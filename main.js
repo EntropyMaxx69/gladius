@@ -72,6 +72,28 @@ function setOverlay(on) {
 const notifyOverlay = () => { if (win) win.webContents.send('overlay-state', overlayOn); };
 const sendCmd = c => { if (win) win.webContents.send('cmd', c); };
 
+// ---------- Multimedia-Tasten (Windows): simuliert echte Medientasten der Tastatur ----------
+// Eine PowerShell bleibt im Hintergrund offen (schnell, ohne Verzögerung pro Tastendruck) und drückt die Taste via keybd_event.
+const { spawn } = require('child_process');
+const MEDIA_VK = { playpause: 0xB3, next: 0xB0, prev: 0xB1, volup: 0xAF, voldown: 0xAE, mute: 0xAD };
+let mediaPs = null;
+function mediaShell() {
+  if (mediaPs && !mediaPs.killed) return mediaPs;
+  const script = "Add-Type -Name K -Namespace G -MemberDefinition '[DllImport(\"user32.dll\")] public static extern void keybd_event(byte v, byte s, uint f, UIntPtr e);';" +
+    "while(($l = [Console]::In.ReadLine()) -ne $null){ $v=[byte][int]$l; [G.K]::keybd_event($v,0,1,[UIntPtr]::Zero); [G.K]::keybd_event($v,0,3,[UIntPtr]::Zero) }";
+  // Als -EncodedCommand (UTF-16LE, Base64), damit Anführungszeichen beim Übergeben nicht verloren gehen
+  mediaPs = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')], { windowsHide: true, stdio: ['pipe', 'ignore', 'ignore'] });
+  mediaPs.on('exit', () => { mediaPs = null; });
+  mediaPs.on('error', () => { mediaPs = null; });
+  return mediaPs;
+}
+ipcMain.on('media-key', (e, k) => {
+  const vk = MEDIA_VK[k]; if (!vk || process.platform !== 'win32') return;
+  try { mediaShell().stdin.write(vk + '\n'); } catch (err) { mediaPs = null; }
+});
+app.on('will-quit', () => { try { mediaPs && mediaPs.kill(); } catch (e) { } });
+if (process.platform === 'win32') app.whenReady().then(() => setTimeout(mediaShell, 3000));   // vorwärmen
+
 ipcMain.on('overlay-toggle', () => setOverlay(!overlayOn));
 ipcMain.on('overlay-set', (e, on) => setOverlay(!!on));
 ipcMain.on('hud-update', (e, state) => { if (overlay && overlayOn && overlayReady) overlay.webContents.send('hud', state); });

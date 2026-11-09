@@ -12,4 +12,6 @@ contextBridge.exposeInMainWorld('gladiusDesktop', {
   selectBt: id => ipcRenderer.send('bt-select', id),
   rideActive: on => ipcRenderer.send('ride-active', on),
   onShortcutFailed: cb => ipcRenderer.on('shortcut-failed', (e, list) => cb(list)),
+  mediaKey: k => ipcRenderer.send('media-key', k),
+  platform: process.platform,
 });
