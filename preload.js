@@ -14,4 +14,6 @@ contextBridge.exposeInMainWorld('gladiusDesktop', {
   onShortcutFailed: cb => ipcRenderer.on('shortcut-failed', (e, list) => cb(list)),
   mediaKey: k => ipcRenderer.send('media-key', k),
   platform: process.platform,
+  version: ipcRenderer.sendSync('app-version'),
+  electron: process.versions.electron,
 });

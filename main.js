@@ -94,6 +94,7 @@ ipcMain.on('media-key', (e, k) => {
 app.on('will-quit', () => { try { mediaPs && mediaPs.kill(); } catch (e) { } });
 if (process.platform === 'win32') app.whenReady().then(() => setTimeout(mediaShell, 3000));   // vorwärmen
 
+ipcMain.on('app-version', e => { e.returnValue = app.getVersion(); });
 ipcMain.on('overlay-toggle', () => setOverlay(!overlayOn));
 ipcMain.on('overlay-set', (e, on) => setOverlay(!!on));
 ipcMain.on('hud-update', (e, state) => { if (overlay && overlayOn && overlayReady) overlay.webContents.send('hud', state); });

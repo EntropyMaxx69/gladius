@@ -16,7 +16,8 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+html{background:var(--bg)}
+html,body{margin:0;color:var(--text);font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
 button{font:inherit;color:inherit;cursor:pointer}
 .num{font-variant-numeric:tabular-nums}
 header{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5;flex-wrap:wrap}
@@ -193,6 +194,22 @@ table.prs tr.pr1 td{color:#ffc53d}
 .ck-head{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:14px}
 .ck-key{flex:1;font-size:14.5px}.ck-key small{display:block;font-size:11.5px;color:var(--muted)}
 .ck-row select{min-width:230px}@keyframes ckhit{from{background:rgba(255,122,47,.35);border-color:var(--accent)}to{}}.ck-row.hit{animation:ckhit 1s ease-out}
+/* Farbliche Bewegung im Hintergrund – langsam, dezent, ohne Blur (schont die CPU) */
+.bgfx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.bgfx i{position:absolute;width:70vmax;height:70vmax;border-radius:50%;opacity:.2;will-change:transform}
+.bgfx i:nth-child(1){left:-20vmax;top:-25vmax;background:radial-gradient(circle,var(--accent) 0,transparent 62%);animation:bgA 46s ease-in-out infinite alternate}
+.bgfx i:nth-child(2){right:-25vmax;top:10vmax;background:radial-gradient(circle,#7a5cff 0,transparent 62%);animation:bgB 58s ease-in-out infinite alternate}
+.bgfx i:nth-child(3){left:15vmax;bottom:-40vmax;background:radial-gradient(circle,#22b8a6 0,transparent 62%);animation:bgC 52s ease-in-out infinite alternate}
+@keyframes bgA{to{transform:translate(28vmax,22vmax) scale(1.15)}}@keyframes bgB{to{transform:translate(-30vmax,18vmax) scale(.9)}}@keyframes bgC{to{transform:translate(20vmax,-28vmax) scale(1.2)}}
+.bgfx.off,.riding .bgfx{display:none}
+/* Schimmer auf Fortschrittsbalken */
+.lv-bar i,.pc-prog i{position:relative;overflow:hidden}
+.lv-bar i::after,.pc-prog i::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.55) 50%,transparent 80%);transform:translateX(-100%);animation:shimmer 2.6s ease-in-out infinite}
+@keyframes shimmer{60%,100%{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){.bgfx i,.lv-bar i::after,.pc-prog i::after{animation:none}}
+.info-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:14px;margin:4px 0 10px}.info-grid dt{color:var(--muted)}.info-grid dd{margin:0}
+.info-logo{display:flex;align-items:center;gap:16px;margin-bottom:12px}.info-logo .wm{font-family:Cinzel,Georgia,serif;font-size:26px;font-weight:800;letter-spacing:.14em}
+.info-list{margin:4px 0 0;padding-left:18px;font-size:13.5px;line-height:1.6;color:var(--muted)}.info-list b{color:var(--text);font-weight:600}
 .wz-goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
 .wz-goal{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--text);display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit}
 .wz-goal span:last-child{font-size:13px;color:var(--muted);line-height:1.4}.wz-goal .ic{font-size:22px;color:var(--accent)}.wz-goal:hover{border-color:var(--muted)}.wz-goal.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:rgba(255,122,47,.08)}
@@ -253,6 +270,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 </style>
 </head>
 <body>
+<div class="bgfx" id="bgfx" aria-hidden="true"><i></i><i></i><i></i></div>
 <header>
   <div class="logo" role="img" aria-label="Gladius – Indoor Cycling Training">
     <div class="wm"><span>GLAD</span><svg class="sword-i" viewBox="0 0 20 66" aria-hidden="true">
@@ -324,12 +342,12 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <div class="dt-head"><div class="grow"><h1>Einstellungen</h1><div class="muted">Änderungen gelten ab dem nächsten Training. Velo-Angaben fliessen direkt in die Simulation ein. Beim Verlassen fragt Gladius, ob du speichern möchtest.</div></div></div>
     <div class="st-layout">
       <nav class="st-nav" id="st-nav">
-        <a href="#st-person">Persönlich</a><a href="#st-perf">Leistung &amp; Puls</a><a href="#st-bike">Velo</a><a href="#st-ride">Fahren</a><a href="#st-keys">Tastenbelegungen</a><a href="#st-dash">Übersicht</a><a href="#st-look">Farben &amp; HUD</a><a href="#st-profiles">Profile</a><a href="#st-data">Daten</a>
+        <a href="#st-person">Persönlich</a><a href="#st-perf">Leistung &amp; Puls</a><a href="#st-bike">Velo</a><a href="#st-ride">Fahren</a><a href="#st-keys">Tastenbelegungen</a><a href="#st-dash">Übersicht</a><a href="#st-look">Farben &amp; HUD</a><a href="#st-profiles">Profile</a><a href="#st-data">Daten</a><a href="#st-info">Infos</a>
       </nav>
       <div class="st-main">
         <section class="dt-box st-sec" id="st-person"><h2>PERSÖNLICH</h2>
           <div class="st-grid">
-            <label class="st-f"><span>Dein Name</span><input type="text" id="s-name" maxlength="40" placeholder="z. B. Dario" autocomplete="given-name"></label>
+            <label class="st-f"><span>Dein Name</span><input type="text" id="s-name" maxlength="40" placeholder="Dein Vorname" autocomplete="given-name"></label>
             <label class="st-f"><span>Geburtsjahr</span><input type="number" id="s-born" min="1930" max="2020" placeholder="–"></label>
             <label class="st-f"><span>Geschlecht</span><select id="s-sex"><option value="">keine Angabe</option><option value="m">Mann</option><option value="f">Frau</option></select></label>
             <label class="st-f"><span>Körpergewicht (kg)</span><input type="number" id="s-weight" min="30" max="200" step="0.5"></label>
@@ -394,6 +412,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
             <label class="st-f"><span>HUD-Grösse (%)</span><input type="range" id="s-hudscale" min="50" max="200" step="10"><output id="s-hudscale-o"></output></label>
             <label class="st-f"><span>HUD-Deckkraft (%)</span><input type="range" id="s-hudop" min="30" max="100" step="5"><output id="s-hudop-o"></output></label>
           </div>
+          <label class="st-check" style="margin-top:6px"><input type="checkbox" id="s-bgfx"><span><b>Bewegter Hintergrund</b><br><small>Langsam wandernde Farbflächen hinter der Übersicht. Während einer Fahrt automatisch aus.</small></span></label>
           <div class="st-preview" id="s-hudprev"><span class="pv-l">LEISTUNG</span><span class="pv-v" id="pv-a">231</span><span class="pv-v ok" id="pv-b">228</span><span class="pv-l">← ausserhalb · im Ziel →</span></div>
         </section>
         <section class="dt-box st-sec" id="st-profiles"><h2>PROFILE</h2>
@@ -407,6 +426,31 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
           <h2 style="margin-top:20px">ZURÜCKSETZEN</h2>
           <div class="toolbar"><button class="btn" id="s-reset-settings">Einstellungen zurücksetzen</button><button class="btn danger" id="s-reset-all">Alle Daten dieses Profils löschen</button></div>
           <p class="st-hint">„Einstellungen zurücksetzen“ stellt Werkeinstellungen wieder her (FTP, Puls, Velo, Farben, HUD), Fahrten und Verlauf bleiben erhalten. „Alle Daten löschen“ setzt das Profil komplett auf den Anfang zurück. Beides lässt sich nicht rückgängig machen – sichere vorher deine Daten.</p>
+        </section>
+        <section class="dt-box st-sec" id="st-info"><h2>INFOS</h2>
+          <div class="info-logo"><span class="wm">GLADIUS</span><span class="muted">Indoor Cycling Training</span></div>
+          <dl class="info-grid">
+            <dt>Version</dt><dd><b id="inf-ver"></b> <span class="muted" id="inf-plat"></span></dd>
+            <dt>Entwickler</dt><dd>Dario Zerla · entwickelt mit Claude (Anthropic)</dd>
+            <dt>Quellcode</dt><dd><a href="https://github.com/EntropyMaxx69/gladius" target="_blank" rel="noopener">github.com/EntropyMaxx69/gladius</a></dd>
+            <dt>Profil</dt><dd id="inf-prof"></dd>
+            <dt>Gespeicherte Daten</dt><dd id="inf-data"></dd>
+          </dl>
+          <div class="toolbar"><button type="button" class="btn small" id="inf-update">Nach Updates suchen</button><span id="inf-upd" class="muted" style="font-size:13.5px"></span></div>
+          <h3 style="font-size:14px;margin:16px 0 4px">Kompatible Geräte</h3>
+          <ul class="info-list"><li><b>Smart-Trainer</b> mit Bluetooth FTMS (ERG, Simulation) – z. B. Van Rysel D500; Leistungsmesser mit Cycling Power als Ersatz (nur Anzeige)</li>
+            <li><b>Pulsgurte</b> mit Bluetooth Heart Rate – z. B. Polar H10</li><li><b>Zwift Click</b> v1 und v2 (beide Pods) für Schalten, Training und Multimedia</li>
+            <li><b>Export</b> als FIT-Datei für Garmin Connect und Strava</li></ul>
+          <h3 style="font-size:14px;margin:16px 0 4px">Wissenschaftliche Grundlagen</h3>
+          <ul class="info-list"><li>Leistungszonen, NP, IF, TSS, CTL/ATL/TSB, Power-Profil – Allen & Coggan, <i>Training and Racing with a Power Meter</i></li>
+            <li>Pulszonen nach Laktatschwelle – Friel; VO2max-Schätzung – ACSM-Formel</li>
+            <li>Intervalle: 4×4 min (Helgerud 2007), 4×8 min (Seiler 2013), 30/15 (Rønnestad 2015/2020), Sprint- und All-out-Intervalle (Gibala, Burgomaster)</li>
+            <li>Trainingspläne: polarisiertes Training (Seiler 2010; Stöggl & Sperlich 2014), Periodisierung (Matwejew, Issurin 2010), Tapering (Mujika & Padilla 2003)</li>
+            <li>Strecken-Schwierigkeit: FIETS-Index</li></ul>
+          <h3 style="font-size:14px;margin:16px 0 4px">Datenschutz</h3>
+          <p class="st-hint" style="margin-top:0">Gladius braucht kein Konto und keinen Server. Alle Fahrten, Einstellungen und Profile bleiben auf diesem Gerät; nichts wird hochgeladen, es gibt kein Tracking. Ins Internet geht Gladius nur für die Schrift im Logo und – wenn du es anklickst – für die Suche nach Updates auf GitHub.</p>
+          <h3 style="font-size:14px;margin:16px 0 4px">Hinweis</h3>
+          <p class="st-hint" style="margin-top:0">Gladius ersetzt keine ärztliche oder trainingswissenschaftliche Beratung. Trainiere nicht bei Fieber, Brustschmerzen oder Schwindel, und lass dich bei gesundheitlichen Fragen untersuchen. Alle Schätzwerte (FTP, VO2max, Leistungsklasse) sind Näherungen.</p>
         </section>
       </div>
     </div>
@@ -713,7 +757,7 @@ async function onTrainerDisconnect() {
 const CLICK_SVC_V2 = 0xFC82, CLICK_SVC_V1 = '00000001-19ca-4651-86e5-fa29dcdd09d1';
 const CLICK_ASYNC = '00000002-19ca-4651-86e5-fa29dcdd09d1', CLICK_RX = '00000003-19ca-4651-86e5-fa29dcdd09d1', CLICK_TX = '00000004-19ca-4651-86e5-fa29dcdd09d1';
 const RIDE_ON = [0x52, 0x69, 0x64, 0x65, 0x4F, 0x6E];
-// Belegung im Click-Test mit Darios Click v2 bestätigt: Steuerkreuz, A/B/Y/Z, − = 0x0100, + = 0x1000
+// Belegung im Click-Test mit einem Click v2 bestätigt: Steuerkreuz, A/B/Y/Z, − = 0x0100, + = 0x1000
 const CLICK_BITS = { 0x1: 'Steuerkreuz links', 0x2: 'Steuerkreuz hoch', 0x4: 'Steuerkreuz rechts', 0x8: 'Steuerkreuz runter', 0x10: 'Taste A', 0x20: 'Taste B', 0x40: 'Taste Y', 0x80: 'Taste Z',
   0x100: 'Schalttaste −', 0x200: 'Taste 0x0200', 0x400: 'Taste 0x0400', 0x800: 'Taste 0x0800', 0x1000: 'Schalttaste +', 0x2000: 'Taste 0x2000', 0x4000: 'Taste 0x4000', 0x8000: 'Taste 0x8000' };
 const clickBitName = b => CLICK_BITS[b] || `Taste 0x${b.toString(16)}`;
@@ -2376,7 +2420,7 @@ function hudRoute() {
 const hudLook = () => ({ scale: settings.hudScale / 100, opacity: settings.hudOpacity / 100, color: settings.hudColor, okColor: settings.hudOk });
 function idleHudState() { const hr = curHr(), z = hrZone(hr); return { active: false, power: power3s(), hr, zone: z ? z.z : '', cad: curCad(), ...hudLook() }; }
 
-function showView(v) { document.querySelectorAll('.view').forEach(x => x.classList.toggle('active', x.id === 'view-' + v)); if (v === 'library') renderLibrary(); window.scrollTo(0, 0); }
+function showView(v) { document.body.classList.toggle('riding', v === 'ride'); document.querySelectorAll('.view').forEach(x => x.classList.toggle('active', x.id === 'view-' + v)); if (v === 'library') renderLibrary(); window.scrollTo(0, 0); }
 let activeCat = 'all', imported = [];
 // Importierte GPX-Strecken bleiben gespeichert
 const savedRoutes = () => store.get('routes', []).map(rt => ({ id: 'r-' + rt.id, cat: 'route', open: true, name: rt.name, desc: `Importiert aus ${rt.file || 'GPX-Datei'}.`, route: rt, imported: true,
@@ -2803,6 +2847,7 @@ function applyLook() {
   const a = settings.accent || DEFAULT_LOOK.accent, r = document.documentElement.style;
   r.setProperty('--accent', a); r.setProperty('--accent2', `color-mix(in srgb, ${a} 55%, #ffffff)`);
   r.setProperty('--hudc', settings.hudColor || DEFAULT_LOOK.hudColor); r.setProperty('--hudok', settings.hudOk || DEFAULT_LOOK.hudOk);
+  $('#bgfx').classList.toggle('off', settings.bgfx === false);
   renderGreeting();
 }
 let settingsFrom = 'library';
@@ -2823,7 +2868,8 @@ function fillSettings() {
   v('s-pos', String(settings.cda || 0.32)); v('s-crr', String(settings.crr || 0.004)); v('s-gears', String(settings.gears || 28));
   $('#s-vshift').checked = settings.virtualShift; $('#s-autopause').checked = settings.autoPause; $('#s-beeps').checked = settings.beeps;
   v('s-accent', settings.accent || DEFAULT_LOOK.accent); v('s-hudc', settings.hudColor || DEFAULT_LOOK.hudColor); v('s-hudok', settings.hudOk || DEFAULT_LOOK.hudOk);
-  v('s-hudscale', settings.hudScale); v('s-hudop', settings.hudOpacity); v('s-gint', settings.globalInt || 100);
+  v('s-hudscale', settings.hudScale); v('s-hudop', settings.hudOpacity); $('#s-bgfx').checked = settings.bgfx !== false; v('s-gint', settings.globalInt || 100);
+  fillInfo();
   renderDashSettings(dashConfig()); renderClickSettings(clickMap()); $('#s-ckact').checked = !!settings.clickActivate; updateClickChip();
   settingsPreview(); stSnap = JSON.stringify(stValues());
 }
@@ -2839,6 +2885,26 @@ function settingsPreview() {
     : 'Den Schwellenpuls ermittelst du mit dem Puls-Zonentest, die FTP mit dem Ramp-Test. Trägst du dein Geburtsjahr ein, zeigt Gladius einen Richtwert für den Maximalpuls.';
   document.querySelectorAll('.st-presets').forEach(box => { if (!box.childElementCount) box.innerHTML = PRESETS[box.dataset.for].map(c => `<button type="button" style="background:${c}" data-c="${c}" title="${c}" aria-label="Farbe ${c}"></button>`).join(''); });
 }
+const APP_VERSION = (DESKTOP && DESKTOP.version) || '0.6.0';
+function fillInfo() {
+  $('#inf-ver').textContent = APP_VERSION;
+  $('#inf-plat').textContent = DESKTOP ? `· Desktop-App${DESKTOP.electron ? ' (Electron ' + DESKTOP.electron + ')' : ''}` : EMBEDDED ? '· Vorschau' : '· Browser';
+  $('#inf-prof').textContent = `${profileName(PROFILE)} · ${profileList().length} Profil${profileList().length === 1 ? '' : 'e'} auf diesem Gerät`;
+  const h = store.get('history', []), first = h.length ? Math.min(...h.map(x => x.date)) : null;
+  $('#inf-data').textContent = `${h.length} Fahrt${h.length === 1 ? '' : 'en'}${first ? ` seit ${fmtDate(first)}` : ''} · ${(store.get('routes', []) || []).length} importierte Strecken`;
+}
+const verNum = v => String(v).replace(/^v/, '').split(/[-+]/)[0].split('.').map(Number);
+const newer = (a, b) => { const x = verNum(a), y = verNum(b); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; };
+$('#inf-update').onclick = async () => {
+  const o = $('#inf-upd'); o.textContent = 'Suche …';
+  try {
+    const r = await fetch('https://api.github.com/repos/EntropyMaxx69/gladius/releases/latest', { headers: { Accept: 'application/vnd.github+json' } });
+    if (!r.ok) throw new Error(r.status === 404 ? 'keine Veröffentlichung gefunden (Repository privat?)' : 'GitHub antwortet nicht (' + r.status + ')');
+    const j = await r.json(), asset = (j.assets || []).find(a => /\.exe$/i.test(a.name));
+    if (newer(j.tag_name, APP_VERSION)) o.innerHTML = `Neue Version <b>${esc(j.tag_name.replace(/^v/, '').split('-')[0])}</b> verfügbar – <a href="${esc(asset ? asset.browser_download_url : j.html_url)}" target="_blank" rel="noopener">Installer herunterladen</a>, Gladius schliessen und ausführen. Deine Daten bleiben erhalten.`;
+    else o.textContent = `Du hast die neueste Version (${APP_VERSION}).`;
+  } catch (e) { o.textContent = 'Suche fehlgeschlagen: ' + e.message; }
+};
 function renderClickSettings(map) {
   $('#s-ckl').innerHTML = map.length ? map.map(m => `<div class="dbl-row ck-row" data-bit="${m.bit}"><span class="ck-key">${esc(clickBitName(m.bit))}<small>0x${m.bit.toString(16).padStart(4, '0')}</small></span>
     <select id="s-ck-${m.bit}" aria-label="Funktion für ${esc(clickBitName(m.bit))}">${ACTION_GROUPS.map(([g, ks]) => { const o = ks.map(k => `<option value="${k}" ${m.action === k ? 'selected' : ''}>${CLICK_ACTIONS[k]}</option>`).join(''); return g ? `<optgroup label="${g}">${o}</optgroup>` : o; }).join('')}</select>
@@ -2884,7 +2950,7 @@ function saveSettings(navigate = true) {
   settings.cda = +$('#s-pos').value; settings.crr = +$('#s-crr').value; settings.gears = +$('#s-gears').value;
   settings.virtualShift = $('#s-vshift').checked; settings.autoPause = $('#s-autopause').checked; settings.beeps = $('#s-beeps').checked;
   settings.accent = $('#s-accent').value; settings.hudColor = $('#s-hudc').value; settings.hudOk = $('#s-hudok').value;
-  settings.hudScale = +$('#s-hudscale').value; settings.hudOpacity = +$('#s-hudop').value;
+  settings.hudScale = +$('#s-hudscale').value; settings.hudOpacity = +$('#s-hudop').value; settings.bgfx = $('#s-bgfx').checked;
   settings.globalInt = +$('#s-gint').value || 100;
   settings.clickMap = clickFromForm(); settings.clickActivate = $('#s-ckact').checked;
   settings.dash = $('#s-db-order').value.split(',').filter(Boolean).map(id => ({ id, on: $(`#s-db-${id}-on`).checked, w: +$(`#s-db-${id}-w`).value }));
