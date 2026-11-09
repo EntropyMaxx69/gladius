@@ -48,7 +48,13 @@ h2{font-size:18px;margin:28px 0 10px}
 .btn.danger{border-color:#5a2a2a;color:#ffb0b0}
 .btn.small{padding:6px 10px;font-size:13px}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0}
-.libbar{display:flex;gap:8px 16px;align-items:center;justify-content:space-between;flex-wrap:wrap}.libbar .tabs{margin:16px 0}.sortsel{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);white-space:nowrap}
+.libbar{display:flex;gap:6px 16px;align-items:flex-start;margin:16px 0}.libbar .tabs{margin:0;flex:1;min-width:0}
+.sortsel{position:relative;flex:none}.sortsel select{appearance:none;-webkit-appearance:none;background:none;border:1px solid var(--line);border-radius:999px;padding:7px 34px 7px 14px;font:inherit;font-size:14px;color:var(--text);cursor:pointer}
+.sortsel select:hover{border-color:var(--muted)}.sortsel select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sortsel::after{content:'';position:absolute;right:14px;top:50%;width:7px;height:7px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.sortsel select option,.wz-row select option,.wz-day select option{background:var(--panel);color:var(--text)}
+.wz-row select,.wz-row input[type=date],.wz-day select,.dt-plan input[type=date]{background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 10px;font:inherit;font-size:14px;color-scheme:dark}
+@media (max-width:640px){.libbar{flex-direction:column}}
 .tab{background:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:14px;color:var(--muted)}
 .tab.active{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:600}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
@@ -286,7 +292,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <h1>Trainings</h1>
     <div class="muted">Wähle ein Workout. Alle Watt-Vorgaben richten sich nach deiner FTP. ERG-Abschnitte stellt der Trainer selbst ein, in <span style="color:var(--gear)">Gang-Abschnitten</span> schaltest du virtuell.</div>
     <div class="libbar"><div class="tabs" id="tabs"></div>
-      <label class="sortsel">Sortieren <select id="lib-sort"><option value="std">Standard</option><option value="dur-asc">Dauer: kurz → lang</option><option value="dur-desc">Dauer: lang → kurz</option><option value="diff-asc">Schwierigkeit: leicht → schwer</option><option value="diff-desc">Schwierigkeit: schwer → leicht</option></select></label></div>
+      <label class="sortsel" title="Trainings sortieren"><select id="lib-sort" aria-label="Trainings sortieren"><option value="std">Sortierung: Standard</option><option value="dur-asc">Dauer: kurz → lang</option><option value="dur-desc">Dauer: lang → kurz</option><option value="diff-asc">Schwierigkeit: leicht → schwer</option><option value="diff-desc">Schwierigkeit: schwer → leicht</option></select></label></div>
     <div class="grid" id="lib"></div>
     <div class="toolbar">
       <button class="btn" id="btn-free">Freie Fahrt (virtuelle Gänge)</button>
