@@ -16,7 +16,8 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+html{background:var(--bg)}
+html,body{margin:0;color:var(--text);font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
 button{font:inherit;color:inherit;cursor:pointer}
 .num{font-variant-numeric:tabular-nums}
 header{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5;flex-wrap:wrap}
@@ -134,7 +135,7 @@ table.hist th{color:var(--muted);font-weight:600}
 .sc-row{display:grid;grid-template-columns:80px 1fr 36px;gap:12px;align-items:center;font-size:14px}.sc-row b{text-align:right}
 .sc-bar{height:8px;background:var(--panel2);border-radius:4px;overflow:hidden}.sc-bar i{display:block;height:100%;background:var(--text);border-radius:4px}
 /* dashboard */
-.plancard{background:linear-gradient(135deg,rgba(255,122,47,.10),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 14px}
+.plancard{background:linear-gradient(135deg,rgba(255,122,47,.10),rgba(255,255,255,.02)),var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 14px}
 .plancard.pc-empty{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .plancard .t,.plancard .t2{font-size:12px;letter-spacing:.14em;color:var(--muted);font-weight:700}.plancard .t2{color:var(--accent2);margin-top:4px}
 .pc-top{display:flex;gap:8px 16px;align-items:center;flex-wrap:wrap}.pc-top .t{margin-right:auto}
@@ -206,6 +207,7 @@ table.prs tr.pr1 td{color:#ffc53d}
 .info-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:14px;margin:4px 0 10px}.info-grid dt{color:var(--muted)}.info-grid dd{margin:0}
 .info-logo{display:flex;align-items:center;gap:16px;margin-bottom:12px}.info-logo .wm{font-family:Cinzel,Georgia,serif;font-size:26px;font-weight:800;letter-spacing:.14em}
 .info-list{margin:4px 0 0;padding-left:18px;font-size:13.5px;line-height:1.6;color:var(--muted)}.info-list b{color:var(--text);font-weight:600}
+#bgfx{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;opacity:.9}
 .wz-goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
 .wz-goal{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--text);display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit}
 .wz-goal span:last-child{font-size:13px;color:var(--muted);line-height:1.4}.wz-goal .ic{font-size:22px;color:var(--accent)}.wz-goal:hover{border-color:var(--muted)}.wz-goal.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:rgba(255,122,47,.08)}
@@ -266,6 +268,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 </style>
 </head>
 <body>
+<canvas id="bgfx" aria-hidden="true"></canvas>
 <header>
   <div class="logo" role="img" aria-label="Gladius – Indoor Cycling Training">
     <div class="wm"><span>GLAD</span><svg class="sword-i" viewBox="0 0 20 66" aria-hidden="true">
@@ -421,6 +424,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
             <label class="st-f"><span>HUD-Grösse (%)</span><input type="range" id="s-hudscale" min="50" max="200" step="10"><output id="s-hudscale-o"></output></label>
             <label class="st-f"><span>HUD-Deckkraft (%)</span><input type="range" id="s-hudop" min="30" max="100" step="5"><output id="s-hudop-o"></output></label>
           </div>
+          <label class="st-check" style="margin-top:6px"><input type="checkbox" id="s-bgfx"><span><b>Animierter Hintergrund</b><br><small>Feine Lichtbänder ziehen langsam durch den Hintergrund (wie der Windows-Bildschirmschoner „Mystify“). Während einer Fahrt automatisch aus.</small></span></label>
 
           <div class="st-preview" id="s-hudprev"><span class="pv-l">LEISTUNG</span><span class="pv-v" id="pv-a">231</span><span class="pv-v ok" id="pv-b">228</span><span class="pv-l">← ausserhalb · im Ziel →</span></div>
         </section>
@@ -2434,7 +2438,7 @@ function hudRoute() {
 const hudLook = () => ({ scale: settings.hudScale / 100, opacity: settings.hudOpacity / 100, color: settings.hudColor, okColor: settings.hudOk });
 function idleHudState() { const hr = curHr(), z = hrZone(hr); return { active: false, power: power3s(), hr, zone: z ? z.z : '', cad: curCad(), ...hudLook() }; }
 
-function showView(v) { document.querySelectorAll('.view').forEach(x => x.classList.toggle('active', x.id === 'view-' + v)); if (v === 'library') renderLibrary(); window.scrollTo(0, 0); }
+function showView(v) { document.body.classList.toggle('riding', v === 'ride'); document.querySelectorAll('.view').forEach(x => x.classList.toggle('active', x.id === 'view-' + v)); if (v === 'library') renderLibrary(); window.scrollTo(0, 0); }
 let activeCat = 'all', imported = [];
 // Importierte GPX-Strecken bleiben gespeichert
 const savedRoutes = () => store.get('routes', []).map(rt => ({ id: 'r-' + rt.id, cat: 'route', open: true, name: rt.name, desc: `Importiert aus ${rt.file || 'GPX-Datei'}.`, route: rt, imported: true,
@@ -2881,7 +2885,7 @@ function fillSettings() {
   v('s-pos', String(settings.cda || 0.32)); v('s-crr', String(settings.crr || 0.004)); v('s-gears', String(settings.gears || 28));
   $('#s-vshift').checked = settings.virtualShift; $('#s-autopause').checked = settings.autoPause; $('#s-beeps').checked = settings.beeps;
   v('s-accent', settings.accent || DEFAULT_LOOK.accent); v('s-hudc', settings.hudColor || DEFAULT_LOOK.hudColor); v('s-hudok', settings.hudOk || DEFAULT_LOOK.hudOk);
-  v('s-hudscale', settings.hudScale); v('s-hudop', settings.hudOpacity); v('s-gint', settings.globalInt || 100);
+  v('s-hudscale', settings.hudScale); v('s-hudop', settings.hudOpacity); $('#s-bgfx').checked = settings.bgfx !== false; v('s-gint', settings.globalInt || 100);
   fillInfo();
   renderDashSettings(dashConfig()); renderClickSettings(clickMap()); $('#s-ckact').checked = !!settings.clickActivate; updateClickChip();
   settingsPreview(); stSnap = JSON.stringify(stValues());
@@ -2963,7 +2967,7 @@ function saveSettings(navigate = true) {
   settings.cda = +$('#s-pos').value; settings.crr = +$('#s-crr').value; settings.gears = +$('#s-gears').value;
   settings.virtualShift = $('#s-vshift').checked; settings.autoPause = $('#s-autopause').checked; settings.beeps = $('#s-beeps').checked;
   settings.accent = $('#s-accent').value; settings.hudColor = $('#s-hudc').value; settings.hudOk = $('#s-hudok').value;
-  settings.hudScale = +$('#s-hudscale').value; settings.hudOpacity = +$('#s-hudop').value;
+  settings.hudScale = +$('#s-hudscale').value; settings.hudOpacity = +$('#s-hudop').value; settings.bgfx = $('#s-bgfx').checked;
   settings.globalInt = +$('#s-gint').value || 100;
   settings.clickMap = clickFromForm(); settings.clickActivate = $('#s-ckact').checked;
   settings.dash = $('#s-db-order').value.split(',').filter(Boolean).map(id => ({ id, on: $(`#s-db-${id}-on`).checked, w: +$(`#s-db-${id}-w`).value }));
@@ -3211,6 +3215,37 @@ updateFtpLabel(); renderLibrary();
 if (!store.get('onboarded')) { $('#w-weight').value = settings.weight; $('#dlg-welcome').showModal(); }
 else setTimeout(dailyReadiness, 400);
 if (!navigator.bluetooth && !EMBEDDED) setTimeout(() => toast('Hinweis: Bluetooth funktioniert nur in Chrome oder Edge. Demo-Modus geht überall.', 6000), 600);
+
+/* ---------------- Animierter Hintergrund („Mystify“) ----------------
+   Zwei Bänder aus je einer Bézierkurve, deren vier Punkte langsam über den Bildschirm wandern.
+   Die letzten Positionen bleiben als feine, verblassende Linien stehen → seidiges Lichtband.
+   Läuft mit ~30 Bildern/s und pausiert bei Fahrt, verstecktem Fenster oder „Animationen reduzieren“. */
+const bgfx = { c: $('#bgfx'), bands: [], last: 0, w: 0, h: 0 };
+function bgfxInit() {
+  const dpr = Math.min(2, window.devicePixelRatio || 1), c = bgfx.c;
+  bgfx.w = innerWidth; bgfx.h = innerHeight; c.width = bgfx.w * dpr; c.height = bgfx.h * dpr;
+  bgfx.ctx = c.getContext('2d'); bgfx.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (!bgfx.bands.length) bgfx.bands = [{ hue: 285 }, { hue: 320 }].map(b => ({ ...b, hist: [], pts: Array.from({ length: 4 }, () => ({ x: Math.random() * bgfx.w, y: Math.random() * bgfx.h, vx: (Math.random() - .5) * 1.6, vy: (Math.random() - .5) * 1.6 })) }));
+}
+function bgfxActive() { return settings.bgfx !== false && !document.hidden && !document.body.classList.contains('riding') && !matchMedia('(prefers-reduced-motion: reduce)').matches; }
+function bgfxFrame(ts) {
+  requestAnimationFrame(bgfxFrame);
+  const on = bgfxActive(); bgfx.c.style.display = settings.bgfx === false ? 'none' : '';
+  if (!on || ts - bgfx.last < 33) return; bgfx.last = ts;
+  const { ctx, w, h } = bgfx; ctx.clearRect(0, 0, w, h); ctx.lineWidth = 1;
+  for (const b of bgfx.bands) {
+    for (const p of b.pts) { p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > w) { p.vx *= -1; p.x = clamp(p.x, 0, w); } if (p.y < 0 || p.y > h) { p.vy *= -1; p.y = clamp(p.y, 0, h); } }
+    // nur jede 4. Position merken → einzelne, feine Linien statt einer vollen Fläche
+    if ((b.n = (b.n || 0) + 1) % 4 === 0) { b.hist.push(b.pts.map(p => [p.x, p.y])); if (b.hist.length > 26) b.hist.shift(); }
+    const cur = b.pts.map(p => [p.x, p.y]);
+    [...b.hist, cur].forEach((q, i, all) => {
+      const a = (i + 1) / all.length;
+      ctx.strokeStyle = `hsla(${b.hue + a * 25}, 85%, ${55 + a * 15}%, ${0.04 + a * 0.3})`;
+      ctx.beginPath(); ctx.moveTo(q[0][0], q[0][1]); ctx.bezierCurveTo(q[1][0], q[1][1], q[2][0], q[2][1], q[3][0], q[3][1]); ctx.stroke();
+    });
+  }
+}
+bgfxInit(); addEventListener('resize', bgfxInit); requestAnimationFrame(bgfxFrame);
 // Testschnittstelle
 window.__gladius = { click, onClickAsync, clickMap, checkPlanBonuses, rankBadge, seasonRank, updateTrophies, rankFromXp, workoutDifficulty, ROUTES, routeClimbScore, levelOf, totalXp, xpNeed, togglePlanDone, rebuildFrom, resumePlan, openPauseDialog, movePlanSession, generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
 </script>
