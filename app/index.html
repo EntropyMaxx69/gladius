@@ -36,7 +36,10 @@ header{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:
 .pf-menu[hidden]{display:none}.pf-menu button{background:none;border:0;text-align:left;padding:9px 10px;border-radius:8px;display:flex;gap:10px;align-items:center;font-size:14px}.pf-menu button:hover{background:var(--panel)}
 .pf-menu .cur{font-weight:700}.pf-menu hr{border:0;border-top:1px solid var(--line);margin:4px 0;width:100%}
 .pf-list{display:flex;flex-direction:column;gap:8px}.pf-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}.pf-row .grow{flex:1;min-width:0}
-.chip-icon{padding:7px 11px;font-size:17px;line-height:1}
+.chip-icon{padding:4px 10px;font-size:25px;line-height:1}#chip-settings span{display:block;transform:translateY(-1px)}
+.cn-dots{display:flex;gap:4px}.cn-dots i{width:9px;height:9px;border-radius:50%;background:var(--z1)}.cn-dots i.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}.cn-dots i.busy{background:var(--warn)}.cn-dots i.demo{background:#a98bff}
+.cn-menu{min-width:250px}.cn-i{display:flex;flex-direction:column;line-height:1.25}.cn-i small{font-size:10.5px;letter-spacing:.12em;color:var(--muted);font-weight:700}
+.cn-demo{font-size:12.5px;color:#a98bff;padding:6px 10px 4px;border-top:1px solid var(--line);margin-top:2px}
 main{max-width:1200px;margin:0 auto;padding:20px}
 .view{display:none}.view.active{display:block}
 h1{font-size:26px;margin:4px 0 6px}
@@ -206,6 +209,7 @@ table.prs tr.pr1 td{color:#ffc53d}
 .info-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:14px;margin:4px 0 10px}.info-grid dt{color:var(--muted)}.info-grid dd{margin:0}
 .info-logo{display:flex;align-items:center;gap:16px;margin-bottom:12px}.info-logo .wm{font-family:Cinzel,Georgia,serif;font-size:26px;font-weight:800;letter-spacing:.14em}
 .info-list{margin:4px 0 0;padding-left:18px;font-size:13.5px;line-height:1.6;color:var(--muted)}.info-list b{color:var(--text);font-weight:600}
+.st-dev summary{cursor:pointer;font-size:13px;font-weight:700;letter-spacing:.12em;color:var(--muted);list-style:none}.st-dev summary::-webkit-details-marker{display:none}.st-dev summary::before{content:'▸ '}.st-dev[open] summary::before{content:'▾ '}
 .wz-goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
 .wz-goal{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--text);display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit}
 .wz-goal span:last-child{font-size:13px;color:var(--muted);line-height:1.4}.wz-goal .ic{font-size:22px;color:var(--accent)}.wz-goal:hover{border-color:var(--muted)}.wz-goal.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:rgba(255,122,47,.08)}
@@ -298,10 +302,13 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <small>INDOOR CYCLING TRAINING</small>
   </div>
   <div class="chips">
-    <button class="chip" id="chip-trainer" title="Smart-Trainer per Bluetooth (FTMS) verbinden"><span class="dot"></span><span id="lbl-trainer">Trainer verbinden</span></button>
-    <button class="chip" id="chip-hr" title="Pulsgurt per Bluetooth verbinden"><span class="dot"></span><span id="lbl-hr">Puls verbinden</span></button>
-    <button class="chip" id="chip-click" title="Zwift Click verbinden (jeden Pod einzeln)"><span class="dot"></span><span id="lbl-click">Click verbinden</span></button>
-    <button class="chip" id="chip-demo" title="Simulierter Trainer zum Ausprobieren ohne Hardware"><span class="dot"></span><span>Demo</span></button>
+    <div class="pf-wrap cn-wrap"><button class="chip" id="chip-conn" aria-haspopup="true" aria-expanded="false" title="Geräte verbinden"><span class="cn-dots" aria-hidden="true"><i data-d="trainer"></i><i data-d="hr"></i><i data-d="click"></i></span><span id="lbl-conn">Geräte verbinden</span><span aria-hidden="true" style="color:var(--muted)">▾</span></button>
+      <div class="pf-menu cn-menu" id="cn-menu" hidden>
+        <button class="chip" id="chip-trainer" title="Smart-Trainer per Bluetooth (FTMS) verbinden"><span class="dot"></span><span class="cn-i"><small>SMART-TRAINER</small><span id="lbl-trainer">Trainer verbinden</span></span></button>
+        <button class="chip" id="chip-hr" title="Pulsgurt per Bluetooth verbinden"><span class="dot"></span><span class="cn-i"><small>PULSGURT</small><span id="lbl-hr">Puls verbinden</span></span></button>
+        <button class="chip" id="chip-click" title="Zwift Click verbinden (jeden Pod einzeln)"><span class="dot"></span><span class="cn-i"><small>ZWIFT CLICK</small><span id="lbl-click">Click verbinden</span></span></button>
+        <div class="cn-demo" id="cn-demo" hidden>Demo-Modus aktiv – Trainer und Puls sind simuliert.</div>
+      </div></div>
     <div class="pf-wrap"><button class="chip" id="chip-profile" aria-haspopup="true" aria-expanded="false" title="Profil wechseln"><span class="pf-av" id="pf-av"></span><span id="pf-name"></span><span aria-hidden="true" style="color:var(--muted)">▾</span></button>
       <div class="pf-menu" id="pf-menu" hidden></div></div>
     <button class="chip chip-icon" id="chip-settings" title="Einstellungen" aria-label="Einstellungen"><span aria-hidden="true">⚙</span></button>
@@ -461,6 +468,9 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
           <h3 style="font-size:14px;margin:16px 0 4px">Hinweis</h3>
           <p class="st-hint" style="margin-top:0">Gladius ersetzt keine ärztliche oder trainingswissenschaftliche Beratung. Trainiere nicht bei Fieber, Brustschmerzen oder Schwindel, und lass dich bei gesundheitlichen Fragen untersuchen. Alle Schätzwerte (FTP, VO2max, Leistungsklasse) sind Näherungen.</p>
         </section>
+        <details class="dt-box st-sec st-dev" id="st-dev"><summary>ENTWICKLEROPTIONEN</summary>
+          <label class="st-check" style="margin-top:10px"><input type="checkbox" id="dev-demo"><span><b>Demo-Modus</b><br><small>Simuliert Trainer und Pulsgurt, damit du Gladius ohne Hardware ausprobieren kannst. Leistung und Puls sind dann erfunden – nicht für echte Trainings verwenden.</small></span></label>
+        </details>
       </div>
     </div>
   </section>
@@ -896,8 +906,19 @@ async function connectHr() {
 }
 
 function setChip(which, state, label) {
-  const c = $('#chip-' + which); c.classList.toggle('on', state === 'on'); c.classList.toggle('busy', state === 'busy');
+  const c = $('#chip-' + which);
+  if (c) { c.classList.toggle('on', state === 'on'); c.classList.toggle('busy', state === 'busy'); }
   if (label && $('#lbl-' + which)) $('#lbl-' + which).textContent = label;
+  updateConnBtn();
+}
+// Ein Knopf für alle Verbindungen: drei Punkte zeigen Trainer, Puls und Click
+function updateConnBtn() {
+  const ids = ['trainer', 'hr', 'click'], st = id => { const c = $('#chip-' + id); return c?.classList.contains('on') ? 'on' : c?.classList.contains('busy') ? 'busy' : ''; };
+  let dm = false; try { dm = demo.on; } catch (e) { }
+  ids.forEach(id => { const i = document.querySelector(`.cn-dots [data-d="${id}"]`); if (i) i.className = st(id) || (dm && id !== 'click' ? 'demo' : ''); });
+  const n = ids.filter(id => st(id) === 'on').length, busy = ids.some(id => st(id) === 'busy'), l = $('#lbl-conn');
+  if (l) l.textContent = busy ? 'Verbinde …' : n ? `${n} verbunden` : dm ? 'Demo-Modus' : 'Geräte verbinden';
+  const d = $('#cn-demo'); if (d) d.hidden = !dm;
 }
 
 /* ---------------- Demo-Modus (simulierter Trainer + Puls) ---------------- */
@@ -2827,7 +2848,10 @@ document.addEventListener('keydown', onKey);
 $('#chip-trainer').onclick = connectTrainer;
 $('#chip-hr').onclick = connectHr;
 $('#chip-click').onclick = () => { if (click.pods.filter(p => p.connected).length >= 2) { openSettings('st-keys'); } else connectClick(); };
-$('#chip-demo').onclick = () => { demo.on = !demo.on; setChip('demo', demo.on ? 'on' : 'off'); toast(demo.on ? 'Demo-Modus an: simulierter Trainer und Puls.' : 'Demo-Modus aus.'); };
+$('#chip-conn').onclick = e => { e.stopPropagation(); const m = $('#cn-menu'); m.hidden = !m.hidden; $('#chip-conn').setAttribute('aria-expanded', String(!m.hidden)); $('#pf-menu').hidden = true; };
+$('#cn-menu').addEventListener('click', e => { if (e.target.closest('button')) $('#cn-menu').hidden = true; });
+document.addEventListener('click', e => { if (!e.target.closest('.cn-wrap')) $('#cn-menu').hidden = true; });
+$('#dev-demo').onchange = e => { demo.on = e.target.checked; updateConnBtn(); toast(demo.on ? 'Demo-Modus an: simulierter Trainer und Puls.' : 'Demo-Modus aus.'); };
 // ---------- Einstellungsseite ----------
 const DEFAULT_LOOK = { accent: '#ff7a2f', hudColor: '#ff2b2b', hudOk: '#6dff9a' };
 const PRESETS = { 's-accent': ['#ff7a2f', '#3d8bfd', '#3ecf8e', '#a98bff', '#ffc53d', '#ff4d6a'], 's-hudc': ['#ff2b2b', '#ffffff', '#ffc53d', '#4fc3f7'], 's-hudok': ['#6dff9a', '#3ecf8e', '#4fc3f7', '#ffffff'] };
@@ -2882,7 +2906,7 @@ function fillSettings() {
   $('#s-vshift').checked = settings.virtualShift; $('#s-autopause').checked = settings.autoPause; $('#s-beeps').checked = settings.beeps;
   v('s-accent', settings.accent || DEFAULT_LOOK.accent); v('s-hudc', settings.hudColor || DEFAULT_LOOK.hudColor); v('s-hudok', settings.hudOk || DEFAULT_LOOK.hudOk);
   v('s-hudscale', settings.hudScale); v('s-hudop', settings.hudOpacity); v('s-gint', settings.globalInt || 100);
-  fillInfo();
+  fillInfo(); $('#dev-demo').checked = demo.on;
   renderDashSettings(dashConfig()); renderClickSettings(clickMap()); $('#s-ckact').checked = !!settings.clickActivate; updateClickChip();
   settingsPreview(); stSnap = JSON.stringify(stValues());
 }
@@ -3041,7 +3065,7 @@ function renderProfiles() {
     return `<div class="pf-row">${avatar(id)}<div class="grow"><b>${esc(profileName(id))}</b>${id === PROFILE ? ' <span class="muted">· aktiv</span>' : ''}<div class="muted" style="font-size:12.5px">${h} Fahrten</div></div>
       <button class="btn small" data-pfren="${id}">Umbenennen</button>${id === PROFILE ? '' : `<button class="btn small" data-pf="${id}">Wechseln</button>`}${id === 'default' || id === PROFILE ? '' : `<button class="btn small danger" data-pfdel="${id}">Löschen</button>`}</div>`; }).join('');
 }
-$('#chip-profile').onclick = e => { e.stopPropagation(); const m = $('#pf-menu'); m.hidden = !m.hidden; $('#chip-profile').setAttribute('aria-expanded', String(!m.hidden)); };
+$('#chip-profile').onclick = e => { e.stopPropagation(); $('#cn-menu').hidden = true; const m = $('#pf-menu'); m.hidden = !m.hidden; $('#chip-profile').setAttribute('aria-expanded', String(!m.hidden)); };
 document.addEventListener('click', e => {
   if (!e.target.closest('.pf-wrap')) $('#pf-menu').hidden = true;
   const sw = e.target.closest('[data-pf]'); if (sw) { if (sw.dataset.pf !== PROFILE) switchProfile(sw.dataset.pf); else $('#pf-menu').hidden = true; }
@@ -3195,7 +3219,7 @@ if (DESKTOP) {
 } else document.querySelectorAll('.field.desk').forEach(f => f.style.display = 'none');
 if (EMBEDDED && !DESKTOP) {
   // Vorschau-Modus: Demo an, Zeitraffer zum schnellen Durchsehen
-  demo.on = true; setChip('demo', 'on'); $('#c-hud').textContent = '◩ HUD-Vorschau';
+  demo.on = true; updateConnBtn(); $('#c-hud').textContent = '◩ HUD-Vorschau';
   $('#embedded').innerHTML = `<div class="banner" style="display:block"><b>Vorschau zum Ausprobieren.</b> Der Demo-Modus mit simuliertem Trainer und Puls ist an.
     Bluetooth und der FIT-Download funktionieren nur in der installierten App. Das HUD siehst du im Training über „HUD-Vorschau“. Mit dem Zeitraffer unten rechts spulst du ein Workout schnell durch.</div>`;
   const bar = document.createElement('div'); bar.id = 'speedbar';
@@ -3212,7 +3236,7 @@ if (!store.get('onboarded')) { $('#w-weight').value = settings.weight; $('#dlg-w
 else setTimeout(dailyReadiness, 400);
 if (!navigator.bluetooth && !EMBEDDED) setTimeout(() => toast('Hinweis: Bluetooth funktioniert nur in Chrome oder Edge. Demo-Modus geht überall.', 6000), 600);
 // Testschnittstelle
-window.__gladius = { click, onClickAsync, clickMap, checkPlanBonuses, rankBadge, seasonRank, updateTrophies, rankFromXp, workoutDifficulty, ROUTES, routeClimbScore, levelOf, totalXp, xpNeed, togglePlanDone, rebuildFrom, resumePlan, openPauseDialog, movePlanSession, generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
+window.__gladius = { updateConnBtn, click, onClickAsync, clickMap, checkPlanBonuses, rankBadge, seasonRank, updateTrophies, rankFromXp, workoutDifficulty, ROUTES, routeClimbScore, levelOf, totalXp, xpNeed, togglePlanDone, rebuildFrom, resumePlan, openPauseDialog, movePlanSession, generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
 </script>
 </body>
 </html>
