@@ -138,6 +138,14 @@ table.hist th{color:var(--muted);font-weight:600}
 .ps-done{opacity:.75}.ps-done .m{color:#3ecf8e}.ps-missed{opacity:.5}.ps-missed .n{text-decoration:line-through}.ps-today{box-shadow:0 0 0 2px var(--accent)}
 .pweeks{display:flex;flex-direction:column;gap:12px;margin-top:16px}.pwk{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.pwk.cur{border-color:var(--accent)}
 .pwk-h{display:flex;gap:12px;align-items:baseline;font-size:14px;color:var(--muted)}.pwk-h b{color:var(--text);font-size:15px}.pwk-h .num{margin-left:auto}.pwk .pweek{margin-top:8px}
+.pgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
+.pday{border:1px dashed transparent;border-radius:10px;padding:4px;display:flex;flex-direction:column;gap:5px;min-height:92px;transition:background .12s,border-color .12s}
+.pday .pd-h{font-size:12px;color:var(--muted);padding:2px 4px}.pday.today .pd-h{color:var(--accent);font-weight:700}
+.pday .ps{flex:1}.prest{flex:1;border-radius:10px;background:rgba(255,255,255,.025);color:#5f6b7a;font-size:13px;display:flex;align-items:center;justify-content:center;min-height:56px}
+.dnd .pday:not(.past){border-color:rgba(255,255,255,.12)}.pday.over{border-color:var(--accent)!important;background:rgba(255,122,47,.08)}.pday.past .prest{opacity:.5}
+.ps[draggable]{cursor:grab}.ps.dragging{opacity:.4}
+.dt-plan{display:flex;flex-direction:column;align-items:flex-end;gap:6px;font-size:13.5px}.dt-plan input{margin-left:6px}
+@media (max-width:900px){.pgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media (max-width:560px){.pgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .wz-goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
 .wz-goal{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--text);display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit}
 .wz-goal span:last-child{font-size:13px;color:var(--muted);line-height:1.4}.wz-goal .ic{font-size:22px;color:var(--accent)}.wz-goal:hover{border-color:var(--muted)}.wz-goal.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:rgba(255,122,47,.08)}
@@ -789,6 +797,10 @@ LIBRARY.push({ id: 'hrtest', cat: 'test', name: 'Puls-Zonentest (30 min)', desc:
   sci: 'Feldtest nach Joe Friel: Der Durchschnittspuls der letzten 20 Minuten eines 30-min-Zeitfahrens entspricht ungefähr der Herzfrequenz an der Laktatschwelle (LTHR). Daraus leiten sich 7 Pulszonen ab. Die Ø-Leistung über die 30 min ist eine brauchbare FTP-Schätzung. Gleichmässig starten – nicht in den ersten Minuten überpacen.',
   segs: [R(15, 45, 75, { label: 'Einfahren' }), S(3, 55, { label: 'Locker', text: 'Gleich gehts los – Gang wählen' }),
     { dur: 1800, from: 100, to: 100, mode: 'gear', gear: 18, label: '30-min-Test', text: 'So hart, wie du 30 min gleichmässig halten kannst' }, ...CD(10)] });
+LIBRARY.push({ id: 'map5', cat: 'test', name: '5-min-Test (VO2max)', desc: '5 Minuten so hart, wie du gleichmässig durchhältst. Ergibt deine maximale aerobe Leistung und eine VO2max-Schätzung.', test: 'map5',
+  sci: 'Die beste 5-Minuten-Leistung liegt nahe an der Leistung bei VO2max (maximale aerobe Leistung, MAP) und eignet sich gut, um Fortschritte im VO2max-Training zu verfolgen. Gladius schätzt daraus die VO2max mit der ACSM-Formel (VO2max ≈ 10,8 × W/kg + 7, Genauigkeit etwa ± 10 %). Für Vergleiche zählt vor allem der Verlauf: Mach den Test ausgeruht, nach gleichem Aufwärmen und mit gleicher Taktik. Pacing: ruhig beginnen, ab Minute 3 steigern und am Schluss alles geben. Ein zu schneller Start ist der häufigste Fehler. Beim Ramp-Test steigt die Leistung jede Minute, deshalb ist dort die beste 5-Minuten-Leistung tiefer und unterschätzt die VO2max.',
+  segs: [R(12, 45, 75, { label: 'Einfahren' }), ...rep(2, [sec(30, 115, { label: 'Öffner', text: 'Kurz anziehen – Beine wecken' }), sec(90, 50, { label: 'Locker' })]), S(4, 55, { label: 'Locker', text: 'Gleich gehts los – Gang wählen' }),
+    { dur: 300, from: 115, to: 115, mode: 'gear', gear: 19, label: '5-min-Test', text: 'Gleichmässig starten, am Schluss alles geben' }, ...CD(10)] });
 const FREE_RIDE ={ id: 'free', cat: 'free', name: 'Freie Fahrt', open: true, desc: 'Virtuelle Gänge, keine Vorgaben.', segs: [{ dur: 4 * 3600, from: 60, to: 60, mode: 'gear', label: 'Freie Fahrt' }] };
 
 const segPct = (s, frac) => s.from + (s.to - s.from) * frac;
@@ -867,7 +879,7 @@ const PB = {
     const len = [5, 6, 8][Math.min(lvl, 2)], r = this._intervals(T, { work: len, rest: 3, min: 3, max: 6, block: () => [S(len, 85, { cad: 60, label: 'Kraftausdauer' })] });
     return { name: `Kraftausdauer ${r.n} × ${len} min`, cat: 'cad', hard: true, desc: `${r.n} × ${len} min bei 85 % FTP mit 60 U/min – Vorbereitung auf lange Anstiege.`, sciRef: 'cad-ka', segs: r.segs };
   },
-  test() { return { ref: 'ramp', hard: true }; },
+  test(ref = 'ramp') { return { ref, hard: true }; },
 };
 
 // ---------- Ziele ----------
@@ -877,7 +889,7 @@ const PLAN_GOALS = {
   ftp: { name: 'FTP steigern', icon: '↗', desc: 'Höhere Dauerleistung an der Schwelle: Sweet Spot, dann Schwelle und Over-Unders, dazu ein VO2max-Reiz.',
     hard: (w, lvl, n, phase) => [phase < 0.34 ? 'sweetspot' : phase < 0.67 ? 'threshold' : 'overunder', 'vo2long'].slice(0, n) },
   vo2: { name: 'VO2max steigern', icon: '◆', desc: 'Grösserer Motor: abwechselnd lange VO2max-Intervalle und 30/15 nach Rønnestad, dazu Schwellenarbeit.',
-    hard: (w, lvl, n) => [w % 2 ? 'vo2short' : 'vo2long', w % 2 ? 'threshold' : 'vo2short'].slice(0, n) },
+    hard: (w, lvl, n) => [w % 2 ? 'vo2short' : 'vo2long', w % 2 ? 'threshold' : 'vo2short'].slice(0, n), test: 'map5' },
   sprint: { name: 'Sprint & Max Power', icon: '⚡', desc: 'Mehr Spitzenleistung: kurze maximale Sprints und All-out-Intervalle mit langen Pausen.',
     hard: (w, lvl, n) => [w % 2 ? 'sit' : 'sprints', 'threshold'].slice(0, n) },
   climb: { name: 'Pässe fahren', icon: '⛰', desc: 'Fit für lange Anstiege: Schwelle und Kraftausdauer, ab Woche 3 ein Pass am langen Tag.',
@@ -889,7 +901,9 @@ function generatePlan({ goal, weeks, start, days }) {
   const G = PLAN_GOALS[goal], startD = dparse(start), sessions = [];
   const avail = WEEKDAYS.map(([wd]) => wd).filter(wd => days[wd] >= 30);
   const nHard = avail.length >= 4 ? 2 : avail.length >= 2 ? 1 : 0;
-  let lvl = 0;
+  let lvl = 0, kindsOfWeek = [];
+  // Tests zu Beginn: Ramp-Test nur ohne bekannte FTP (nötig für alle Watt-Vorgaben), dazu der Zieltest
+  const startTests = [!ftpKnown() ? 'ramp' : null, G.test].filter(Boolean);
   for (let w = 0; w < weeks; w++) {
     const last = w === weeks - 1 && weeks >= 4, recovery = !last && (w + 1) % 4 === 0, phase = w / Math.max(1, weeks - 1);
     // Wochentage dieser Woche (ab Startdatum)
@@ -901,11 +915,16 @@ function generatePlan({ goal, weeks, start, days }) {
     const hardCand = slots.filter(s => s.T >= 45 && s !== longSlot);
     const hardSlots = pickSpread(hardCand.length >= nHard ? hardCand : slots.filter(s => s.T >= 45), nHard);
     let kinds = G.hard(w, lvl, recovery ? Math.min(1, nHard) : nHard, phase);
+    kindsOfWeek[w] = recovery ? 'recovery' : last ? 'taper' : 'load';
+    // Testtage dieser Woche: Starttests (ggf. über zwei Wochen verteilt) bzw. Schlusstests
+    const testSlots = hardSlots.length ? hardSlots : [slots[Math.floor(slots.length / 2)]];
+    const tests = new Map();
+    if (startTests.length && !last) testSlots.forEach(s => { if (startTests.length) tests.set(s, startTests.shift()); });
+    if (last) { const fin = G.test ? [G.test, 'ramp'] : ['ramp']; testSlots.forEach((s, i) => { if (fin[i]) tests.set(s, fin[i]); }); }
     for (const s of slots) {
       let spec;
       const hi = hardSlots.indexOf(s);
-      if (w === 0 && !ftpKnown() && s === (hardSlots[0] || slots[0])) spec = PB.test();
-      else if (last && s === (hardSlots[0] || slots[Math.floor(slots.length / 2)])) spec = PB.test();
+      if (tests.has(s)) spec = PB.test(tests.get(s));
       else if (last) spec = s === longSlot ? PB.endurance(Math.min(s.T, Math.max(30, Math.round(s.T * 0.6 / 5) * 5))) : PB.endurance(Math.min(s.T, 60));
       else if (hi >= 0 && kinds[hi]) spec = PB[kinds[hi]](s.T, recovery ? 0 : lvl);
       else if (s === longSlot && G.longRoute && w >= 2 && !recovery) spec = routeFor(s.T) || PB.endurance(s.T);
@@ -915,7 +934,7 @@ function generatePlan({ goal, weeks, start, days }) {
     }
     if (!recovery && !last) lvl++;
   }
-  return { goal, weeks, start, days, created: dkey(new Date(clock.now())), sessions: sessions.map((s, i) => ({ ...s, idx: i })) };
+  return { goal, weeks, start, days, kinds: kindsOfWeek, created: dkey(new Date(clock.now())), sessions: sessions.map((s, i) => ({ ...s, idx: i })) };
 }
 function pickSpread(cands, n) {
   // n Tage wählen, die im Wochenverlauf möglichst weit auseinander liegen (keine harten Tage hintereinander)
@@ -955,24 +974,66 @@ function markPlanDone(idx, completion, score) {
 }
 
 // ---------- Plan-Oberfläche ----------
-const PLAN_SCI = 'So ist der Plan aufgebaut: <b>Polarisiert</b> – rund 80 % der Einheiten locker, höchstens zwei harte pro Woche, nie an zwei Tagen hintereinander (Seiler 2010; Stöggl & Sperlich 2014: grösste Verbesserungen bei VO2max und Schwellenleistung). <b>Periodisiert</b> – drei Belastungswochen, dann eine Erholungswoche mit weniger Volumen und Intensität, damit sich der Körper anpasst (Superkompensation; Matwejew, Issurin 2010). <b>Progressiv</b> – die harten Einheiten werden von Woche zu Woche länger oder intensiver. <b>Messbar</b> – Ramp-Test zu Beginn (falls deine FTP noch unbekannt ist) und am Ende; davor eine leichtere Woche (Tapering, Mujika & Padilla 2003). Alle Einheiten sind genau auf die Zeit zugeschnitten, die du für den Tag angegeben hast; die längste Einheit liegt am Tag mit der meisten Zeit.';
+const PLAN_SCI = 'So ist der Plan aufgebaut: <b>Polarisiert</b> – rund 80 % der Einheiten locker, höchstens zwei harte pro Woche, nie an zwei Tagen hintereinander (Seiler 2010; Stöggl & Sperlich 2014: grösste Verbesserungen bei VO2max und Schwellenleistung). <b>Periodisiert</b> – drei Belastungswochen, dann eine Erholungswoche mit weniger Volumen und Intensität, damit sich der Körper anpasst (Superkompensation; Matwejew, Issurin 2010). <b>Progressiv</b> – die harten Einheiten werden von Woche zu Woche länger oder intensiver. <b>Messbar</b> – zu Beginn und am Ende ein Test, der zum Ziel passt: beim VO2max-Ziel der 5-min-Test (beste 5-Minuten-Leistung → VO2max), sonst der Ramp-Test (FTP). Ist deine FTP noch unbekannt, kommt zu Beginn zusätzlich der Ramp-Test, weil alle Watt-Vorgaben darauf beruhen. Vor dem Schlusstest gibt es eine leichtere Woche (Tapering, Mujika & Padilla 2003). Alle Einheiten sind genau auf die Zeit zugeschnitten, die du für den Tag angegeben hast; die längste Einheit liegt am Tag mit der meisten Zeit.';
 const STATUS_TXT = { done: 'erledigt', missed: 'verpasst', today: 'heute', next: 'geplant' };
 function sessionChip(s, today) {
   const w = planWorkout(s); if (!w) return '';
   const st = planStatus(s, today), col = w.route ? 'var(--gear)' : w.test ? '#ff4d6d' : s.hard ? zoneHex(w.cat === 'max' ? 130 : w.cat === 'vo2' ? 112 : 96) : zoneHex(w.cat === 'warm' ? 45 : 65);
-  return `<button class="ps ps-${st}" data-psess="${s.idx}" style="--pc:${col}" title="${esc(w.name)} · ${STATUS_TXT[st]}">
-    <span class="d">${fmtDay(s.date)}</span><span class="n">${esc(w.name)}</span><span class="m num">${sessionMin(s)} min${s.done ? ` · ✓${s.done.score != null ? ' ' + s.done.score : ''}` : st === 'missed' ? ' · verpasst' : ''}</span></button>`;
+  return `<button class="ps ps-${st}" data-psess="${s.idx}" style="--pc:${col}" title="${esc(w.name)} · ${STATUS_TXT[st]}${s.done ? '' : ' · zum Verschieben auf einen anderen Tag ziehen'}" ${s.done ? '' : 'draggable="true"'}>
+    <span class="n">${esc(w.name)}</span><span class="m num">${sessionMin(s)} min${s.done ? ` · ✓${s.done.score != null ? ' ' + s.done.score : ''}` : st === 'missed' ? ' · verpasst' : ''}</span></button>`;
+}
+
+const byDate = (a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : a.idx - b.idx;
+const planSorted = p => p.sessions.slice().sort(byDate);
+const planEnd = p => dkey(addDays(dparse(p.start), p.weeks * 7 - 1));
+const weekKind = (p, wn) => (p.kinds && p.kinds[wn]) || p.sessions.find(s => s.week === wn)?.kind || 'load';
+function weekGrid(p, wn, today) {
+  // Alle 7 Tage der Planwoche, inkl. Ruhetage; jeder Tag ist ein Ablageziel zum Verschieben
+  return `<div class="pgrid">${Array.from({ length: 7 }, (_, i) => {
+    const k = dkey(addDays(dparse(p.start), wn * 7 + i)), ss = p.sessions.filter(s => s.date === k).sort(byDate), past = k < today;
+    return `<div class="pday ${k === today ? 'today' : ''} ${past ? 'past' : ''}" data-day="${k}"><div class="pd-h">${fmtDay(k)}</div>
+      ${ss.length ? ss.map(s => sessionChip(s, today)).join('') : `<div class="prest">Ruhetag</div>`}</div>`; }).join('')}</div>`;
+}
+function movePlanSession(idx, date) {
+  const p = getPlan(), s = p && p.sessions[idx]; if (!s || s.done || date === s.date) return false;
+  const today = planToday();
+  if (date < today) { toast('In die Vergangenheit kann nicht verschoben werden.'); return false; }
+  if (date < p.start || date > planEnd(p)) { toast('Nur innerhalb des Plans verschiebbar (' + fmtDay(p.start) + ' – ' + fmtDay(planEnd(p)) + ').'); return false; }
+  const other = p.sessions.find(x => x.date === date && !x.done && x !== s), from = s.date;
+  const wk = d => Math.floor((dparse(d) - dparse(p.start)) / (7 * DAY * 1000));
+  s.date = date; s.week = wk(date);
+  if (other) { other.date = from; other.week = wk(from); }
+  store.set('plan', p);
+  // Hinweise: harte Tage direkt hintereinander, Einheit länger als die geplante Zeit
+  const notes = [], hardDays = new Set(p.sessions.filter(x => x.hard && !x.done).map(x => x.date));
+  for (const x of [s, other].filter(Boolean)) {
+    if (!x.hard) continue;
+    const prev = dkey(addDays(dparse(x.date), -1)), next = dkey(addDays(dparse(x.date), 1));
+    if (hardDays.has(prev) || hardDays.has(next)) { notes.push('Achtung: Jetzt liegen zwei harte Einheiten direkt hintereinander – die zweite fällt meist schwächer aus.'); break; }
+  }
+  const avail = p.days[dparse(date).getDay()] || 0, m = sessionMin(s);
+  if (m > avail) notes.push(avail ? `Die Einheit dauert ${m} min, du hattest an diesem Wochentag ${avail} min eingeplant.` : 'Das war in deinem Plan ein Ruhetag.');
+  toast((other ? `Getauscht: ${fmtDay(date)} ↔ ${fmtDay(from)}` : `Verschoben auf ${fmtDay(date)}`) + (notes.length ? ' ' + notes.join(' ') : ''), notes.length ? 7000 : 3000);
+  return true;
+}
+function rerenderPlan() { if ($('#view-plan').classList.contains('active')) renderPlanView(); else renderPlanCard(); }
+function bindPlanDnD(root) {
+  let drag = null;
+  root.addEventListener('dragstart', e => { const c = e.target.closest('[data-psess][draggable]'); if (!c) return; drag = +c.dataset.psess; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', c.dataset.psess); c.classList.add('dragging'); root.classList.add('dnd'); });
+  root.addEventListener('dragend', () => { drag = null; root.classList.remove('dnd'); root.querySelectorAll('.dragging,.over').forEach(x => x.classList.remove('dragging', 'over')); });
+  root.addEventListener('dragover', e => { const d = e.target.closest('[data-day]'); if (drag == null || !d || d.classList.contains('past')) return; e.preventDefault(); root.querySelectorAll('.over').forEach(x => x !== d && x.classList.remove('over')); d.classList.add('over'); });
+  root.addEventListener('dragleave', e => { const d = e.target.closest('[data-day]'); if (d && !d.contains(e.relatedTarget)) d.classList.remove('over'); });
+  root.addEventListener('drop', e => { const d = e.target.closest('[data-day]'); if (drag == null || !d) return; e.preventDefault(); const i = drag; drag = null; if (movePlanSession(i, d.dataset.day)) rerenderPlan(); });
 }
 function renderPlanCard() {
   const box = $('#d-plan'), p = getPlan();
   if (!p) { box.innerHTML = `<div class="plancard empty"><div><div class="t">TRAININGSPLAN</div><div class="pc-h">Trainiere gezielt auf ein Ziel hin</div>
     <div class="muted" style="font-size:14px">Gib an, wie viel Zeit du an welchen Tagen hast – Gladius plant die passenden Einheiten Woche für Woche.</div></div>
     <button class="btn primary" data-plan="new">Plan erstellen</button></div>`; return; }
-  const today = planToday(), G = PLAN_GOALS[p.goal], ss = p.sessions;
+  const today = planToday(), G = PLAN_GOALS[p.goal], ss = planSorted(p);
   const done = ss.filter(s => s.done).length, endKey = ss[ss.length - 1]?.date;
   const curWeek = clamp(Math.floor((dparse(today) - dparse(p.start)) / (7 * DAY * 1000)), 0, p.weeks - 1);
   const todays = ss.filter(s => s.date === today), next = ss.find(s => s.date >= today && !s.done);
-  const wk = ss.filter(s => s.week === curWeek);
   const finished = endKey && today > endKey;
   const focus = todays.find(s => !s.done) || null;
   let main;
@@ -982,19 +1043,19 @@ function renderPlanCard() {
   else if (todays.length) main = `<div class="t2">HEUTE</div><div class="pc-h">Erledigt – stark! 💪</div><div class="muted">${next ? `Nächste Einheit: ${fmtDay(next.date)} · ${esc(planWorkout(next)?.name || '')}` : ''}</div>`;
   else main = `<div class="t2">HEUTE</div><div class="pc-h">Ruhetag</div><div class="muted">Erholung gehört zum Training – die Anpassung passiert in der Pause.${next ? ` Nächste Einheit: ${fmtDay(next.date)} · ${esc(planWorkout(next)?.name || '')} (${sessionMin(next)} min).` : ''}</div>`;
   box.innerHTML = `<div class="plancard"><div class="pc-top"><div class="t">TRAININGSPLAN · ${esc(G.name.toUpperCase())}</div>
-    <div class="muted num" style="font-size:13px">${finished ? '' : `Woche ${curWeek + 1} von ${p.weeks}${wk[0]?.kind === 'recovery' ? ' · Erholungswoche' : wk[0]?.kind === 'taper' ? ' · Testwoche' : ''} · `}${done}/${ss.length} erledigt</div>
+    <div class="muted num" style="font-size:13px">${finished ? '' : `Woche ${curWeek + 1} von ${p.weeks}${weekKind(p, curWeek) === 'recovery' ? ' · Erholungswoche' : weekKind(p, curWeek) === 'taper' ? ' · Testwoche' : ''} · `}${done}/${ss.length} erledigt</div>
     <button class="btn small" data-plan="view">Ganzen Plan ansehen</button></div>
     <div class="pc-prog"><i style="width:${done / ss.length * 100}%"></i></div>
     <div class="pc-main">${main}</div>
-    ${finished ? '<div class="toolbar"><button class="btn primary" data-plan="new">Neuen Plan erstellen</button></div>' : `<div class="pweek">${wk.map(s => sessionChip(s, today)).join('')}</div>`}</div>`;
+    ${finished ? '<div class="toolbar"><button class="btn primary" data-plan="new">Neuen Plan erstellen</button></div>' : weekGrid(p, curWeek, today)}</div>`;
 }
 function renderPlanView() {
   const p = getPlan(), box = $('#planview');
   if (!p) { openPlanWizard(); return; }
-  const G = PLAN_GOALS[p.goal], today = planToday(), ss = p.sessions;
+  const G = PLAN_GOALS[p.goal], today = planToday(), ss = planSorted(p);
   const mins = ss.filter(s => s.week >= 0).reduce((a, s) => a + sessionMin(s), 0), done = ss.filter(s => s.done);
   const hard = ss.filter(s => s.hard).length;
-  const weeks = [...new Set(ss.map(s => s.week))];
+  const old = ss.filter(s => s.week < 0);
   box.innerHTML = `<button class="dt-back" data-plan="back">← Zurück zur Übersicht</button>
     <div class="dt-head"><div class="grow"><div style="font-size:12px;letter-spacing:.14em;color:var(--accent2);font-weight:700">TRAININGSPLAN</div><h1>${G.icon} ${esc(G.name)}</h1>
     <div class="muted">${esc(G.desc)}</div></div>
@@ -1002,9 +1063,11 @@ function renderPlanView() {
     <div class="stats dt-stats">${[['Zeitraum', `${ss[0].date.slice(8) * 1}.${ss[0].date.slice(5, 7) * 1}. – ${ss[ss.length - 1].date.slice(8) * 1}.${ss[ss.length - 1].date.slice(5, 7) * 1}.`], ['Einheiten', `${ss.length} · ${hard} hart`], ['Ø pro Woche', fmtDur(mins * 60 / p.weeks)],
       ['Erledigt', `${done.length} / ${ss.length}`], ['Ø Score', done.some(s => s.done.score != null) ? Math.round(done.filter(s => s.done.score != null).reduce((a, s) => a + s.done.score, 0) / done.filter(s => s.done.score != null).length) : '–']]
       .map(([l, v]) => `<div class="stat"><div class="l">${l}</div><div class="v num">${v}</div></div>`).join('')}</div>
-    <div class="pweeks">${weeks.map(wn => { const ws = ss.filter(s => s.week === wn), k = ws[0].kind, wm = ws.reduce((a, s) => a + sessionMin(s), 0);
-      return `<div class="pwk ${ws.some(s => s.date <= today) && ws.some(s => s.date >= today) ? 'cur' : ''}"><div class="pwk-h"><b>${wn < 0 ? 'Vorheriger Plan' : `Woche ${wn + 1}`}</b><span>${wn < 0 ? 'erledigt' : k === 'recovery' ? 'Erholung' : k === 'taper' ? 'Test & Entlastung' : wn === 0 ? 'Einstieg' : 'Aufbau'}</span><span class="num">${fmtDur(wm * 60)}</span></div>
-        <div class="pweek">${ws.map(s => sessionChip(s, today)).join('')}</div></div>`; }).join('')}</div>
+    <div class="muted" style="font-size:13.5px;margin-top:14px">Tipp: Einheiten mit der Maus auf einen anderen Tag ziehen, um sie zu verschieben. Liegt dort schon eine Einheit, werden die beiden getauscht.</div>
+    <div class="pweeks">${old.length ? `<div class="pwk"><div class="pwk-h"><b>Vorheriger Plan</b><span>erledigt</span></div><div class="pweek">${old.map(s => sessionChip(s, today)).join('')}</div></div>` : ''}
+    ${Array.from({ length: p.weeks }, (_, wn) => { const k = weekKind(p, wn), a = dkey(addDays(dparse(p.start), wn * 7)), b = dkey(addDays(dparse(p.start), wn * 7 + 6)), wm = ss.filter(s => s.week === wn).reduce((x, s) => x + sessionMin(s), 0);
+      return `<div class="pwk ${a <= today && today <= b ? 'cur' : ''}"><div class="pwk-h"><b>Woche ${wn + 1}</b><span>${k === 'recovery' ? 'Erholung' : k === 'taper' ? 'Test & Entlastung' : wn === 0 ? 'Einstieg' : 'Aufbau'}</span><span class="num">${fmtDur(wm * 60)}</span></div>
+        ${weekGrid(p, wn, today)}</div>`; }).join('')}</div>
     <div class="dt-box" style="margin-top:14px"><h2>WIE DER PLAN FUNKTIONIERT</h2><div class="dt-sci">${PLAN_SCI}</div></div>`;
 }
 let wiz = null;
@@ -1283,6 +1346,16 @@ function showSummary(r) {
     const ftp = Math.round(m.best60 * 0.75);
     $('#s-extra').innerHTML = `<div class="banner">Beste 1-Minuten-Leistung: <b>${m.best60} W</b> → geschätzte FTP <b>${ftp} W</b> <button class="btn primary small" id="s-ftp">Als FTP übernehmen</button></div>`;
     $('#s-ftp').onclick = () => { setFtp(ftp, 'Ramp-Test'); toast('FTP auf ' + ftp + ' W gesetzt.'); };
+  }
+  if (r.test === 'map5') {
+    const seg = r.labels.findIndex(l => l === '5-min-Test'), T = r.samples.filter(x => x.seg === seg).map(x => x.p || 0);
+    if (T.length < 270) $('#s-extra').innerHTML = `<div class="banner">Der Testabschnitt war nur ${fmtTime(T.length)} lang – für eine Auswertung braucht es die vollen 5 Minuten.</div>`;
+    else {
+      const p5 = Math.round(T.slice(0, 300).reduce((a, b) => a + b, 0) / Math.min(300, T.length)), vo2 = vo2FromPower(p5, settings.weight);
+      const prev = store.get('history', []).filter(h => h.cat === 'test' && h.name === r.name && h.date < r.samples[0].t && h.vo2).sort((a, b) => b.date - a.date)[0];
+      $('#s-extra').innerHTML = `<div class="banner" style="display:block">5-Minuten-Leistung: <b>${p5} W</b> (${(p5 / settings.weight).toFixed(2)} W/kg) → geschätzte VO2max <b>${vo2.toFixed(1)} ml/kg/min</b>${prev ? ` · letzter Test: ${prev.vo2.toFixed(1)} (${fmtDate(prev.date)}) → <b style="color:${vo2 >= prev.vo2 ? '#3ecf8e' : '#ff8a8a'}">${vo2 >= prev.vo2 ? '+' : ''}${(vo2 - prev.vo2).toFixed(1)}</b>` : ''}
+        <div class="muted" style="margin-top:6px;font-size:13px">Grobe Faustregel: Die FTP liegt meist bei 72–80 % dieser Leistung (≈ ${Math.round(p5 * 0.72)}–${Math.round(p5 * 0.8)} W). Für die FTP ist der Ramp-Test genauer.</div></div>`;
+    }
   }
   if (r.test === 'hr') {
     const seg = r.labels.findIndex(l => l === '30-min-Test');
@@ -1740,7 +1813,11 @@ function openDetail(id) {
   if (from === 'library') libScroll = window.scrollY; $('#detail').innerHTML = w.route ? routeDetail(w) : workoutDetail(w);
   showView('detail');
   if (from === 'plan') $('#dt-back').textContent = '← Zurück zum Plan';
-  if (w.planDate) $('#dt-start').insertAdjacentHTML('beforebegin', `<div class="muted" style="text-align:right">Plan-Einheit · ${fmtDay(w.planDate)}</div>`);
+  if (w.planDate) {
+    const p = getPlan(), s = p.sessions[w.planIdx];
+    $('#dt-start').insertAdjacentHTML('beforebegin', `<div class="dt-plan"><span class="muted">Plan-Einheit · ${fmtDay(w.planDate)}${s.done ? ' · erledigt ✓' : ''}</span>${s.done ? '' : `<label class="muted">Verschieben auf <input type="date" id="dt-move" value="${w.planDate}" min="${[planToday(), p.start].sort()[1]}" max="${planEnd(p)}"></label>`}</div>`);
+    const mv = $('#dt-move'); if (mv) mv.onchange = () => { if (mv.value && movePlanSession(w.planIdx, mv.value)) openDetail(id); else mv.value = w.planDate; };
+  }
   $('#dt-back').onclick = () => { if (from === 'plan') showPlan(); else { showView('library'); window.scrollTo(0, libScroll); } };
   $('#dt-start').onclick = () => startRide(w);
   const box = $('#detail .dt-chart'), tip = document.createElement('div'); tip.className = 'dt-tip'; box.appendChild(tip);
@@ -2282,7 +2359,7 @@ function planClick(e) {
   const st = e.target.closest('[data-pstart]'); if (st) { startRide(findWorkout('plan-' + st.dataset.pstart)); return; }
   const ps = e.target.closest('[data-psess]'); if (ps) openDetail('plan-' + ps.dataset.psess);
 }
-$('#d-plan').onclick = planClick; $('#planview').onclick = planClick;
+$('#d-plan').onclick = planClick; $('#planview').onclick = planClick; bindPlanDnD($('#d-plan')); bindPlanDnD($('#planview'));
 $('#planwiz').onclick = e => {
   const a = e.target.closest('[data-plan]'); if (a) { planAction(a.dataset.plan); return; }
   const g = e.target.closest('[data-goal]'); if (g) { wiz.goal = g.dataset.goal; renderWizard(); return; }
@@ -2386,7 +2463,7 @@ updateFtpLabel(); renderLibrary();
 if (!store.get('onboarded')) { $('#w-weight').value = settings.weight; $('#dlg-welcome').showModal(); }
 if (!navigator.bluetooth && !EMBEDDED) setTimeout(() => toast('Hinweis: Bluetooth funktioniert nur in Chrome oder Edge. Demo-Modus geht überall.', 6000), 600);
 // Testschnittstelle
-window.__gladius = { generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
+window.__gladius = { movePlanSession, generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
 </script>
 </body>
 </html>
