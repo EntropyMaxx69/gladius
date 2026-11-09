@@ -403,6 +403,10 @@ const profileKeys = id => LS.keys().filter(k => id === 'default' ? k.startsWith(
 let PROFILE = LS.get('gladius.activeProfile') || 'default';
 const profileList = () => { let l = []; try { l = JSON.parse(LS.get('gladius.profiles') || '[]'); } catch (e) { } if (!l.includes('default')) l.unshift('default'); return l; };
 if (!profileList().includes(PROFILE)) PROFILE = 'default';
+// Jedes Profil hat seine eigene Farbe: gespeichert beim Anlegen, sonst nach Reihenfolge
+const PROFILE_COLORS = ['#ff7a2f', '#3d8bfd', '#3ecf8e', '#a98bff', '#ffc53d', '#ff4d6a', '#4fc3f7', '#f78fb3'];
+const profileColor = id => { try { const c = JSON.parse(LS.get(profilePrefix(id) + 'settings') || '{}').avatarColor; if (c) return c; } catch (e) { } return PROFILE_COLORS[Math.max(0, profileList().indexOf(id)) % PROFILE_COLORS.length]; };
+const avatar = id => `<span class="pf-av" style="background:${profileColor(id)}">${esc(profileName(id).charAt(0).toUpperCase())}</span>`;
 const profileName = id => { try { const st = JSON.parse(LS.get(profilePrefix(id) + 'settings') || '{}'); return (st.name || '').trim() || (id === 'default' ? 'Profil 1' : 'Neues Profil'); } catch (e) { return 'Profil'; } };
 const store = {
   get(k, d) { try { const v = localStorage.getItem(profilePrefix(PROFILE) + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -1873,7 +1877,8 @@ async function newProfile() {
   if (settingsDirty() && !(await leaveSettings(() => { }))) return;
   const name = await askText('Name des neuen Profils'); if (!name) return;
   const id = Date.now().toString(36), list = profileList(); list.push(id); LS.set('gladius.profiles', JSON.stringify(list));
-  LS.set(profilePrefix(id) + 'settings', JSON.stringify({ name }));
+  const used = list.filter(x => x !== id).map(profileColor), color = PROFILE_COLORS.find(c => !used.includes(c)) || PROFILE_COLORS[list.length % PROFILE_COLORS.length];
+  LS.set(profilePrefix(id) + 'settings', JSON.stringify({ name, avatarColor: color }));
   switchProfile(id);
 }
 async function renameProfile(id) {
@@ -1889,11 +1894,11 @@ async function deleteProfile(id) {
   renderProfiles(); toast('Profil gelöscht.');
 }
 function renderProfiles() {
-  const name = profileName(PROFILE); $('#pf-name').textContent = name; $('#pf-av').textContent = name.charAt(0).toUpperCase();
-  $('#pf-menu').innerHTML = profileList().map(id => `<button data-pf="${id}" class="${id === PROFILE ? 'cur' : ''}"><span class="pf-av">${esc(profileName(id).charAt(0).toUpperCase())}</span>${esc(profileName(id))}${id === PROFILE ? ' ✓' : ''}</button>`).join('') +
+  const name = profileName(PROFILE); $('#pf-name').textContent = name; $('#pf-av').textContent = name.charAt(0).toUpperCase(); $('#pf-av').style.background = profileColor(PROFILE);
+  $('#pf-menu').innerHTML = profileList().map(id => `<button data-pf="${id}" class="${id === PROFILE ? 'cur' : ''}">${avatar(id)}${esc(profileName(id))}${id === PROFILE ? ' ✓' : ''}</button>`).join('') +
     '<hr><button data-pfnew="1">＋ Neues Profil</button><button data-pfmanage="1">Profile verwalten</button>';
   if ($('#pf-list')) $('#pf-list').innerHTML = profileList().map(id => { const h = (() => { try { return JSON.parse(LS.get(profilePrefix(id) + 'history') || '[]').length; } catch (e) { return 0; } })();
-    return `<div class="pf-row"><span class="pf-av">${esc(profileName(id).charAt(0).toUpperCase())}</span><div class="grow"><b>${esc(profileName(id))}</b>${id === PROFILE ? ' <span class="muted">· aktiv</span>' : ''}<div class="muted" style="font-size:12.5px">${h} Fahrten</div></div>
+    return `<div class="pf-row">${avatar(id)}<div class="grow"><b>${esc(profileName(id))}</b>${id === PROFILE ? ' <span class="muted">· aktiv</span>' : ''}<div class="muted" style="font-size:12.5px">${h} Fahrten</div></div>
       <button class="btn small" data-pfren="${id}">Umbenennen</button>${id === PROFILE ? '' : `<button class="btn small" data-pf="${id}">Wechseln</button>`}${id === 'default' || id === PROFILE ? '' : `<button class="btn small danger" data-pfdel="${id}">Löschen</button>`}</div>`; }).join('');
 }
 $('#chip-profile').onclick = e => { e.stopPropagation(); const m = $('#pf-menu'); m.hidden = !m.hidden; $('#chip-profile').setAttribute('aria-expanded', String(!m.hidden)); };
