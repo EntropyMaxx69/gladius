@@ -67,6 +67,9 @@ h2{font-size:18px;margin:28px 0 10px}
 .zrow{display:grid;grid-template-columns:110px 1fr 56px;gap:10px;align-items:center;font-size:13px;margin:5px 0}.zrow .b{height:8px;background:var(--panel2);border-radius:4px;overflow:hidden}.zrow .b i{display:block;height:100%}
 .kmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;font-size:12px}.kmgrid div{border-radius:8px;padding:6px;text-align:center;color:#0d1014;font-weight:700}.kmgrid small{display:block;font-weight:600;opacity:.75}
 .stats.dt-stats{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}.stats.dt-stats .v{font-size:23px;white-space:nowrap}
+.dt-chart{position:relative}.dt-chart .hb{cursor:crosshair;transition:opacity .1s}.dt-chart .hb.on{opacity:1;stroke:#fff;stroke-width:2}
+.dt-tip{position:absolute;display:none;pointer-events:none;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;line-height:1.45;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.45);z-index:3}
+.dt-tip b{font-size:15px}
 .dt-sci{font-size:14px;line-height:1.6;color:#c5ccd6;max-width:75ch}
 @media (max-width:860px){.dt-cols{grid-template-columns:1fr}}
 .profile{width:100%;height:54px;display:block;background:var(--panel2);border-radius:8px}
@@ -274,6 +277,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <div class="field"><label for="set-hrmax">Maximalpuls (bpm)</label><input type="number" id="set-hrmax" min="100" max="230" placeholder="–"></div>
   <div class="field"><label for="set-beeps">Countdown-Töne</label><input type="checkbox" id="set-beeps"></div>
   <div class="field"><label for="set-autopause">Auto-Pause wenn du nicht trittst</label><input type="checkbox" id="set-autopause"></div>
+  <div class="field"><label for="set-vshift">Selbst virtuell schalten<br><small class="muted">aus = Trainer hält die Soll-Watt (ERG)</small></label><input type="checkbox" id="set-vshift"></div>
   <div class="field desk"><label for="set-hudscale">HUD-Grösse (%)</label><input type="number" id="set-hudscale" min="50" max="200" step="10"></div>
   <div class="field desk"><label for="set-hudop">HUD-Deckkraft (%)</label><input type="number" id="set-hudop" min="30" max="100" step="5"></div>
   <div class="toolbar" style="justify-content:flex-end"><button class="btn" id="set-cancel">Abbrechen</button><button class="btn primary" id="set-save">Speichern</button></div>
@@ -300,7 +304,7 @@ const store = {
   set(k, v) { try { localStorage.setItem('gladius.' + k, JSON.stringify(v)); } catch (e) { } },
   del(k) { try { localStorage.removeItem('gladius.' + k); } catch (e) { } }
 };
-const settings = Object.assign({ ftp: 200, weight: 75, bikeWeight: 9, beeps: true, autoPause: true, lthr: null, hrMax: null, hudScale: 100, hudOpacity: 92 }, store.get('settings', {}));
+const settings = Object.assign({ ftp: 200, weight: 75, bikeWeight: 9, beeps: true, autoPause: true, lthr: null, hrMax: null, hudScale: 100, hudOpacity: 92, virtualShift: true }, store.get('settings', {}));
 // FTP-Verlauf: [{t: Unix-Sekunden, ftp, src}]
 if (!store.get('ftpHistory')) store.set('ftpHistory', [{ t: Math.floor(Date.now() / 1000), ftp: settings.ftp, src: 'Startwert' }]);
 function setFtp(ftp, src) {
@@ -496,7 +500,7 @@ function demoStep(dt) {
   const seg = r && currentSeg();
   const wantCad = !r || r.paused ? 0 : (seg && seg.cad ? seg.cad - 2 : seg && seg.mode === 'gear' && seg.from >= 150 ? 112 : 88);
   demo.cad += (wantCad - demo.cad) * Math.min(1, dt * 2);
-  if (r && r.w.route && !r.paused && demo.cad > 30) { let best = r.gear, bd = 1e9; GEARS.forEach((_, g) => { const d = Math.abs(gearPower(demo.cad, g) - settings.ftp * 0.75); if (d < bd) { bd = d; best = g; } }); r.gear = best; }
+  if (r && gearModeActive() && !r.paused && demo.cad > 30 && (r.w.route || displayTarget())) { const want = r.w.route ? settings.ftp * 0.75 : displayTarget(); let best = r.gear, bd = 1e9; GEARS.forEach((_, g) => { const d = Math.abs(gearPower(demo.cad, g) - want); if (d < bd) { bd = d; best = g; } }); r.gear = best; }
   const target = r && !r.paused ? (gearModeActive() ? gearPower(demo.cad) : (trainer.demoTarget || 0)) : 0;
   demo.p += (target - demo.p) * Math.min(1, dt * 1.5);
   const p = Math.max(0, demo.p + (Math.random() - .5) * 8);
@@ -719,7 +723,7 @@ function beginRide(w, readiness) {
   if (fCat !== 1) notes.push(`gelernt für ${ADAPT_CATS[w.cat]} ${fCat > 1 ? '+' : ''}${Math.round((fCat - 1) * 1000) / 10} %`);
   Object.assign(ride, {
     active: true, w, total: w.open ? Infinity : totalDur(w), elapsed: 0, paused: false, started: false, intensity: startInt, startInt, intAcc: 0, intT: 0, workSkips: 0, readiness: readiness.v,
-    gear: w.route ? 8 : 17, forceGear: !!w.route, segIdx: -1, lastBeep: null, samples: [], lastRecSec: null, dist: 0, startUnix: null, hudRouteSent: false, hudTraceAt: 0,
+    gear: w.route ? 8 : 17, forceGear: !!w.route || (settings.virtualShift && !w.test), segIdx: -1, lastBeep: null, samples: [], lastRecSec: null, dist: 0, startUnix: null, hudRouteSent: false, hudTraceAt: 0,
     lastPersist: 0, segStarts: (() => { let a = 0; return w.segs.map(s => { const st = a; a += s.dur; return st; }); })()
   });
   trainer.lastSent = null;
@@ -737,10 +741,12 @@ function ergTargetAt(t) {
   return Math.round(segPct(s, frac) / 100 * settings.ftp * ride.intensity);
 }
 function displayTarget() {
-  if (!ride.active) return null;
-  if (gearModeActive()) { const c = curCad(); return Math.round(gearPower(c)); }
+  // Soll-Leistung aus dem Workout – auch wenn du selbst schaltest. Freie Gang-Abschnitte und Strecken haben kein Soll.
+  if (!ride.active || ride.w.route || currentSeg()?.mode === 'gear') return null;
   return ergTargetAt(ride.elapsed);
 }
+// Gang, der bei 90 rpm ungefähr das Soll ergibt (Empfehlung beim Selbstschalten)
+function suggestGear(target, cad = 90) { if (!target) return null; let best = 0, bd = 1e9; GEARS.forEach((_, g) => { const d = Math.abs(gearPower(cad, g) - target); if (d < bd) { bd = d; best = g; } }); return best; }
 const isMoving = () => (curCad() || 0) > 10 || (curPower() || 0) > 15;
 
 function sendControl() {
@@ -798,7 +804,7 @@ function record(nowMs, running) {
     const p = curPower(), cad = curCad(), hr = curHr();
     const v = ride.w.route ? Math.max(gearSpeed(cad, ride.gear), coastSpeed(routeGrade())) : gm ? gearSpeed(cad, ride.gear) : speedFromPower(p);
     ride.dist += v; if (ride.w.route) ride.dist = Math.min(ride.dist, ride.w.route.len);
-    ride.samples.push({ t: s, p: p == null ? null : Math.round(p), hr: hr == null ? null : Math.round(hr), cad: cad == null ? null : Math.round(cad), v: +v.toFixed(3), d: +ride.dist.toFixed(1), alt: ride.w.route ? Math.round(eleAt(ride.w.route, ride.dist)) : null, seg: ride.segIdx, tg: gm ? null : ergTargetAt(ride.elapsed), gm: gm ? 1 : 0, ct: currentSeg()?.cad || null });
+    ride.samples.push({ t: s, p: p == null ? null : Math.round(p), hr: hr == null ? null : Math.round(hr), cad: cad == null ? null : Math.round(cad), v: +v.toFixed(3), d: +ride.dist.toFixed(1), alt: ride.w.route ? Math.round(eleAt(ride.w.route, ride.dist)) : null, seg: ride.segIdx, tg: displayTarget(), gm: gm ? 1 : 0, ct: currentSeg()?.cad || null });
   }
   ride.lastRecSec = secNow;
   if (ride.samples.length - ride.lastPersist >= 30) { ride.lastPersist = ride.samples.length; persistActive(); }
@@ -1228,7 +1234,7 @@ function render() {
     $('#r-target').style.color = gradeColor(g);
   } else { $('#r-target').previousElementSibling.textContent = 'SOLL'; $('#r-target').style.color = ''; $('#r-target').textContent = target ?? '–'; }
   $('#r-power').textContent = p ?? '–';
-  $('#m-power').className = 'metric ' + (gm ? '' : deviationClass(target, p));
+  $('#m-power').className = 'metric ' + (target ? deviationClass(target, p) : '');
   $('#r-hr').textContent = hr ?? '–';
   const hz = hrZone(hr); $('#r-hrz').innerHTML = hz ? `<span style="color:${hz.col}">· ${hz.z} ${hz.name}</span>` : '';
   $('#r-cad').textContent = cad ?? '–';
@@ -1238,7 +1244,8 @@ function render() {
   $('#r-remain').previousElementSibling.textContent = rt ? 'HÖHE' : 'VERBLEIBEND'; $('#r-remain').textContent = rt ? Math.round(eleAt(rt, ride.dist)) + ' m' : ride.w.open ? '–' : fmtTime(ride.total - ride.elapsed);
   $('#r-elapsed').textContent = fmtTime(ride.elapsed);
   $('#r-modelbl').textContent = gm ? 'GANG' : 'MODUS';
-  $('#r-mode').textContent = gm ? `${ride.gear + 1}/${GEARS.length}` : (trainer.mode === 'ftms' || demo.on ? 'ERG' : 'Anzeige');
+  const sg = gm && target ? suggestGear(target) : null;
+  $('#r-mode').innerHTML = gm ? `${ride.gear + 1}/${GEARS.length}${sg != null && sg !== ride.gear ? ` <span style="font-size:.5em;color:var(--muted)">→ ${sg + 1}</span>` : ''}` : (trainer.mode === 'ftms' || demo.on ? 'ERG' : 'Anzeige');
   $('#r-mode').style.color = gm ? 'var(--gear)' : '';
   $('#r-int').textContent = Math.round(ride.intensity * 100) + '%';
   $('#c-pause').textContent = ride.paused ? 'Weiter' : 'Pause';
@@ -1258,7 +1265,7 @@ function render() {
     g('h-p').textContent = ride.paused ? '▶' : '⏸';
   }
   if (DESKTOP || prevHud.frame) pushHud({
-    active: true, paused: ride.paused, target, power: p, dev: gm ? '' : deviationClass(target, p), hr, zone: hz ? hz.z : '', cad, cadTarget: seg.cad || null,
+    active: true, paused: ride.paused, target, power: p, dev: target ? deviationClass(target, p) : '', gearHint: gm && target ? suggestGear(target) + 1 : null, hr, zone: hz ? hz.z : '', cad, cadTarget: seg.cad || null,
     segLabel: (ride.paused ? 'Pausiert · ' : !ride.started ? 'Bereit – fang an zu treten · ' : '') + (seg.label || (gm ? 'Gang-Modus' : 'Intervall')),
     gm, gear: ride.gear + 1, gears: GEARS.length, intensity: Math.round(ride.intensity * 100),
     segRem, elapsed: ride.elapsed, flash: segRem != null && segRem <= 3.5 && !ride.paused, msg: seg.text || '', next: nextTxt,
@@ -1320,6 +1327,16 @@ function openDetail(id) {
   showView('detail');
   $('#dt-back').onclick = () => { showView('library'); window.scrollTo(0, libScroll); };
   $('#dt-start').onclick = () => startRide(w);
+  const box = $('#detail .dt-chart'), tip = document.createElement('div'); tip.className = 'dt-tip'; box.appendChild(tip);
+  let hl = null;
+  box.addEventListener('pointermove', e => {
+    const el = e.target.closest('.hb'); if (hl && hl !== el) hl.classList.remove('on');
+    if (!el) { tip.style.display = 'none'; return; }
+    hl = el; el.classList.add('on'); tip.innerHTML = el.dataset.tip; tip.style.display = 'block';
+    const r = box.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    tip.style.left = Math.min(x + 14, r.width - tip.offsetWidth - 6) + 'px'; tip.style.top = Math.max(6, y - tip.offsetHeight - 10) + 'px';
+  });
+  box.addEventListener('pointerleave', () => { tip.style.display = 'none'; if (hl) hl.classList.remove('on'); });
 }
 const sameSeg = (a, b) => a.dur === b.dur && a.from === b.from && a.to === b.to && a.w === b.w && a.mode === b.mode && a.cad === b.cad && a.label === b.label;
 function compressSegs(segs) {
@@ -1377,7 +1394,8 @@ function workoutDetailSvg(w) {
   const st = [60, 120, 300, 600, 900, 1200, 1800, 3600].find(x => T / x <= 10) || 3600;
   for (let x = 0; x <= T; x += st) g += `<text x="${X(x)}" y="${H - 6}" text-anchor="middle" font-size="12" fill="#8b97a7">${Math.round(x / 60)} min</text>`;
   for (const s of w.segs) { const a = fw(s) ?? s.from / 100 * settings.ftp, b = fw(s) ?? s.to / 100 * settings.ftp;
-    g += `<polygon points="${X(t)},${Y(0)} ${X(t)},${Y(a)} ${X(t + s.dur)},${Y(b)} ${X(t + s.dur)},${Y(0)}" fill="${s.mode === 'gear' ? '#a98bff' : zoneHex((a + b) / 2 / settings.ftp * 100)}" opacity=".85"/>`; t += s.dur; }
+    const tip = `<b>${esc(s.label || 'Abschnitt')}</b><br>${durTxt(s.dur)} · ${fmtTime(t)} – ${fmtTime(t + s.dur)}<br>${s.mode === 'gear' ? 'frei im Gang-Modus' : a === b ? `${Math.round(a)} W · ${Math.round(a / settings.ftp * 100)} % FTP` : `${Math.round(a)} → ${Math.round(b)} W`}${s.cad ? ` · ${s.cad} rpm` : ''}`;
+    g += `<polygon class="hb" data-tip="${tip.replace(/"/g, '&quot;')}" points="${X(t)},${Y(0)} ${X(t)},${Y(a)} ${X(t + s.dur)},${Y(b)} ${X(t + s.dur)},${Y(0)}" fill="${s.mode === 'gear' ? '#a98bff' : zoneHex((a + b) / 2 / settings.ftp * 100)}" opacity=".85"/>`; t += s.dur; }
   g += `<line x1="${L}" x2="${W - R}" y1="${Y(settings.ftp)}" y2="${Y(settings.ftp)}" stroke="rgba(255,255,255,.5)" stroke-dasharray="5 5"/><text x="${W - R - 4}" y="${Y(settings.ftp) - 6}" text-anchor="end" font-size="12" fill="#c5ccd6">FTP ${settings.ftp} W</text>`;
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Leistungsprofil in Watt über die Zeit"><text x="4" y="14" font-size="12" fill="#8b97a7">W</text>${g}</svg>`;
 }
@@ -1412,7 +1430,7 @@ function routeDetailSvg(rt) {
   const es = niceStep((eHi - eLo) / 4); for (let v = Math.ceil(eLo / es) * es; v <= eHi; v += es) g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.07)"/><text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="12" fill="#8b97a7">${Math.round(v)}</text>`;
   const km = rt.len / 1000, ks = niceStep(km / 10); for (let k = 0; k <= km + 1e-9; k += ks) g += `<text x="${X(k * 1000)}" y="${H - 6}" text-anchor="middle" font-size="12" fill="#8b97a7">${+k.toFixed(1)} km</text>`;
   for (let d = 0; d < rt.len; d += 250) { const d2 = Math.min(rt.len, d + 250), gr = (eleAt(rt, d2) - eleAt(rt, d)) / (d2 - d) * 100;
-    g += `<polygon points="${X(d)},${Y(eLo)} ${X(d)},${Y(eleAt(rt, d))} ${X(d2)},${Y(eleAt(rt, d2))} ${X(d2)},${Y(eLo)}" fill="${gradeColor(gr)}" opacity=".9"/>`; }
+    g += `<polygon class="hb" data-tip="<b>${gr.toFixed(1)} %</b><br>km ${(d / 1000).toFixed(2)} – ${(d2 / 1000).toFixed(2)}<br>${Math.round(eleAt(rt, d))} → ${Math.round(eleAt(rt, d2))} m" points="${X(d)},${Y(eLo)} ${X(d)},${Y(eleAt(rt, d))} ${X(d2)},${Y(eleAt(rt, d2))} ${X(d2)},${Y(eLo)}" fill="${gradeColor(gr)}" opacity=".9"/>`; }
   let path = ''; for (let d = 0; d <= rt.len; d += 50) path += `${d ? 'L' : 'M'}${X(d).toFixed(1)},${Y(eleAt(rt, d)).toFixed(1)}`;
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Höhenprofil, eingefärbt nach Steigung"><text x="4" y="14" font-size="12" fill="#8b97a7">m</text>${g}<path d="${path}" fill="none" stroke="#e9edf2" stroke-width="1.5"/></svg>`;
 }
@@ -1440,16 +1458,16 @@ function scoreRide(r) {
   for (let i = 0; i < s.length; i++) {
     if (i === 0 || s[i].seg !== s[i - 1].seg) segStart = i;
     const x = s[i], into = i - segStart;
-    if (x.tg && !x.gm) {
-      // Leistung: ±5 % = voll, ab ±25 % = 0 (erste 5 s eines Abschnitts zählen nicht – der Trainer braucht kurz zum Umstellen)
-      if (x.p != null && into >= 5) { pS += lin(Math.abs(x.p - x.tg) / x.tg, 0.05, 0.25); pN++; }
+    if (x.tg) {
+      // Leistung: ±5 % = voll, ab ±25 % = 0 (Anfang eines Abschnitts zählt nicht: ERG braucht ~5 s zum Umstellen, beim Schalten gibts 10 s)
+      if (x.p != null && into >= (x.gm ? 10 : 5)) { pS += lin(Math.abs(x.p - x.tg) / x.tg, 0.05, 0.25); pN++; }
       // Puls: nur in Abschnitten ≥ 3 min und erst nach 90 s, weil der Puls verzögert reagiert
       if (r.lthr && x.hr != null && (r.segDur?.[x.seg] || 0) >= 180 && into >= 90) {
         const [lo, hi] = hrBand(x.tg / r.ftp * 100), h = x.hr / r.lthr; hS += lin(h < lo ? lo - h : h > hi ? h - hi : 0, 0, 0.08); hN++;
       }
     }
     // Kadenz: mit Vorgabe ±5 rpm = voll, ab ±20 = 0; ohne Vorgabe zählt der sinnvolle Bereich 75–105 rpm
-    if (x.cad != null && x.cad > 0 && into >= 5 && !x.gm) {
+    if (x.cad != null && x.cad > 0 && into >= 5 && !(x.gm && !x.tg)) {
       if (x.ct) cS += lin(Math.abs(x.cad - x.ct), 5, 20); else cS += lin(x.cad < 75 ? 75 - x.cad : x.cad > 105 ? x.cad - 105 : 0, 0, 15);
       cN++;
     }
@@ -1651,12 +1669,12 @@ $('#chip-settings').onclick = () => {
   $('#set-ftp').value = settings.ftp; $('#set-weight').value = settings.weight; $('#set-bike').value = settings.bikeWeight;
   $('#set-lthr').value = settings.lthr || ''; $('#set-hrmax').value = settings.hrMax || '';
   $('#set-hudscale').value = settings.hudScale; $('#set-hudop').value = settings.hudOpacity;
-  $('#set-beeps').checked = settings.beeps; $('#set-autopause').checked = settings.autoPause; $('#dlg-settings').showModal();
+  $('#set-beeps').checked = settings.beeps; $('#set-autopause').checked = settings.autoPause; $('#set-vshift').checked = settings.virtualShift; $('#dlg-settings').showModal();
 };
 $('#set-cancel').onclick = () => $('#dlg-settings').close();
 $('#set-save').onclick = () => {
   const newFtp = clamp(+$('#set-ftp').value || 200, 50, 600); settings.weight = clamp(+$('#set-weight').value || 75, 30, 200);
-  settings.bikeWeight = clamp(+$('#set-bike').value || 9, 3, 30); settings.beeps = $('#set-beeps').checked; settings.autoPause = $('#set-autopause').checked;
+  settings.bikeWeight = clamp(+$('#set-bike').value || 9, 3, 30); settings.beeps = $('#set-beeps').checked; settings.autoPause = $('#set-autopause').checked; settings.virtualShift = $('#set-vshift').checked;
   settings.hudScale = clamp(+$('#set-hudscale').value || 100, 50, 200); settings.hudOpacity = clamp(+$('#set-hudop').value || 92, 30, 100);
   settings.lthr = +$('#set-lthr').value ? clamp(+$('#set-lthr').value, 90, 220) : null; settings.hrMax = +$('#set-hrmax').value ? clamp(+$('#set-hrmax').value, 100, 230) : null;
   store.set('settings', settings);

@@ -122,12 +122,12 @@ function update(s) {
   }
   // Leistung: grün im Soll-Bereich (±5 %), sonst rot; im Gang-Modus gibt es kein Soll
   $('power').textContent = s.power ?? '–';
-  const pwOk = !s.gm && s.target && s.power != null && Math.abs(s.power - s.target) / s.target <= 0.05;
+  const pwOk = s.target && s.power != null && Math.abs(s.power - s.target) / s.target <= 0.05;
   $('pw-ist').className = pwOk ? 'ok' : '';
   $('pw-soll').style.visibility = 'visible';
   $('pw-soll').firstElementChild.textContent = s.route ? 'STEIGUNG ' : 'SOLL ';
   $('pw-soll').lastElementChild.textContent = s.route ? '%' : 'W';
-  $('target').textContent = s.route ? s.route.grade.toFixed(1) : s.gm ? 'frei' : (s.target ?? '–');
+  $('target').textContent = s.route ? s.route.grade.toFixed(1) : (s.target ?? 'frei');
   $('seg').textContent = s.segLabel || '';
   // Kadenz: grün innerhalb ±5 rpm der Vorgabe
   $('cad').textContent = s.cad ?? '–';
@@ -135,7 +135,7 @@ function update(s) {
   $('cad-ist').className = cadOk ? 'ok' : '';
   $('cad-soll').style.visibility = s.cadTarget ? 'visible' : 'hidden';
   $('cadt').textContent = s.cadTarget ?? '–';
-  $('mode').textContent = s.gm ? `GANG ${s.gear}/${s.gears}` : `ERG ${s.intensity}%`;
+  $('mode').textContent = s.gm ? `GANG ${s.gear}/${s.gears}${s.gearHint && s.gearHint !== s.gear ? ` → ${s.gearHint}` : ''}` : `ERG ${s.intensity}%`;
   // Intervallzeit oben mitte
   $('seglbl').textContent = s.route ? 'NOCH' : s.segRem == null ? 'DAUER' : 'INTERVALL NOCH';
   $('segtime').textContent = s.route ? (s.route.left / 1000).toFixed(2) + ' km' : s.segRem == null ? fmt(s.elapsed) : fmt(s.segRem);
