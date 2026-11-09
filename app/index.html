@@ -187,6 +187,9 @@ table.prs tr.pr1 td{color:#ffc53d}
 .dbl-ord{display:flex;gap:4px}.dbl-ord .btn{padding:3px 9px}.dbl-on{display:flex;align-items:center;gap:8px;flex:1;font-size:14.5px;cursor:pointer}.dbl-on input{accent-color:var(--accent);width:16px;height:16px}
 .dbl-row select{background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:6px 8px;font:inherit;font-size:13.5px}.dbl-row:has(input:not(:checked)) .dbl-on span{color:var(--muted);text-decoration:line-through}
 .st-int{display:flex;align-items:center;gap:10px}.st-int input{flex:1;accent-color:var(--accent)}.st-int output{min-width:48px;font-weight:700}
+.rider{display:flex;gap:14px 22px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin:10px 0}
+.rider .t{font-size:11px;letter-spacing:.14em;color:var(--muted);font-weight:700;margin-bottom:2px}.rider-av{width:44px;height:44px;font-size:20px}.rider-n b{font-size:18px}.rider-tr{margin-left:auto;min-width:0}.rider-tr .trophies{margin-top:2px}
+.banner.bonus{background:rgba(62,207,142,.08);border-color:rgba(62,207,142,.4)}
 .wz-goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
 .wz-goal{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--text);display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit}
 .wz-goal span:last-child{font-size:13px;color:var(--muted);line-height:1.4}.wz-goal .ic{font-size:22px;color:var(--accent)}.wz-goal:hover{border-color:var(--muted)}.wz-goal.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:rgba(255,122,47,.08)}
@@ -1023,13 +1026,29 @@ const findWorkout = id => allWorkouts().find(x => x.id === id) || planWorkouts()
 const planToday = () => dkey(new Date(clock.now()));
 function planStatus(s, today = planToday()) { return s.done ? 'done' : s.date < today ? 'missed' : s.date === today ? 'today' : 'next'; }
 function sessionMin(s) { const w = planWorkout(s); if (!w) return 0; return w.route ? (s.estMin || 60) : Math.round(totalDur(w) / 60); }
+// Bonus-XP: jede vollständig erledigte Planwoche und der ganz abgeschlossene Plan
+const WEEK_BONUS = 50, planBonus = p => 40 * p.weeks;
+function checkPlanBonuses() {
+  const p = getPlan(); if (!p) return [];
+  const got = [], log = store.get('xpLog', []), has = k => log.some(x => x.k === k);
+  const ss = p.sessions.filter(s => !s.old), weeks = [...new Set(ss.map(s => calWeek(p, s.date)))];
+  for (const wn of weeks) {
+    const ws = ss.filter(s => calWeek(p, s.date) === wn), k = `planweek-${p.created}-${wn}`, full = ws.length && ws.every(s => s.done);
+    if (full && !has(k)) { addXpLog(k, WEEK_BONUS, `Planwoche ${wn + 1} komplett`); got.push({ xp: WEEK_BONUS, why: `Woche ${wn + 1} des Plans komplett` }); }
+    else if (!full && has(k)) addXpLog(k, 0);
+  }
+  const k = `plandone-${p.created}`, all = ss.length && ss.every(s => s.done);
+  if (all && !has(k)) { addXpLog(k, planBonus(p), `Trainingsplan ${PLAN_GOALS[p.goal].name} abgeschlossen`); got.push({ xp: planBonus(p), why: `Trainingsplan „${PLAN_GOALS[p.goal].name}“ komplett abgeschlossen`, plan: true }); }
+  else if (!all && has(k)) addXpLog(k, 0);
+  return got;
+}
 function markPlanDone(idx, completion, score) {
   const p = getPlan(); if (!p || !p.sessions[idx]) return;
   p.sessions[idx].done = { t: Math.floor(clock.now() / 1000), score: score ?? null, completion: Math.round(completion * 100) }; store.set('plan', p);
 }
 
 // ---------- Plan-Oberfläche ----------
-const PLAN_SCI = 'So ist der Plan aufgebaut: <b>Polarisiert</b> – rund 80 % der Einheiten locker, höchstens zwei harte pro Woche, nie an zwei Tagen hintereinander (Seiler 2010; Stöggl & Sperlich 2014: grösste Verbesserungen bei VO2max und Schwellenleistung). <b>Periodisiert</b> – drei Belastungswochen, dann eine Erholungswoche mit weniger Volumen und Intensität, damit sich der Körper anpasst (Superkompensation; Matwejew, Issurin 2010). <b>Progressiv</b> – die harten Einheiten werden von Woche zu Woche länger oder intensiver. <b>Messbar</b> – zu Beginn und am Ende ein Test, der zum Ziel passt: beim VO2max-Ziel der 5-min-Test (beste 5-Minuten-Leistung → VO2max), sonst der Ramp-Test (FTP). Ist deine FTP noch unbekannt, kommt zu Beginn zusätzlich der Ramp-Test, weil alle Watt-Vorgaben darauf beruhen. Vor dem Schlusstest gibt es eine leichtere Woche (Tapering, Mujika & Padilla 2003). Alle Einheiten sind genau auf die Zeit zugeschnitten, die du für den Tag angegeben hast; die längste Einheit liegt am Tag mit der meisten Zeit.';
+const PLAN_SCI = 'So ist der Plan aufgebaut: <b>Polarisiert</b> – rund 80 % der Einheiten locker, höchstens zwei harte pro Woche, nie an zwei Tagen hintereinander (Seiler 2010; Stöggl & Sperlich 2014: grösste Verbesserungen bei VO2max und Schwellenleistung). <b>Periodisiert</b> – drei Belastungswochen, dann eine Erholungswoche mit weniger Volumen und Intensität, damit sich der Körper anpasst (Superkompensation; Matwejew, Issurin 2010). <b>Progressiv</b> – die harten Einheiten werden von Woche zu Woche länger oder intensiver. <b>Messbar</b> – zu Beginn und am Ende ein Test, der zum Ziel passt: beim VO2max-Ziel der 5-min-Test (beste 5-Minuten-Leistung → VO2max), sonst der Ramp-Test (FTP). Ist deine FTP noch unbekannt, kommt zu Beginn zusätzlich der Ramp-Test, weil alle Watt-Vorgaben darauf beruhen. Vor dem Schlusstest gibt es eine leichtere Woche (Tapering, Mujika & Padilla 2003). Bonus-XP: +50 für jede komplett erledigte Woche, beim ganz abgeschlossenen Plan +40 pro Planwoche. Alle Einheiten sind genau auf die Zeit zugeschnitten, die du für den Tag angegeben hast; die längste Einheit liegt am Tag mit der meisten Zeit.';
 const STATUS_TXT = { done: 'erledigt', missed: 'verpasst', today: 'heute', next: 'geplant' };
 const byDate = (a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : a.idx - b.idx;
 const planSorted = p => p.sessions.slice().sort(byDate);
@@ -1070,8 +1089,9 @@ function togglePlanDone(idx) {
   store.set('plan', p);
   // Abgehakte Einheiten zählen mit 80 % der geschätzten XP (nicht gemessen)
   const w = planWorkout(s), k = `plan-${p.created}-${s.date}-${s.idx}`;
-  if (s.done) { const xp = Math.round((w.route ? (s.estMin || 60) * 0.8 : estTss(w)) * (1 + 0.1 * ((workoutDifficulty(w) || 2) - 1)) * 0.8) + 10; addXpLog(k, xp, w.name); toast(`Abgehakt: ${w.name} ✓ · +${xp} XP`); }
-  else addXpLog(k, 0);
+  if (s.done) { const xp = Math.round((w.route ? (s.estMin || 60) * 0.8 : estTss(w)) * (1 + 0.1 * ((workoutDifficulty(w) || 2) - 1)) * 0.8) + 10; addXpLog(k, xp, w.name);
+    const b = checkPlanBonuses(); toast(`Abgehakt: ${w.name} ✓ · +${xp} XP${b.map(x => ` · ${x.plan ? '🏆' : '★'} ${x.why}: +${x.xp} XP`).join('')}`, b.length ? 7000 : 3000); }
+  else { addXpLog(k, 0); checkPlanBonuses(); }
 }
 function movePlanSession(idx, date) {
   const p = getPlan(), s = p && p.sessions[idx]; if (!s || s.done || date === s.date) return false;
@@ -1527,7 +1547,16 @@ function renderXpBox(r) {
   let pr = '';
   if (r.prInfo) { const p = r.prInfo; pr = p.pr ? `<div class="banner pr">🏆 <b>Neue Bestzeit: ${fmtTime(p.time)}</b>${p.prev ? ` – ${fmtTime(p.prev - p.time)} schneller als bisher` : ' – deine erste Zeit auf dieser Strecke'} · +25 Bonus-XP</div>`
       : `<div class="banner" style="background:var(--panel);border-color:var(--line)">Zeit: <b>${fmtTime(p.time)}</b> · Platz ${p.rank} von ${p.of} · ${fmtTime(p.time - p.prev)} hinter deiner Bestzeit</div>`; }
-  box.innerHTML = `<div class="xpbox">${parts.join('')}</div>${pr}`;
+  const bn = (x.bonus || []).map(b => `<div class="banner bonus">${b.plan ? '🏆' : '★'} <b>${esc(b.why)}</b> · +${b.xp} Bonus-XP</div>`).join('');
+  box.innerHTML = `${riderCard(r)}<div class="xpbox">${parts.join('')}</div>${bn}${pr}`;
+}
+function riderCard(r) {
+  const R = r.rider || { profile: PROFILE, name: settings.name, profileName: profileName(PROFILE), color: profileColor(PROFILE) };
+  const who = R.name || R.profileName, tr = R.profile === PROFILE ? updateTrophies() : [];
+  return `<div class="rider"><span class="pf-av rider-av" style="background:${R.color}">${esc(who.charAt(0).toUpperCase())}</span>
+    <div class="rider-n"><div class="t">GEFAHREN VON</div><b>${esc(who)}</b>${R.name && R.name !== R.profileName ? `<span class="muted"> · ${esc(/^profil/i.test(R.profileName) ? R.profileName : 'Profil ' + R.profileName)}</span>` : ''}</div>
+    <div class="rider-tr"><div class="t">TROPHÄEN</div>${tr.length ? `<div class="trophies">${tr.map(x => `<div title="Saison ${x.season}: ${TIERS[x.tier].name} · ${x.xp.toLocaleString('de-CH')} XP">${rankBadge(x.tier, true, 58)}<span>${x.season}</span></div>`).join('')}</div>`
+      : `<div class="muted" style="font-size:13px">Noch keine – die erste gibt es am Saisonende (30. April).</div>`}</div></div>`;
 }
 
 function estTss(w) {
@@ -1742,9 +1771,11 @@ function finishRide() {
     vo2: sum.dur >= 300 ? +vo2FromPower(sum.best300, settings.weight).toFixed(1) : null, diff: workoutDifficulty(ride.w) || null, plan: ride.w.planIdx != null || undefined, pr: result.prInfo?.pr || undefined };
   hist.unshift(entry);
   store.set('history', hist.slice(0, 3000));
-  result.xpInfo = { gain: rideXp(entry), before: lvBefore, after: levelOf(totalXp()), rankBefore: rkBefore, rankAfter: seasonRank(result.samples[0].t) };
+  let bonus = [];
+  if (ride.w.planIdx != null) { markPlanDone(ride.w.planIdx, result.completion, sc ? sc.total : null); bonus = checkPlanBonuses(); }
+  result.rider = { profile: PROFILE, name: settings.name || '', profileName: profileName(PROFILE), color: profileColor(PROFILE) };
+  result.xpInfo = { gain: rideXp(entry) + bonus.reduce((a, b) => a + b.xp, 0), bonus, before: lvBefore, after: levelOf(totalXp()), rankBefore: rkBefore, rankAfter: seasonRank(Math.floor(clock.now() / 1000)) };
   store.set('lastRide', result);
-  if (ride.w.planIdx != null) markPlanDone(ride.w.planIdx, result.completion, sc ? sc.total : null);
   if (sum.maxHr && (!settings.hrMax || sum.maxHr > settings.hrMax)) { settings.hrMax = sum.maxHr; store.set('settings', settings); }
   showSummary(result);
 }
@@ -2946,7 +2977,7 @@ if (!store.get('onboarded')) { $('#w-weight').value = settings.weight; $('#dlg-w
 else setTimeout(dailyReadiness, 400);
 if (!navigator.bluetooth && !EMBEDDED) setTimeout(() => toast('Hinweis: Bluetooth funktioniert nur in Chrome oder Edge. Demo-Modus geht überall.', 6000), 600);
 // Testschnittstelle
-window.__gladius = { rankBadge, seasonRank, updateTrophies, rankFromXp, workoutDifficulty, ROUTES, routeClimbScore, levelOf, totalXp, xpNeed, togglePlanDone, rebuildFrom, resumePlan, openPauseDialog, movePlanSession, generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
+window.__gladius = { checkPlanBonuses, rankBadge, seasonRank, updateTrophies, rankFromXp, workoutDifficulty, ROUTES, routeClimbScore, levelOf, totalXp, xpNeed, togglePlanDone, rebuildFrom, resumePlan, openPauseDialog, movePlanSession, generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
 </script>
 </body>
 </html>
