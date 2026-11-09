@@ -194,19 +194,11 @@ table.prs tr.pr1 td{color:#ffc53d}
 .ck-head{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:14px}
 .ck-key{flex:1;font-size:14.5px}.ck-key small{display:block;font-size:11.5px;color:var(--muted)}
 .ck-row select{min-width:230px}@keyframes ckhit{from{background:rgba(255,122,47,.35);border-color:var(--accent)}to{}}.ck-row.hit{animation:ckhit 1s ease-out}
-/* Farbliche Bewegung im Hintergrund – langsam, dezent, ohne Blur (schont die CPU) */
-.bgfx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
-.bgfx i{position:absolute;width:70vmax;height:70vmax;border-radius:50%;opacity:.2;will-change:transform}
-.bgfx i:nth-child(1){left:-20vmax;top:-25vmax;background:radial-gradient(circle,var(--accent) 0,transparent 62%);animation:bgA 46s ease-in-out infinite alternate}
-.bgfx i:nth-child(2){right:-25vmax;top:10vmax;background:radial-gradient(circle,#7a5cff 0,transparent 62%);animation:bgB 58s ease-in-out infinite alternate}
-.bgfx i:nth-child(3){left:15vmax;bottom:-40vmax;background:radial-gradient(circle,#22b8a6 0,transparent 62%);animation:bgC 52s ease-in-out infinite alternate}
-@keyframes bgA{to{transform:translate(28vmax,22vmax) scale(1.15)}}@keyframes bgB{to{transform:translate(-30vmax,18vmax) scale(.9)}}@keyframes bgC{to{transform:translate(20vmax,-28vmax) scale(1.2)}}
-.bgfx.off,.riding .bgfx{display:none}
 /* Schimmer auf Fortschrittsbalken */
 .lv-bar i,.pc-prog i{position:relative;overflow:hidden}
 .lv-bar i::after,.pc-prog i::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.55) 50%,transparent 80%);transform:translateX(-100%);animation:shimmer 2.6s ease-in-out infinite}
 @keyframes shimmer{60%,100%{transform:translateX(100%)}}
-@media (prefers-reduced-motion:reduce){.bgfx i,.lv-bar i::after,.pc-prog i::after{animation:none}}
+@media (prefers-reduced-motion:reduce){.lv-bar i::after,.pc-prog i::after{animation:none}}
 .info-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:14px;margin:4px 0 10px}.info-grid dt{color:var(--muted)}.info-grid dd{margin:0}
 .info-logo{display:flex;align-items:center;gap:16px;margin-bottom:12px}.info-logo .wm{font-family:Cinzel,Georgia,serif;font-size:26px;font-weight:800;letter-spacing:.14em}
 .info-list{margin:4px 0 0;padding-left:18px;font-size:13.5px;line-height:1.6;color:var(--muted)}.info-list b{color:var(--text);font-weight:600}
@@ -270,7 +262,6 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 </style>
 </head>
 <body>
-<div class="bgfx" id="bgfx" aria-hidden="true"><i></i><i></i><i></i></div>
 <header>
   <div class="logo" role="img" aria-label="Gladius – Indoor Cycling Training">
     <div class="wm"><span>GLAD</span><svg class="sword-i" viewBox="0 0 20 66" aria-hidden="true">
@@ -412,7 +403,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
             <label class="st-f"><span>HUD-Grösse (%)</span><input type="range" id="s-hudscale" min="50" max="200" step="10"><output id="s-hudscale-o"></output></label>
             <label class="st-f"><span>HUD-Deckkraft (%)</span><input type="range" id="s-hudop" min="30" max="100" step="5"><output id="s-hudop-o"></output></label>
           </div>
-          <label class="st-check" style="margin-top:6px"><input type="checkbox" id="s-bgfx"><span><b>Bewegter Hintergrund</b><br><small>Langsam wandernde Farbflächen hinter der Übersicht. Während einer Fahrt automatisch aus.</small></span></label>
+
           <div class="st-preview" id="s-hudprev"><span class="pv-l">LEISTUNG</span><span class="pv-v" id="pv-a">231</span><span class="pv-v ok" id="pv-b">228</span><span class="pv-l">← ausserhalb · im Ziel →</span></div>
         </section>
         <section class="dt-box st-sec" id="st-profiles"><h2>PROFILE</h2>
@@ -2847,7 +2838,6 @@ function applyLook() {
   const a = settings.accent || DEFAULT_LOOK.accent, r = document.documentElement.style;
   r.setProperty('--accent', a); r.setProperty('--accent2', `color-mix(in srgb, ${a} 55%, #ffffff)`);
   r.setProperty('--hudc', settings.hudColor || DEFAULT_LOOK.hudColor); r.setProperty('--hudok', settings.hudOk || DEFAULT_LOOK.hudOk);
-  $('#bgfx').classList.toggle('off', settings.bgfx === false);
   renderGreeting();
 }
 let settingsFrom = 'library';
@@ -2868,7 +2858,7 @@ function fillSettings() {
   v('s-pos', String(settings.cda || 0.32)); v('s-crr', String(settings.crr || 0.004)); v('s-gears', String(settings.gears || 28));
   $('#s-vshift').checked = settings.virtualShift; $('#s-autopause').checked = settings.autoPause; $('#s-beeps').checked = settings.beeps;
   v('s-accent', settings.accent || DEFAULT_LOOK.accent); v('s-hudc', settings.hudColor || DEFAULT_LOOK.hudColor); v('s-hudok', settings.hudOk || DEFAULT_LOOK.hudOk);
-  v('s-hudscale', settings.hudScale); v('s-hudop', settings.hudOpacity); $('#s-bgfx').checked = settings.bgfx !== false; v('s-gint', settings.globalInt || 100);
+  v('s-hudscale', settings.hudScale); v('s-hudop', settings.hudOpacity); v('s-gint', settings.globalInt || 100);
   fillInfo();
   renderDashSettings(dashConfig()); renderClickSettings(clickMap()); $('#s-ckact').checked = !!settings.clickActivate; updateClickChip();
   settingsPreview(); stSnap = JSON.stringify(stValues());
@@ -2950,7 +2940,7 @@ function saveSettings(navigate = true) {
   settings.cda = +$('#s-pos').value; settings.crr = +$('#s-crr').value; settings.gears = +$('#s-gears').value;
   settings.virtualShift = $('#s-vshift').checked; settings.autoPause = $('#s-autopause').checked; settings.beeps = $('#s-beeps').checked;
   settings.accent = $('#s-accent').value; settings.hudColor = $('#s-hudc').value; settings.hudOk = $('#s-hudok').value;
-  settings.hudScale = +$('#s-hudscale').value; settings.hudOpacity = +$('#s-hudop').value; settings.bgfx = $('#s-bgfx').checked;
+  settings.hudScale = +$('#s-hudscale').value; settings.hudOpacity = +$('#s-hudop').value;
   settings.globalInt = +$('#s-gint').value || 100;
   settings.clickMap = clickFromForm(); settings.clickActivate = $('#s-ckact').checked;
   settings.dash = $('#s-db-order').value.split(',').filter(Boolean).map(id => ({ id, on: $(`#s-db-${id}-on`).checked, w: +$(`#s-db-${id}-w`).value }));
