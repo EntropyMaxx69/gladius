@@ -45,8 +45,8 @@ def svg(full=True):
         body+='<rect x="68" y="68" width="376" height="376" rx="60" fill="none" stroke="url(#gold)" stroke-width="4"/>'
         sc, st = 5.0, (372, 140, 68)
     else:
-        body+='<rect x="24" y="24" width="464" height="464" rx="100" fill="none" stroke="url(#gold)" stroke-width="20"/>'
-        sc, st = 6.4, (405, 107, 88)
+        body+='<rect x="23" y="23" width="466" height="466" rx="101" fill="none" stroke="url(#gold)" stroke-width="14"/>'
+        sc, st = 6.6, (409, 103, 38)
     body+=f'<g transform="translate(256 256) rotate(225) scale({sc}) translate(-10 -33)">{SWORD}</g>'+star(*st)
     return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">{defs}{body}</svg>'
 async def render(s, out):
@@ -55,10 +55,10 @@ async def render(s, out):
         pg=await b.new_page(viewport={'width':512,'height':512})
         await pg.set_content(f"<html><body style='margin:0;background:transparent'>{s}</body></html>")
         await pg.screenshot(path=out, omit_background=True); await b.close()
-full, simple = svg(True), svg(False)
-asyncio.run(render(full, S+'icon-full.png')); asyncio.run(render(simple, S+'icon-simple.png'))
+full = simple = svg(False)
+asyncio.run(render(simple, S+'icon-simple.png')); import shutil; shutil.copy(S+'icon-simple.png', S+'icon-full.png')
 F=Image.open(S+'icon-full.png').convert('RGBA'); P=Image.open(S+'icon-simple.png').convert('RGBA')
-open(G+'build/icon.svg','w').write(full); open(G+'build/icon-small.svg','w').write(simple)
+open(G+'build/icon.svg','w').write(full)
 F.save(G+'build/icon.png'); F.resize((256,256),Image.LANCZOS).save(G+'app/icon.png')
 # ICO: grosse Grössen mit Mäander, kleine (≤48 px) mit schlichtem Goldrand und grösserem Gladius
 imgs=[(P if s<=48 else F).resize((s,s),Image.LANCZOS) for s in (16,24,32,48,64,128,256)]
