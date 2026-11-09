@@ -2950,7 +2950,7 @@ function settingsPreview() {
     : 'Den Schwellenpuls ermittelst du mit dem Puls-Zonentest, die FTP mit dem Ramp-Test. Trägst du dein Geburtsjahr ein, zeigt Gladius einen Richtwert für den Maximalpuls.';
   document.querySelectorAll('.st-presets').forEach(box => { if (!box.childElementCount) box.innerHTML = PRESETS[box.dataset.for].map(c => `<button type="button" style="background:${c}" data-c="${c}" title="${c}" aria-label="Farbe ${c}"></button>`).join(''); });
 }
-const APP_VERSION = (DESKTOP && DESKTOP.version) || '0.6.0';
+const APP_VERSION = (DESKTOP && DESKTOP.version) || '0.6.1';
 function fillInfo() {
   $('#inf-ver').textContent = APP_VERSION;
   $('#inf-plat').textContent = DESKTOP ? `· Desktop-App${DESKTOP.electron ? ' (Electron ' + DESKTOP.electron + ')' : ''}` : EMBEDDED ? '· Vorschau' : '· Browser';

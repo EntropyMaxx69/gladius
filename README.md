@@ -33,12 +33,14 @@ Windows zeigt beim ersten Start evtl. „Der Computer wurde durch Windows gesch�
 | Ctrl+Alt+N | Nächstes Intervall |
 
 ## Zwift Click (v1 und v2)
-- In der Kopfzeile **„Click verbinden“**. Der Click v2 hat zwei Pods: am Pod kurz eine Taste drücken, dann verbinden – für den zweiten Pod nochmals.
+- In der Kopfzeile **Geräte verbinden** → **Zwift Click**. Der Click v2 hat zwei Pods: am Pod kurz eine Taste drücken, dann verbinden – für den zweiten Pod nochmals.
 - Standard: **+** = Hochschalten, **−** = Runterschalten (gedrückt halten = mehrere Gänge).
 - ⚙ Einstellungen → **Tastenbelegungen**: jede Taste (Schalttasten, Steuerkreuz, A/B/Y/Z) frei belegen – Training (Pause, nächstes Intervall, Intensität, HUD …) oder **Multimedia** (Wiedergabe/Pause, Titel, Lautstärke für YouTube, Spotify & Co.).
 - Zwift, MyWhoosh und die Companion-App vorher schliessen: der Click nimmt nur eine Verbindung an.
 
 ## Gut zu wissen
+- Alle Verbindungen (Trainer, Puls, Click) laufen über den Knopf **Geräte verbinden** oben rechts. Der Demo-Modus zum Ausprobieren ohne Hardware liegt unter ⚙ → Entwickleroptionen.
+- ⚙ → **Infos**: Version, Update-Suche, Quellen, Datenschutz und rechtliche Hinweise.
 - Bluetooth: Beim Verbinden zeigt Gladius eine eigene Geräteliste. Trainer antreten bzw. Pulsgurt anlegen, damit sie auftauchen.
   MyWhoosh/Zwift vorher schliessen – der Trainer verbindet sich nur mit einer App.
 - Während einer Fahrt geht der Bildschirm nicht in den Ruhezustand.
