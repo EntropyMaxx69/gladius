@@ -183,6 +183,10 @@ table.prs tr.pr1 td{color:#ffc53d}
 .ladder>div.cur{background:rgba(255,122,47,.12);color:var(--text);font-weight:700}
 .trophies{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}.trophies>div{display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--muted)}
 .xpbox .rbadge{margin:-8px 0}
+.dbl{display:flex;flex-direction:column;gap:6px}.dbl-row{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.dbl-ord{display:flex;gap:4px}.dbl-ord .btn{padding:3px 9px}.dbl-on{display:flex;align-items:center;gap:8px;flex:1;font-size:14.5px;cursor:pointer}.dbl-on input{accent-color:var(--accent);width:16px;height:16px}
+.dbl-row select{background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:6px 8px;font:inherit;font-size:13.5px}.dbl-row:has(input:not(:checked)) .dbl-on span{color:var(--muted);text-decoration:line-through}
+.st-int{display:flex;align-items:center;gap:10px}.st-int input{flex:1;accent-color:var(--accent)}.st-int output{min-width:48px;font-weight:700}
 .wz-goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
 .wz-goal{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--text);display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit}
 .wz-goal span:last-child{font-size:13px;color:var(--muted);line-height:1.4}.wz-goal .ic{font-size:22px;color:var(--accent)}.wz-goal:hover{border-color:var(--muted)}.wz-goal.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:rgba(255,122,47,.08)}
@@ -191,7 +195,8 @@ table.prs tr.pr1 td{color:#ffc53d}
 @media (max-width:640px){.wz-days{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .wz-sum{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:14px;color:var(--muted)}.wz-sum b{color:var(--text);font-size:17px}
 #view-planwiz h2{font-size:15px;margin:6px 0 10px}
-.dash{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 26px}
+.dash{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:6px 0 26px}.dash>*{grid-column:span var(--w,4);min-width:0}.dash>*>.plancard,.dash>*>.dcard{margin:0;height:100%;box-sizing:border-box}.dash>.dayrow{margin:0}
+@media (max-width:900px){.dash>*{grid-column:1/-1}}
 .dcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
 .dcard .t{font-size:12px;letter-spacing:.14em;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;gap:8px}
 .dcard .big{font-size:52px;font-weight:800;line-height:1.05;margin-top:4px}
@@ -277,18 +282,19 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <div class="greet" id="greet"><div class="g1" id="greet-1"></div><div class="g2" id="greet-2"></div></div>
     <h1>Übersicht</h1>
     <div id="d-setup"></div>
-    <div id="d-day" class="dayrow"></div>
-    <div id="d-plan"></div>
-    <div id="d-level"></div>
-    <div class="dash">
-      <div class="dcard"><div class="t"><span>PULS JETZT</span><span id="d-hrsrc"></span></div>
+    <div class="dash" id="dash">
+      <div id="d-day" class="dayrow" data-db="day"></div>
+      <div id="d-plan" data-db="plan"></div>
+      <div id="d-level" data-db="rank"></div>
+      <div id="d-class" data-db="class"></div>
+      <div class="dcard" data-db="hr"><div class="t"><span>PULS JETZT</span><span id="d-hrsrc"></span></div>
         <div class="big num" id="d-hr">–<small>bpm</small></div><div class="note" id="d-hrzone"></div>
         <div class="zbar" id="d-zbar"></div><div class="zlab" id="d-zlab"></div></div>
-      <div class="dcard"><div class="t"><span>TRAININGSSCORE · FITNESS</span><span id="d-week"></span></div>
+      <div class="dcard" data-db="fitness"><div class="t"><span>TRAININGSSCORE · FITNESS</span><span id="d-week"></span></div>
         <div class="trio"><div><div class="l">Fitness</div><div class="v num" id="d-ctl">–</div></div><div><div class="l">Ermüdung</div><div class="v num" id="d-atl">–</div></div><div><div class="l">Form</div><div class="v num" id="d-tsb">–</div></div></div>
         <div class="note" id="d-form"></div><div class="chartbox" id="d-ctlchart"></div></div>
-      <div class="dcard"><div class="t"><span>FTP-VERLAUF</span><span id="d-ftpnow"></span></div><div class="chartbox" id="d-ftpchart"></div></div>
-      <div class="dcard"><div class="t"><span>VO2MAX (GESCHÄTZT)</span><span id="d-vo2now"></span></div><div class="chartbox" id="d-vo2chart"></div>
+      <div class="dcard" data-db="ftp"><div class="t"><span>FTP-VERLAUF</span><span id="d-ftpnow"></span></div><div class="chartbox" id="d-ftpchart"></div></div>
+      <div class="dcard" data-db="vo2"><div class="t"><span>VO2MAX (GESCHÄTZT)</span><span id="d-vo2now"></span></div><div class="chartbox" id="d-vo2chart"></div>
         <div class="note">Schätzung aus deiner besten 5-min-Leistung je Fahrt (ACSM-Formel, ± ~10 %). Gezeigt wird der Bestwert der letzten 90 Tage – steigt also vor allem nach harten Einheiten und Tests.</div></div>
     </div>
     <h1>Trainings</h1>
@@ -311,7 +317,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <div class="dt-head"><div class="grow"><h1>Einstellungen</h1><div class="muted">Änderungen gelten ab dem nächsten Training. Velo-Angaben fliessen direkt in die Simulation ein. Beim Verlassen fragt Gladius, ob du speichern möchtest.</div></div></div>
     <div class="st-layout">
       <nav class="st-nav" id="st-nav">
-        <a href="#st-person">Persönlich</a><a href="#st-perf">Leistung &amp; Puls</a><a href="#st-bike">Velo</a><a href="#st-ride">Fahren</a><a href="#st-look">Farben &amp; HUD</a><a href="#st-profiles">Profile</a><a href="#st-data">Daten</a>
+        <a href="#st-person">Persönlich</a><a href="#st-perf">Leistung &amp; Puls</a><a href="#st-bike">Velo</a><a href="#st-ride">Fahren</a><a href="#st-dash">Übersicht</a><a href="#st-look">Farben &amp; HUD</a><a href="#st-profiles">Profile</a><a href="#st-data">Daten</a>
       </nav>
       <div class="st-main">
         <section class="dt-box st-sec" id="st-person"><h2>PERSÖNLICH</h2>
@@ -350,9 +356,16 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
           <p class="st-hint">Diese Werte bestimmen in Gang-Modus und auf Strecken, wie viel Leistung bei welcher Geschwindigkeit nötig ist – wie draussen mit deinem Velo. Mehr Gänge = kleinere Schritte beim Schalten (Bandbreite immer 0,7 bis 5,0).</p>
         </section>
         <section class="dt-box st-sec" id="st-ride"><h2>FAHREN</h2>
+          <div class="st-f" style="margin-bottom:12px"><span>Intensität aller Workouts</span><span class="st-int"><input type="range" id="s-gint" min="70" max="130" step="1"><output id="s-gint-o"></output><button type="button" class="btn small" id="s-gint-r">100 %</button></span>
+            <small class="muted" id="s-gint-h" style="line-height:1.45"></small></div>
           <label class="st-check"><input type="checkbox" id="s-vshift"><span><b>Selbst virtuell schalten</b><br><small>Aus = der Trainer hält die Soll-Watt (ERG). Tests laufen immer in ERG.</small></span></label>
           <label class="st-check"><input type="checkbox" id="s-autopause"><span><b>Auto-Pause</b><br><small>Die Zeit stoppt, wenn du nicht trittst.</small></span></label>
           <label class="st-check"><input type="checkbox" id="s-beeps"><span><b>Countdown-Töne</b><br><small>Piepen in den letzten 3 Sekunden eines Intervalls.</small></span></label>
+        </section>
+        <section class="dt-box st-sec" id="st-dash"><h2>ÜBERSICHT</h2>
+          <p class="st-hint" style="margin-top:0">Lege fest, welche Kästchen auf der Übersicht erscheinen, in welcher Reihenfolge und wie breit. Auf schmalen Fenstern nehmen alle die ganze Breite ein.</p>
+          <div class="dbl" id="s-dbl"></div><input type="hidden" id="s-db-order">
+          <div class="toolbar"><button class="btn small" type="button" id="s-db-reset">Standard-Anordnung</button></div>
         </section>
         <section class="dt-box st-sec" id="st-look"><h2>FARBEN &amp; HUD</h2>
           <div class="st-grid">
@@ -1443,6 +1456,17 @@ const classTable = () => settings.sex === 'f' ? CLASSES_M.map(([v, n]) => [Math.
 function classOf(wkg) { const C = classTable(); let i = 0; C.forEach((c, j) => { if (wkg >= c[0]) i = j; }); return { i, name: C[i][1], next: C[i + 1] || null }; }
 function addXpLog(k, xp, why) { const l = store.get('xpLog', []).filter(x => x.k !== k); if (xp) l.push({ k, t: Math.floor(clock.now() / 1000), xp, why }); store.set('xpLog', l); }
 
+const DASH_BLOCKS = { day: 'Tagesform & Anpassung', plan: 'Trainingsplan', rank: 'Rang & Trophäen', class: 'Leistungsklasse', hr: 'Puls jetzt', fitness: 'Trainingsscore · Fitness', ftp: 'FTP-Verlauf', vo2: 'VO2max' };
+const DASH_DEFAULT = [['day', 4], ['plan', 4], ['rank', 2], ['class', 2], ['hr', 1], ['fitness', 3], ['ftp', 2], ['vo2', 2]].map(([id, w]) => ({ id, on: true, w }));
+const WIDTHS = { 1: 'Viertel', 2: 'Halb', 3: 'Dreiviertel', 4: 'Ganze Breite' };
+function dashConfig() {
+  const saved = Array.isArray(settings.dash) ? settings.dash.filter(x => DASH_BLOCKS[x.id]) : [];
+  return [...saved, ...DASH_DEFAULT.filter(d => !saved.some(s => s.id === d.id)).map(d => ({ ...d }))];
+}
+function applyDashLayout() {
+  const box = $('#dash'); if (!box) return;
+  for (const b of dashConfig()) { const el = box.querySelector(`[data-db="${b.id}"]`); if (!el) continue; el.hidden = !b.on; el.style.setProperty('--w', b.w); box.appendChild(el); }
+}
 let ladderOpen = false;
 function renderLevelCard() {
   const box = $('#d-level'); if (!box) return;
@@ -1451,7 +1475,7 @@ function renderLevelCard() {
   const wkg = settings.ftp / settings.weight, CT = classTable(), C = classOf(wkg);
   const lo = CT[1][0] - 0.5, hi = CT[CT.length - 1][0] + 0.6, pos = v => clamp((v - lo) / (hi - lo) * 100, 0, 100);
   const nextW = C.next ? Math.ceil(C.next[0] * settings.weight - settings.ftp) : 0, trophies = updateTrophies();
-  box.innerHTML = `<div class="dcard lvcard"><div class="lv-l">
+  box.innerHTML = `<div class="dcard"><div class="lv-l">
       <div class="t"><span>RANG · SAISON ${S.label}</span><span>${wk ? `+${wk} XP in 7 Tagen` : ''}</span></div>
       <div class="lv-row"><button class="lv-toggle" id="lv-toggle" aria-expanded="${ladderOpen}" title="Alle Ränge ${ladderOpen ? 'ausblenden' : 'anzeigen'}">${rankBadge(SR.tier, true, 104)}</button>
         <div style="min-width:0;flex:1"><button class="lv-toggle lv-rank" id="lv-toggle2" aria-expanded="${ladderOpen}">${esc(SR.name)} <span class="lv-caret">${ladderOpen ? '▴' : '▾'}</span></button>
@@ -1460,7 +1484,8 @@ function renderLevelCard() {
         <div class="muted num" style="font-size:12.5px;display:flex;justify-content:space-between;gap:8px"><span>${SR.next ? `Noch ${(SR.to - SR.xp).toLocaleString('de-CH')} XP bis ${esc(SR.next)}` : 'Höchster Rang erreicht!'}</span><span>Reset in ${daysLeft} Tagen (1. Mai)</span></div></div></div>
       <div class="ladder" ${ladderOpen ? '' : 'hidden'}>${TIERS.map((T, i) => `<div class="${i === SR.tier ? 'cur' : ''}" title="${T.name} ab ${T.xp.toLocaleString('de-CH')} Saison-XP">${rankBadge(i, 0, 40, { locked: i > SR.tier })}<span>${T.name}</span></div>`).join('')}</div>
       ${trophies.length ? `<div class="t" style="margin-top:14px"><span>TROPHÄEN</span></div><div class="trophies">${trophies.map(x => `<div title="Saison ${x.season}: ${TIERS[x.tier].name} · ${x.xp.toLocaleString('de-CH')} XP">${rankBadge(x.tier, true, 76)}<span>Saison ${x.season}</span></div>`).join('')}</div>` : ''}
-    </div><div class="lv-r">
+    </div></div>`;
+  $('#d-class').innerHTML = `<div class="dcard"><div class="lv-r">
       <div class="t"><span>LEISTUNGSKLASSE</span><span>${wkg.toFixed(2)} W/kg</span></div>
       <div class="lv-rank" style="margin-top:6px">${C.name}</div>
       <div class="muted" style="font-size:13px">${C.next ? `Noch <b style="color:var(--text)">${nextW} W</b> FTP bis „${C.next[1]}“ (${C.next[0].toFixed(1)} W/kg)` : 'Die Spitze – Respekt.'}</div>
@@ -1590,8 +1615,10 @@ function beginRide(w, readiness) {
   pendingWorkout = null;
   const adaptive = !!ADAPT_CATS[w.cat], isTest = !!w.test;
   const fDay = isTest ? 1 : readiness.f, fCat = adaptive ? adaptFactor(w.cat) : 1;
-  const startInt = clamp(Math.round(fDay * fCat * 100) / 100, 0.5, 1.5);
+  const fAll = isTest ? 1 : (settings.globalInt || 100) / 100;
+  const startInt = clamp(Math.round(fDay * fCat * fAll * 100) / 100, 0.5, 1.5);
   const notes = [];
+  if (fAll !== 1) notes.push(`Intensität aller Workouts ${fAll > 1 ? '+' : ''}${Math.round((fAll - 1) * 100)} %`);
   if (!isTest && fDay !== 1) notes.push(`Tagesform „${readiness.label}“ ${fDay > 1 ? '+' : ''}${Math.round((fDay - 1) * 100)} %`);
   if (fCat !== 1) notes.push(`gelernt für ${ADAPT_CATS[w.cat]} ${fCat > 1 ? '+' : ''}${Math.round((fCat - 1) * 1000) / 10} %`);
   Object.assign(ride, {
@@ -2280,7 +2307,8 @@ function workoutDetail(w) {
     (gearT ? `<div class="zrow"><span>Gang-Modus</span><div class="b"><i style="width:${gearT / zmax * 100}%;background:var(--gear)"></i></div><span class="num">${fmtDur(gearT)}</span></div>` : '');
   const notes = [w.segs.some(s => s.mode === 'gear') ? 'Gang-Abschnitte: Hier stellt der Trainer keine Watt ein – du schaltest selbst und fährst nach Gefühl bzw. Vorgabe.' : '',
     w.segs.some(s => s.cad) ? 'Mit Ziel-Kadenz: Gladius zeigt sie an und bewertet sie im Workout-Score.' : '',
-    ADAPT_CATS[w.cat] ? `Gelernte Anpassung für ${ADAPT_CATS[w.cat]}: ${Math.round(adaptFactor(w.cat) * 1000) / 10} %. Die Tagesform wird beim Start abgefragt.` : ''].filter(Boolean);
+    ADAPT_CATS[w.cat] ? `Gelernte Anpassung für ${ADAPT_CATS[w.cat]}: ${Math.round(adaptFactor(w.cat) * 1000) / 10} %. Die Tagesform wird beim Start abgefragt.` : '',
+    !w.test && (settings.globalInt || 100) !== 100 ? `Intensität aller Workouts: ${settings.globalInt} % (Einstellungen → Fahren). Die Watt oben sind die Grundwerte; beim Start werden sie entsprechend angepasst.` : ''].filter(Boolean);
   return `<button class="dt-back" id="dt-back">← Zurück zu den Trainings</button>
     <div class="dt-head"><div class="grow"><div class="cat" style="font-size:12px;letter-spacing:.14em;color:var(--accent2);font-weight:700">${(CATS[w.cat] || 'Importiert').toUpperCase()}</div><h1>${esc(w.name)}</h1>${diffBadge(w, true)}<div class="muted">${esc(w.desc || '')}</div></div>
     <button class="btn primary" id="dt-start" style="padding:12px 26px;font-size:16px">Workout starten</button></div>
@@ -2512,6 +2540,7 @@ function renderSetupHint() {
 function renderDash() {
   renderGreeting();
   renderSetupHint();
+  applyDashLayout();
   renderPlanCard();
   renderLevelCard();
   const rd = readinessToday(), ad = store.get('adapt', {});
@@ -2627,10 +2656,14 @@ function fillSettings() {
   v('s-pos', String(settings.cda || 0.32)); v('s-crr', String(settings.crr || 0.004)); v('s-gears', String(settings.gears || 28));
   $('#s-vshift').checked = settings.virtualShift; $('#s-autopause').checked = settings.autoPause; $('#s-beeps').checked = settings.beeps;
   v('s-accent', settings.accent || DEFAULT_LOOK.accent); v('s-hudc', settings.hudColor || DEFAULT_LOOK.hudColor); v('s-hudok', settings.hudOk || DEFAULT_LOOK.hudOk);
-  v('s-hudscale', settings.hudScale); v('s-hudop', settings.hudOpacity);
+  v('s-hudscale', settings.hudScale); v('s-hudop', settings.hudOpacity); v('s-gint', settings.globalInt || 100);
+  renderDashSettings(dashConfig());
   settingsPreview(); stSnap = JSON.stringify(stValues());
 }
 function settingsPreview() {
+  const gi = +$('#s-gint').value; $('#s-gint-o').textContent = gi + ' %';
+  $('#s-gint-h').textContent = gi === 100 ? 'Alle Watt-Vorgaben wie vorgesehen (100 %). Gilt zusätzlich zu Tagesform und gelernter Anpassung, nicht für Tests.'
+    : `Alle Watt-Vorgaben ${gi > 100 ? '+' : ''}${gi - 100} % – z. B. Sweet Spot ${Math.round(0.9 * gi)} % statt 90 % FTP. Gilt zusätzlich zu Tagesform und gelernter Anpassung, nicht für Tests.`;
   $('#s-hudscale-o').textContent = $('#s-hudscale').value + ' %'; $('#s-hudop-o').textContent = $('#s-hudop').value + ' %';
   const ac = $('#s-accent').value; document.documentElement.style.setProperty('--accent', ac); document.documentElement.style.setProperty('--accent2', `color-mix(in srgb, ${ac} 55%, #ffffff)`);
   const pv = $('#s-hudprev'); pv.style.setProperty('--hudc', $('#s-hudc').value); pv.style.setProperty('--hudok', $('#s-hudok').value); pv.style.opacity = $('#s-hudop').value / 100; pv.style.setProperty('--s', $('#s-hudscale').value / 100);
@@ -2639,6 +2672,21 @@ function settingsPreview() {
     : 'Den Schwellenpuls ermittelst du mit dem Puls-Zonentest, die FTP mit dem Ramp-Test. Trägst du dein Geburtsjahr ein, zeigt Gladius einen Richtwert für den Maximalpuls.';
   document.querySelectorAll('.st-presets').forEach(box => { if (!box.childElementCount) box.innerHTML = PRESETS[box.dataset.for].map(c => `<button type="button" style="background:${c}" data-c="${c}" title="${c}" aria-label="Farbe ${c}"></button>`).join(''); });
 }
+function renderDashSettings(cfg) {
+  $('#s-dbl').innerHTML = cfg.map((b, i) => `<div class="dbl-row" data-id="${b.id}"><span class="dbl-ord"><button type="button" class="btn small" data-mv="-1" ${i ? '' : 'disabled'} aria-label="nach oben">↑</button><button type="button" class="btn small" data-mv="1" ${i < cfg.length - 1 ? '' : 'disabled'} aria-label="nach unten">↓</button></span>
+    <label class="dbl-on"><input type="checkbox" id="s-db-${b.id}-on" ${b.on ? 'checked' : ''}><span>${DASH_BLOCKS[b.id]}</span></label>
+    <select id="s-db-${b.id}-w" aria-label="Breite">${[1, 2, 3, 4].map(w => `<option value="${w}" ${b.w == w ? 'selected' : ''}>${WIDTHS[w]}</option>`).join('')}</select></div>`).join('');
+  $('#s-db-order').value = cfg.map(b => b.id).join(',');
+}
+const dashFromForm = () => $('#s-db-order').value.split(',').filter(Boolean).map(id => ({ id, on: $(`#s-db-${id}-on`).checked, w: +$(`#s-db-${id}-w`).value }));
+$('#s-dbl').onclick = e => {
+  const b = e.target.closest('[data-mv]'); if (!b) return;
+  const cfg = dashFromForm(), i = cfg.findIndex(x => x.id === b.closest('.dbl-row').dataset.id), j = i + +b.dataset.mv;
+  if (j < 0 || j >= cfg.length) return; [cfg[i], cfg[j]] = [cfg[j], cfg[i]]; renderDashSettings(cfg);
+  $(`.dbl-row[data-id="${cfg[j].id}"] [data-mv="${b.dataset.mv}"]`)?.focus();
+};
+$('#s-db-reset').onclick = () => renderDashSettings(DASH_DEFAULT.map(d => ({ ...d })));
+$('#s-gint-r').onclick = () => { $('#s-gint').value = 100; settingsPreview(); };
 function saveSettings(navigate = true) {
   const num = (id, lo, hi, dflt) => { const x = +$('#' + id).value; return x ? clamp(x, lo, hi) : dflt; };
   settings.name = $('#s-name').value.trim(); settings.born = num('s-born', 1930, 2020, null); settings.sex = $('#s-sex').value || null; settings.weight = num('s-weight', 30, 200, 75); settings.height = num('s-height', 120, 230, null);
@@ -2649,6 +2697,8 @@ function saveSettings(navigate = true) {
   settings.virtualShift = $('#s-vshift').checked; settings.autoPause = $('#s-autopause').checked; settings.beeps = $('#s-beeps').checked;
   settings.accent = $('#s-accent').value; settings.hudColor = $('#s-hudc').value; settings.hudOk = $('#s-hudok').value;
   settings.hudScale = +$('#s-hudscale').value; settings.hudOpacity = +$('#s-hudop').value;
+  settings.globalInt = +$('#s-gint').value || 100;
+  settings.dash = $('#s-db-order').value.split(',').filter(Boolean).map(id => ({ id, on: $(`#s-db-${id}-on`).checked, w: +$(`#s-db-${id}-w`).value }));
   store.set('settings', settings);
   const newFtp = num('s-ftp', 50, 600, 200); if (newFtp !== settings.ftp) setFtp(newFtp, 'Einstellungen');
   applyBike(); applyLook(); updateFtpLabel(); toast('Einstellungen gespeichert.'); stSnap = JSON.stringify(stValues());
