@@ -176,19 +176,20 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 <body>
 <header>
   <div class="logo" role="img" aria-label="Gladius – Indoor Cycling Training">
-    <svg viewBox="0 0 240 34" aria-hidden="true">
+    <svg viewBox="0 0 226 34" aria-hidden="true">
       <defs>
         <linearGradient id="lg-blade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#c3ccd6"/><stop offset="1" stop-color="#8a95a3"/></linearGradient>
         <linearGradient id="lg-grip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5a35"/><stop offset="1" stop-color="#4a2c17"/></linearGradient>
       </defs>
-      <text x="40" y="27" font-family="'Segoe UI',system-ui,sans-serif" font-size="25" font-weight="800" letter-spacing="6" fill="var(--text)">GLADIUS</text>
-      <!-- schlanke Klinge sticht waagrecht durch den Schriftzug; die dunkle Kontur schneidet die Buchstaben -->
-      <path d="M31 16.2 L218 16.2 L238 17.8 L218 19.4 L31 19.4 Z" fill="url(#lg-blade)" stroke="var(--panel)" stroke-width="1.6" paint-order="stroke" stroke-linejoin="round"/>
+      <!-- kürzere Klinge, liegt hinter dem Schriftzug -->
+      <path d="M31 16 L188 16 L206 17.8 L188 19.6 L31 19.6 Z" fill="url(#lg-blade)"/>
       <!-- Parierstange, Griff mit Rillen, Kugelknauf -->
       <rect x="26" y="10.3" width="5.6" height="15" rx="2.6" fill="var(--accent)" stroke="var(--panel)" stroke-width="1"/>
       <rect x="11" y="15.1" width="15.5" height="5.4" rx="2" fill="url(#lg-grip)"/>
       <path d="M14.5 15.3v5M18 15.3v5M21.5 15.3v5" stroke="#2c180b" stroke-width=".9" opacity=".7"/>
       <ellipse cx="7" cy="17.8" rx="4.8" ry="4.4" fill="var(--accent)" stroke="var(--panel)" stroke-width="1"/>
+      <!-- Schriftzug im Vordergrund, mit dunkler Kontur gegen die Klinge abgesetzt -->
+      <text x="40" y="27" font-family="'Segoe UI',system-ui,sans-serif" font-size="25" font-weight="800" letter-spacing="6" fill="var(--text)" stroke="var(--panel)" stroke-width="2.4" paint-order="stroke" stroke-linejoin="round">GLADIUS</text>
     </svg>
     <small>INDOOR CYCLING TRAINING</small>
   </div>
