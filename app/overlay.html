@@ -108,6 +108,7 @@ function update(s) {
   lastAt = Date.now(); last = s;
   const r = document.documentElement.style;
   r.setProperty('--s', s.scale || 1); r.setProperty('--o', s.opacity || .92);
+  if (s.color) r.setProperty('--c', s.color); if (s.okColor) r.setProperty('--ok', s.okColor);
   document.body.style.visibility = 'visible';
   if (s.prof) prof = s.prof;
   if (s.trace) trace = s.trace;

@@ -70,6 +70,24 @@ h2{font-size:18px;margin:28px 0 10px}
 .dt-chart{position:relative}.dt-chart .hb{cursor:crosshair;transition:opacity .1s}.dt-chart .hb.on{opacity:1;stroke:#fff;stroke-width:2}
 .dt-tip{position:absolute;display:none;pointer-events:none;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;line-height:1.45;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.45);z-index:3}
 .dt-tip b{font-size:15px}
+.st-layout{display:grid;grid-template-columns:190px minmax(0,1fr);gap:18px;margin-top:16px}
+.st-nav{position:sticky;top:84px;align-self:start;display:flex;flex-direction:column;gap:2px}
+.st-nav a{color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:8px;font-size:14px}.st-nav a:hover{color:var(--text);background:var(--panel)}
+.st-main{display:flex;flex-direction:column;gap:14px;min-width:0}.st-sec{scroll-margin-top:84px}
+.st-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px 18px}
+.st-f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+.st-f input[type=text],.st-f input[type=number],.st-f select{background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:9px 10px;font:inherit;font-size:15px}
+.st-f input:focus,.st-f select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.st-f input[type=range]{accent-color:var(--accent)}.st-f output{color:var(--text);font-size:14px}
+.st-check{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);font-size:14px}.st-check:first-of-type{border-top:0}
+.st-check input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent)}.st-check small{color:var(--muted)}
+.st-hint{font-size:13px;color:var(--muted);line-height:1.5;margin:12px 0 0;max-width:75ch}
+.st-color{display:flex;gap:8px;align-items:center}.st-color input[type=color]{width:44px;height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:2px}
+.st-presets{display:flex;gap:6px}.st-presets button{width:22px;height:22px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line);padding:0}
+.st-preview{margin-top:14px;display:flex;gap:18px;align-items:baseline;flex-wrap:wrap;padding:14px 18px;border-radius:10px;background:linear-gradient(160deg,#6fb8f0,#e6f2fa 55%,#6f9a5c 56%,#4f7d3c)}
+.st-preview .pv-l{font-size:12px;letter-spacing:.18em;font-weight:700}.st-preview .pv-v{font-size:52px;font-weight:800;line-height:1}
+.st-preview span{color:var(--hudc);text-shadow:0 0 2px #000,0 0 3px #000,0 1px 8px rgba(0,0,0,.85)}.st-preview .ok{color:var(--hudok)}
+@media (max-width:760px){.st-layout{grid-template-columns:1fr}.st-nav{position:static;flex-direction:row;flex-wrap:wrap}}
 .dt-sci{font-size:14px;line-height:1.6;color:#c5ccd6;max-width:75ch}
 @media (max-width:860px){.dt-cols{grid-template-columns:1fr}}
 .profile{width:100%;height:54px;display:block;background:var(--panel2);border-radius:8px}
@@ -191,6 +209,72 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   </section>
 
   <!-- RIDE -->
+  <section class="view" id="view-settings">
+    <button class="dt-back" id="st-back">← Zurück</button>
+    <div class="dt-head"><div class="grow"><h1>Einstellungen</h1><div class="muted">Änderungen gelten ab dem nächsten Training. Velo-Angaben fliessen direkt in die Simulation ein.</div></div>
+      <button class="btn" id="st-reset">Verwerfen</button><button class="btn primary" id="st-save" style="padding:12px 26px">Speichern</button></div>
+    <div class="st-layout">
+      <nav class="st-nav" id="st-nav">
+        <a href="#st-person">Persönlich</a><a href="#st-perf">Leistung &amp; Puls</a><a href="#st-bike">Velo</a><a href="#st-ride">Fahren</a><a href="#st-look">Farben &amp; HUD</a><a href="#st-data">Daten</a>
+      </nav>
+      <div class="st-main">
+        <section class="dt-box st-sec" id="st-person"><h2>PERSÖNLICH</h2>
+          <div class="st-grid">
+            <label class="st-f"><span>Name</span><input type="text" id="s-name" maxlength="40" placeholder="z. B. Dario" autocomplete="given-name"></label>
+            <label class="st-f"><span>Geburtsjahr</span><input type="number" id="s-born" min="1930" max="2020" placeholder="–"></label>
+            <label class="st-f"><span>Körpergewicht (kg)</span><input type="number" id="s-weight" min="30" max="200" step="0.5"></label>
+            <label class="st-f"><span>Grösse (cm)</span><input type="number" id="s-height" min="120" max="230" placeholder="–"></label>
+          </div>
+          <p class="st-hint">Gewicht bestimmt W/kg, die VO2max-Schätzung und wie schwer es am Berg geht.</p>
+        </section>
+        <section class="dt-box st-sec" id="st-perf"><h2>LEISTUNG &amp; PULS</h2>
+          <div class="st-grid">
+            <label class="st-f"><span>FTP (Watt)</span><input type="number" id="s-ftp" min="50" max="600"></label>
+            <label class="st-f"><span>Schwellenpuls LTHR (bpm)</span><input type="number" id="s-lthr" min="90" max="220" placeholder="–"></label>
+            <label class="st-f"><span>Maximalpuls (bpm)</span><input type="number" id="s-hrmax" min="100" max="230" placeholder="–"></label>
+          </div>
+          <p class="st-hint" id="s-hrhint"></p>
+        </section>
+        <section class="dt-box st-sec" id="st-bike"><h2>VELO</h2>
+          <div class="st-grid">
+            <label class="st-f"><span>Bezeichnung</span><input type="text" id="s-bikename" maxlength="40" placeholder="z. B. Rennvelo auf der Rolle"></label>
+            <label class="st-f"><span>Velogewicht (kg)</span><input type="number" id="s-bikeweight" min="3" max="30" step="0.1"></label>
+            <label class="st-f"><span>Reifen / Radumfang</span><select id="s-wheel">
+              <option value="2096">700 × 23C · 2096 mm</option><option value="2105">700 × 25C · 2105 mm</option><option value="2136">700 × 28C · 2136 mm</option>
+              <option value="2155">700 × 32C · 2155 mm</option><option value="2180">700 × 38C (Gravel) · 2180 mm</option><option value="2235">29 × 2.1 (MTB) · 2235 mm</option><option value="custom">Eigener Wert …</option></select></label>
+            <label class="st-f" id="s-wheelc-wrap" hidden><span>Radumfang (mm)</span><input type="number" id="s-wheelc" min="1500" max="2500"></label>
+            <label class="st-f"><span>Sitzposition (Luftwiderstand)</span><select id="s-pos">
+              <option value="0.40">Aufrecht · CdA 0.40</option><option value="0.32">Oberlenker / Hoods · CdA 0.32</option><option value="0.29">Unterlenker · CdA 0.29</option><option value="0.25">Zeitfahrposition · CdA 0.25</option></select></label>
+            <label class="st-f"><span>Reifen (Rollwiderstand)</span><select id="s-crr">
+              <option value="0.0032">Schneller Rennreifen · Crr 0.0032</option><option value="0.004">Standard-Rennreifen · Crr 0.004</option><option value="0.0055">Gravel · Crr 0.0055</option><option value="0.008">MTB · Crr 0.008</option></select></label>
+            <label class="st-f"><span>Virtuelle Gänge</span><select id="s-gears">
+              <option value="22">22 · grob</option><option value="28">28 · normal</option><option value="36">36 · fein</option></select></label>
+          </div>
+          <p class="st-hint">Diese Werte bestimmen in Gang-Modus und auf Strecken, wie viel Leistung bei welcher Geschwindigkeit nötig ist – wie draussen mit deinem Velo. Mehr Gänge = kleinere Schritte beim Schalten (Bandbreite immer 0,7 bis 5,0).</p>
+        </section>
+        <section class="dt-box st-sec" id="st-ride"><h2>FAHREN</h2>
+          <label class="st-check"><input type="checkbox" id="s-vshift"><span><b>Selbst virtuell schalten</b><br><small>Aus = der Trainer hält die Soll-Watt (ERG). Tests laufen immer in ERG.</small></span></label>
+          <label class="st-check"><input type="checkbox" id="s-autopause"><span><b>Auto-Pause</b><br><small>Die Zeit stoppt, wenn du nicht trittst.</small></span></label>
+          <label class="st-check"><input type="checkbox" id="s-beeps"><span><b>Countdown-Töne</b><br><small>Piepen in den letzten 3 Sekunden eines Intervalls.</small></span></label>
+        </section>
+        <section class="dt-box st-sec" id="st-look"><h2>FARBEN &amp; HUD</h2>
+          <div class="st-grid">
+            <label class="st-f"><span>Akzentfarbe der App</span><span class="st-color"><input type="color" id="s-accent"><span class="st-presets" data-for="s-accent"></span></span></label>
+            <label class="st-f"><span>HUD-Grundfarbe</span><span class="st-color"><input type="color" id="s-hudc"><span class="st-presets" data-for="s-hudc"></span></span></label>
+            <label class="st-f"><span>HUD-Farbe „im Ziel“</span><span class="st-color"><input type="color" id="s-hudok"><span class="st-presets" data-for="s-hudok"></span></span></label>
+            <label class="st-f"><span>HUD-Grösse (%)</span><input type="range" id="s-hudscale" min="50" max="200" step="10"><output id="s-hudscale-o"></output></label>
+            <label class="st-f"><span>HUD-Deckkraft (%)</span><input type="range" id="s-hudop" min="30" max="100" step="5"><output id="s-hudop-o"></output></label>
+          </div>
+          <div class="st-preview" id="s-hudprev"><span class="pv-l">LEISTUNG</span><span class="pv-v" id="pv-a">231</span><span class="pv-v ok" id="pv-b">228</span><span class="pv-l">← ausserhalb · im Ziel →</span></div>
+        </section>
+        <section class="dt-box st-sec" id="st-data"><h2>DATEN</h2>
+          <p class="st-hint" style="margin-top:0">Alle Fahrten, der FTP-Verlauf, importierte Strecken und Einstellungen liegen nur auf diesem Gerät. Sichere sie regelmässig, z. B. auf OneDrive.</p>
+          <div class="toolbar"><button class="btn" id="s-export">Daten sichern (.json)</button><label class="btn">Sicherung wiederherstellen<input type="file" id="s-import" accept=".json,application/json" hidden></label></div>
+        </section>
+      </div>
+    </div>
+  </section>
+
   <section class="view" id="view-detail"><div id="detail"></div></section>
 
   <section class="view" id="view-ride">
@@ -268,20 +352,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <p class="muted" style="font-size:13px;line-height:1.45">Unbekannte Werte? Fahr den <b style="color:var(--text)">Ramp-Test</b> für die FTP und ein paar Tage später den <b style="color:var(--text)">Puls-Zonentest</b>. Bis dahin rechnet die App mit 200 W.</p>
   <div class="toolbar" style="justify-content:flex-end"><button class="btn primary" id="w-save">Los geht's</button></div>
 </dialog>
-<dialog id="dlg-settings">
-  <h2 style="margin-top:0">Einstellungen</h2>
-  <div class="field"><label for="set-ftp">FTP (Watt)</label><input type="number" id="set-ftp" min="50" max="600"></div>
-  <div class="field"><label for="set-weight">Körpergewicht (kg)</label><input type="number" id="set-weight" min="30" max="200"></div>
-  <div class="field"><label for="set-bike">Velogewicht (kg)</label><input type="number" id="set-bike" min="3" max="30"></div>
-  <div class="field"><label for="set-lthr">Schwellenpuls LTHR (bpm)<br><small class="muted">aus dem Puls-Zonentest</small></label><input type="number" id="set-lthr" min="90" max="220" placeholder="–"></div>
-  <div class="field"><label for="set-hrmax">Maximalpuls (bpm)</label><input type="number" id="set-hrmax" min="100" max="230" placeholder="–"></div>
-  <div class="field"><label for="set-beeps">Countdown-Töne</label><input type="checkbox" id="set-beeps"></div>
-  <div class="field"><label for="set-autopause">Auto-Pause wenn du nicht trittst</label><input type="checkbox" id="set-autopause"></div>
-  <div class="field"><label for="set-vshift">Selbst virtuell schalten<br><small class="muted">aus = Trainer hält die Soll-Watt (ERG)</small></label><input type="checkbox" id="set-vshift"></div>
-  <div class="field desk"><label for="set-hudscale">HUD-Grösse (%)</label><input type="number" id="set-hudscale" min="50" max="200" step="10"></div>
-  <div class="field desk"><label for="set-hudop">HUD-Deckkraft (%)</label><input type="number" id="set-hudop" min="30" max="100" step="5"></div>
-  <div class="toolbar" style="justify-content:flex-end"><button class="btn" id="set-cancel">Abbrechen</button><button class="btn primary" id="set-save">Speichern</button></div>
-</dialog>
+
 
 <script>
 'use strict';
@@ -512,8 +583,13 @@ function demoStep(dt) {
 /* ---------------- Virtuelle Gänge ---------------- */
 // 24 Gänge, Übersetzung (Kettenblatt/Ritzel) 1.0 … 5.0. Mit Zwift Cog bleibt die echte Übersetzung fix –
 // die App rechnet aus Trittfrequenz + virtuellem Gang eine Geschwindigkeit und daraus die nötige Leistung (flache Strasse).
-const GEARS = [0.70, 0.78, 0.87, 0.95, ...Array.from({ length: 24 }, (_, i) => Math.pow(5, i / 23))];   // Index 4 = 1.0 (z. B. 34/34)
-const WHEEL = 2.105, RHO = 1.2, CDA = 0.32, CRR = 0.004, ETA = 0.975;
+const GEARS28 = [0.70, 0.78, 0.87, 0.95, ...Array.from({ length: 24 }, (_, i) => Math.pow(5, i / 23))];   // Referenz: Gangangaben in Workouts beziehen sich hierauf
+let GEARS = GEARS28;
+const buildGears = n => n === 28 ? GEARS28 : Array.from({ length: n }, (_, i) => 0.7 * Math.pow(5 / 0.7, i / (n - 1)));
+const mapGear = i28 => { const r = GEARS28[clamp(i28, 0, 27)]; let best = 0; GEARS.forEach((g, i) => { if (Math.abs(Math.log(g / r)) < Math.abs(Math.log(GEARS[best] / r))) best = i; }); return best; };
+const RHO = 1.2, ETA = 0.975;
+let WHEEL = 2.105, CDA = 0.32, CRR = 0.004;
+function applyBike() { WHEEL = (settings.wheel || 2105) / 1000; CDA = settings.cda || 0.32; CRR = settings.crr || 0.004; GEARS = buildGears(settings.gears || 28); }
 const gearSpeed = (cad, gear) => (cad || 0) / 60 * GEARS[gear] * WHEEL;               // m/s
 const powerAtSpeed = (v, grade = 0) => { const m = settings.weight + settings.bikeWeight, th = Math.atan(grade);
   return (0.5 * RHO * CDA * v ** 3 + CRR * m * 9.81 * Math.cos(th) * v + m * 9.81 * Math.sin(th) * v) / ETA; };
@@ -723,7 +799,7 @@ function beginRide(w, readiness) {
   if (fCat !== 1) notes.push(`gelernt für ${ADAPT_CATS[w.cat]} ${fCat > 1 ? '+' : ''}${Math.round((fCat - 1) * 1000) / 10} %`);
   Object.assign(ride, {
     active: true, w, total: w.open ? Infinity : totalDur(w), elapsed: 0, paused: false, started: false, intensity: startInt, startInt, intAcc: 0, intT: 0, workSkips: 0, readiness: readiness.v,
-    gear: w.route ? 8 : 17, forceGear: !!w.route || (settings.virtualShift && !w.test), segIdx: -1, lastBeep: null, samples: [], lastRecSec: null, dist: 0, startUnix: null, hudRouteSent: false, hudTraceAt: 0,
+    gear: mapGear(w.route ? 8 : 17), forceGear: !!w.route || (settings.virtualShift && !w.test), segIdx: -1, lastBeep: null, samples: [], lastRecSec: null, dist: 0, startUnix: null, hudRouteSent: false, hudTraceAt: 0,
     lastPersist: 0, segStarts: (() => { let a = 0; return w.segs.map(s => { const st = a; a += s.dur; return st; }); })()
   });
   trainer.lastSent = null;
@@ -780,7 +856,7 @@ function tick() {
     const idx = Math.min(segIndexAt(ride.elapsed), ride.w.segs.length - 1);
     if (idx !== ride.segIdx) {
       const prev = ride.segIdx; ride.segIdx = idx; const s = ride.w.segs[idx];
-      if (s.mode === 'gear' && s.gear != null) ride.gear = clamp(s.gear, 0, GEARS.length - 1);
+      if (s.mode === 'gear' && s.gear != null) ride.gear = mapGear(s.gear);
       if (prev >= 0) beep(880, 0.35);
     }
     // Countdown-Töne in den letzten 3 s
@@ -1291,7 +1367,7 @@ function hudRoute() {
   if (!ride.hudRouteSent) { ride.hudRouteSent = true; const k = Math.max(1, Math.ceil(rt.ele.length / 400)); out.route.ele = rt.ele.filter((_, i) => i % k === 0); out.route.step = RSTEP * k; }
   return out;
 }
-const hudLook = () => ({ scale: settings.hudScale / 100, opacity: settings.hudOpacity / 100 });
+const hudLook = () => ({ scale: settings.hudScale / 100, opacity: settings.hudOpacity / 100, color: settings.hudColor, okColor: settings.hudOk });
 function idleHudState() { const hr = curHr(), z = hrZone(hr); return { active: false, power: power3s(), hr, zone: z ? z.z : '', cad: curCad(), ...hudLook() }; }
 
 function showView(v) { document.querySelectorAll('.view').forEach(x => x.classList.toggle('active', x.id === 'view-' + v)); if (v === 'library') renderLibrary(); window.scrollTo(0, 0); }
@@ -1665,21 +1741,83 @@ document.addEventListener('keydown', onKey);
 $('#chip-trainer').onclick = connectTrainer;
 $('#chip-hr').onclick = connectHr;
 $('#chip-demo').onclick = () => { demo.on = !demo.on; setChip('demo', demo.on ? 'on' : 'off'); toast(demo.on ? 'Demo-Modus an: simulierter Trainer und Puls.' : 'Demo-Modus aus.'); };
-$('#chip-settings').onclick = () => {
-  $('#set-ftp').value = settings.ftp; $('#set-weight').value = settings.weight; $('#set-bike').value = settings.bikeWeight;
-  $('#set-lthr').value = settings.lthr || ''; $('#set-hrmax').value = settings.hrMax || '';
-  $('#set-hudscale').value = settings.hudScale; $('#set-hudop').value = settings.hudOpacity;
-  $('#set-beeps').checked = settings.beeps; $('#set-autopause').checked = settings.autoPause; $('#set-vshift').checked = settings.virtualShift; $('#dlg-settings').showModal();
-};
-$('#set-cancel').onclick = () => $('#dlg-settings').close();
-$('#set-save').onclick = () => {
-  const newFtp = clamp(+$('#set-ftp').value || 200, 50, 600); settings.weight = clamp(+$('#set-weight').value || 75, 30, 200);
-  settings.bikeWeight = clamp(+$('#set-bike').value || 9, 3, 30); settings.beeps = $('#set-beeps').checked; settings.autoPause = $('#set-autopause').checked; settings.virtualShift = $('#set-vshift').checked;
-  settings.hudScale = clamp(+$('#set-hudscale').value || 100, 50, 200); settings.hudOpacity = clamp(+$('#set-hudop').value || 92, 30, 100);
-  settings.lthr = +$('#set-lthr').value ? clamp(+$('#set-lthr').value, 90, 220) : null; settings.hrMax = +$('#set-hrmax').value ? clamp(+$('#set-hrmax').value, 100, 230) : null;
+// ---------- Einstellungsseite ----------
+const DEFAULT_LOOK = { accent: '#ff7a2f', hudColor: '#ff2b2b', hudOk: '#6dff9a' };
+const PRESETS = { 's-accent': ['#ff7a2f', '#3d8bfd', '#3ecf8e', '#a98bff', '#ffc53d', '#ff4d6a'], 's-hudc': ['#ff2b2b', '#ffffff', '#ffc53d', '#4fc3f7'], 's-hudok': ['#6dff9a', '#3ecf8e', '#4fc3f7', '#ffffff'] };
+function applyLook() {
+  const a = settings.accent || DEFAULT_LOOK.accent, r = document.documentElement.style;
+  r.setProperty('--accent', a); r.setProperty('--accent2', `color-mix(in srgb, ${a} 55%, #ffffff)`);
+  r.setProperty('--hudc', settings.hudColor || DEFAULT_LOOK.hudColor); r.setProperty('--hudok', settings.hudOk || DEFAULT_LOOK.hudOk);
+  const name = (settings.name || '').trim(); const h = $('#view-library h1'); if (h) h.textContent = name ? `Übersicht · ${name}` : 'Übersicht';
+}
+let settingsFrom = 'library';
+function openSettings() {
+  if (ride.active) { toast('Einstellungen kannst du nach der Fahrt ändern.'); return; }
+  settingsFrom = document.querySelector('.view.active')?.id?.replace('view-', '') || 'library';
+  fillSettings(); showView('settings');
+}
+function fillSettings() {
+  const v = (id, x) => { $('#' + id).value = x ?? ''; };
+  v('s-name', settings.name); v('s-born', settings.born); v('s-weight', settings.weight); v('s-height', settings.height);
+  v('s-ftp', settings.ftp); v('s-lthr', settings.lthr); v('s-hrmax', settings.hrMax);
+  v('s-bikename', settings.bikeName); v('s-bikeweight', settings.bikeWeight);
+  const wh = String(settings.wheel || 2105), known = [...$('#s-wheel').options].some(o => o.value === wh);
+  $('#s-wheel').value = known ? wh : 'custom'; v('s-wheelc', settings.wheel || 2105); $('#s-wheelc-wrap').hidden = known;
+  v('s-pos', String(settings.cda || 0.32)); v('s-crr', String(settings.crr || 0.004)); v('s-gears', String(settings.gears || 28));
+  $('#s-vshift').checked = settings.virtualShift; $('#s-autopause').checked = settings.autoPause; $('#s-beeps').checked = settings.beeps;
+  v('s-accent', settings.accent || DEFAULT_LOOK.accent); v('s-hudc', settings.hudColor || DEFAULT_LOOK.hudColor); v('s-hudok', settings.hudOk || DEFAULT_LOOK.hudOk);
+  v('s-hudscale', settings.hudScale); v('s-hudop', settings.hudOpacity);
+  settingsPreview();
+}
+function settingsPreview() {
+  $('#s-hudscale-o').textContent = $('#s-hudscale').value + ' %'; $('#s-hudop-o').textContent = $('#s-hudop').value + ' %';
+  const ac = $('#s-accent').value; document.documentElement.style.setProperty('--accent', ac); document.documentElement.style.setProperty('--accent2', `color-mix(in srgb, ${ac} 55%, #ffffff)`);
+  const pv = $('#s-hudprev'); pv.style.setProperty('--hudc', $('#s-hudc').value); pv.style.setProperty('--hudok', $('#s-hudok').value); pv.style.opacity = $('#s-hudop').value / 100;
+  const by = +$('#s-born').value, age = by ? new Date().getFullYear() - by : null;
+  $('#s-hrhint').textContent = age ? `Alter ${age}: Maximalpuls nach der Formel von Tanaka (208 − 0,7 × Alter) ≈ ${Math.round(208 - 0.7 * age)} bpm – nur ein Richtwert, dein echter Wert kann ±10 bpm abweichen. Gemessene Werte sind besser: Gladius übernimmt den höchsten Puls aus deinen Fahrten automatisch.`
+    : 'Den Schwellenpuls ermittelst du mit dem Puls-Zonentest, die FTP mit dem Ramp-Test. Trägst du dein Geburtsjahr ein, zeigt Gladius einen Richtwert für den Maximalpuls.';
+  document.querySelectorAll('.st-presets').forEach(box => { if (!box.childElementCount) box.innerHTML = PRESETS[box.dataset.for].map(c => `<button type="button" style="background:${c}" data-c="${c}" title="${c}" aria-label="Farbe ${c}"></button>`).join(''); });
+}
+function saveSettings() {
+  const num = (id, lo, hi, dflt) => { const x = +$('#' + id).value; return x ? clamp(x, lo, hi) : dflt; };
+  settings.name = $('#s-name').value.trim(); settings.born = num('s-born', 1930, 2020, null); settings.weight = num('s-weight', 30, 200, 75); settings.height = num('s-height', 120, 230, null);
+  settings.lthr = num('s-lthr', 90, 220, null); settings.hrMax = num('s-hrmax', 100, 230, null);
+  settings.bikeName = $('#s-bikename').value.trim(); settings.bikeWeight = num('s-bikeweight', 3, 30, 9);
+  settings.wheel = $('#s-wheel').value === 'custom' ? num('s-wheelc', 1500, 2500, 2105) : +$('#s-wheel').value;
+  settings.cda = +$('#s-pos').value; settings.crr = +$('#s-crr').value; settings.gears = +$('#s-gears').value;
+  settings.virtualShift = $('#s-vshift').checked; settings.autoPause = $('#s-autopause').checked; settings.beeps = $('#s-beeps').checked;
+  settings.accent = $('#s-accent').value; settings.hudColor = $('#s-hudc').value; settings.hudOk = $('#s-hudok').value;
+  settings.hudScale = +$('#s-hudscale').value; settings.hudOpacity = +$('#s-hudop').value;
   store.set('settings', settings);
-  if (newFtp !== settings.ftp) setFtp(newFtp, 'Einstellungen');
-  updateFtpLabel(); renderLibrary(); $('#dlg-settings').close();
+  const newFtp = num('s-ftp', 50, 600, 200); if (newFtp !== settings.ftp) setFtp(newFtp, 'Einstellungen');
+  applyBike(); applyLook(); updateFtpLabel(); toast('Einstellungen gespeichert.');
+  showView(settingsFrom === 'settings' ? 'library' : settingsFrom);
+}
+$('#chip-settings').onclick = openSettings;
+$('#st-back').onclick = () => applyLook() || showView(settingsFrom === 'settings' ? 'library' : settingsFrom);
+$('#st-save').onclick = saveSettings;
+$('#st-reset').onclick = () => { fillSettings(); toast('Änderungen verworfen.'); };
+$('#view-settings').addEventListener('input', settingsPreview);
+$('#s-wheel').onchange = () => { $('#s-wheelc-wrap').hidden = $('#s-wheel').value !== 'custom'; };
+$('#view-settings').addEventListener('click', e => { const c = e.target.dataset.c; if (c) { const inp = $('#' + e.target.parentElement.dataset.for); inp.value = c; settingsPreview(); } });
+$('#st-nav').onclick = e => { const a = e.target.closest('a'); if (!a) return; e.preventDefault(); $(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+// Datensicherung
+const BACKUP_KEYS = ['settings', 'history', 'ftpHistory', 'adapt', 'routes', 'lastRide', 'onboarded'];
+$('#s-export').onclick = () => {
+  const data = { app: 'Gladius', version: 1, created: new Date().toISOString(), data: Object.fromEntries(BACKUP_KEYS.map(k => [k, store.get(k, null)])) };
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
+  a.download = `Gladius-Sicherung_${new Date().toISOString().slice(0, 10)}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  if (EMBEDDED && !DESKTOP) toast('In der Vorschau sind Downloads gesperrt – in der installierten App funktioniert das Sichern.', 6000);
+};
+$('#s-import').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const j = JSON.parse(await f.text()); if (j.app !== 'Gladius' || !j.data) throw new Error('Das ist keine Gladius-Sicherung');
+    const n = (j.data.history || []).length;
+    if (!(await askConfirm(`Sicherung vom ${new Date(j.created).toLocaleDateString('de-CH')} mit ${n} Fahrten wiederherstellen? Die aktuellen Daten auf diesem Gerät werden ersetzt.`, 'Wiederherstellen'))) return;
+    for (const k of BACKUP_KEYS) { if (j.data[k] == null) store.del(k); else store.set(k, j.data[k]); }
+    Object.assign(settings, j.data.settings || {}); applyBike(); applyLook(); updateFtpLabel(); fillSettings(); toast(`Wiederhergestellt: ${n} Fahrten.`);
+  } catch (err) { toast('Wiederherstellen fehlgeschlagen: ' + err.message, 6000); }
 };
 $('#tabs').onclick = e => { const c = e.target.dataset.cat; if (c) { activeCat = c; renderLibrary(); } };
 $('#lib').onclick = e => {
@@ -1768,6 +1906,7 @@ if (EMBEDDED && !DESKTOP) {
   bar.onclick = e => { const v = +e.target.dataset.speed; if (v) { speed = v; mark(); } };
   setInterval(() => { if (speed > 1 && ride.active && !ride.paused) clock.offset += 250 * (speed - 1); }, 250);
 }
+applyBike(); applyLook();
 updateFtpLabel(); renderLibrary();
 if (!store.get('onboarded')) { $('#w-weight').value = settings.weight; $('#dlg-welcome').showModal(); }
 if (!navigator.bluetooth && !EMBEDDED) setTimeout(() => toast('Hinweis: Bluetooth funktioniert nur in Chrome oder Edge. Demo-Modus geht überall.', 6000), 600);
