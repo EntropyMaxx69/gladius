@@ -49,7 +49,26 @@ h2{font-size:18px;margin:28px 0 10px}
 .card p{margin:0;font-size:14px;line-height:1.45;color:#c5ccd6}
 .card details{font-size:13px;color:var(--muted);line-height:1.5}
 .card summary{cursor:pointer;color:var(--text)}
-.card .actions{display:flex;gap:8px;margin-top:auto;padding-top:6px}
+.card .actions{display:flex;gap:8px;margin-top:auto;padding-top:6px;align-items:center}
+.card[data-open]{cursor:pointer;transition:border-color .15s,transform .15s}.card[data-open]:hover{border-color:var(--muted)}.card[data-open]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card .more{margin-left:auto;font-size:13px;color:var(--muted)}.card[data-open]:hover .more{color:var(--text)}
+.tab .cnt{display:inline-block;min-width:20px;padding:0 6px;margin-left:4px;border-radius:999px;background:var(--panel2);color:var(--muted);font-size:12px;font-weight:600}
+.tab.active .cnt{background:rgba(13,16,20,.15);color:var(--bg)}
+/* detail */
+.dt-back{background:none;border:0;color:var(--muted);font-size:14px;padding:0;margin-bottom:10px}.dt-back:hover{color:var(--text)}
+.dt-head{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}.dt-head h1{margin:2px 0 0;text-wrap:balance}.dt-head .grow{flex:1;min-width:240px}
+.dt-chart{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 10px 6px;margin:16px 0}.dt-chart svg{display:block;width:100%;height:auto}
+.dt-cols{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px}
+.dt-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0}.dt-box h2{margin:0 0 10px;font-size:15px;letter-spacing:.06em}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.steps li{display:grid;grid-template-columns:72px 1fr;gap:10px;align-items:baseline}.steps .rep{color:var(--accent2);font-weight:700}
+.steps ul{list-style:none;margin:4px 0 0;padding:0 0 0 12px;border-left:2px solid var(--line);display:flex;flex-direction:column;gap:4px}
+.swatch{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:baseline}
+.zrow{display:grid;grid-template-columns:110px 1fr 56px;gap:10px;align-items:center;font-size:13px;margin:5px 0}.zrow .b{height:8px;background:var(--panel2);border-radius:4px;overflow:hidden}.zrow .b i{display:block;height:100%}
+.kmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;font-size:12px}.kmgrid div{border-radius:8px;padding:6px;text-align:center;color:#0d1014;font-weight:700}.kmgrid small{display:block;font-weight:600;opacity:.75}
+.stats.dt-stats{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}.stats.dt-stats .v{font-size:23px;white-space:nowrap}
+.dt-sci{font-size:14px;line-height:1.6;color:#c5ccd6;max-width:75ch}
+@media (max-width:860px){.dt-cols{grid-template-columns:1fr}}
 .profile{width:100%;height:54px;display:block;background:var(--panel2);border-radius:8px}
 .banner{background:#2a1d10;border:1px solid #6b4318;border-radius:12px;padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
@@ -169,6 +188,8 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   </section>
 
   <!-- RIDE -->
+  <section class="view" id="view-detail"><div id="detail"></div></section>
+
   <section class="view" id="view-ride">
     <div class="ridehead">
       <div class="seg" id="r-seg">–</div>
@@ -1275,14 +1296,14 @@ const allWorkouts = () => [...LIBRARY, ...ROUTES, ...savedRoutes(), ...imported]
 function renderLibrary() {
   renderDash();
   const cats = { all: 'Alle', ...CATS, ...(imported.length ? { import: 'Importiert' } : {}) };
-  $('#tabs').innerHTML = Object.entries(cats).map(([k, v]) => `<button class="tab ${k === activeCat ? 'active' : ''}" data-cat="${k}">${v}</button>`).join('');
+  const all = allWorkouts(), count = k => k === 'all' ? all.length : all.filter(w => w.cat === k).length;
+  $('#tabs').innerHTML = Object.entries(cats).map(([k, v]) => `<button class="tab ${k === activeCat ? 'active' : ''}" data-cat="${k}">${v} <span class="cnt">${count(k)}</span></button>`).join('');
   const list = allWorkouts().filter(w => activeCat === 'all' || w.cat === activeCat);
-  $('#lib').innerHTML = list.map(w => w.route ? routeCard(w) : `<div class="card">
+  $('#lib').innerHTML = list.map(w => w.route ? routeCard(w) : `<div class="card" data-open="${w.id}" tabindex="0" role="button" aria-label="${esc(w.name)} – Details">
     <div class="cat">${CATS[w.cat] || 'Importiert'}</div><h3>${esc(w.name)}</h3>
     <div class="meta num">${fmtDur(totalDur(w))} ·≈ ${estTss(w)} TSS${w.segs.some(s => s.mode === 'gear') ? ' · <span style="color:var(--gear)">mit Gang-Abschnitten</span>' : ''}</div>
     ${profileSvg(w)}<p>${esc(w.desc || '')}</p>
-    ${w.sci ? `<details><summary>Warum dieses Training?</summary>${esc(w.sci)}</details>` : ''}
-    <div class="actions"><button class="btn primary small" data-start="${w.id}">Starten</button></div></div>`).join('');
+    <div class="actions"><button class="btn primary small" data-start="${w.id}">Starten</button><span class="more">Details ansehen →</span></div></div>`).join('');
   const hist = store.get('history', []);
   $('#history').innerHTML = hist.length ? `<table class="hist"><tr><th>Datum</th><th>Training</th><th>Dauer</th><th>Ø W</th><th>NP</th><th>TSS</th><th>Score</th></tr>${hist.map((h, i) => `<tr><td>${new Date(h.date * 1000).toLocaleDateString('de-CH')}</td><td>${esc(h.name)}</td><td class="num">${fmtTime(h.dur)}</td><td class="num">${h.avgP}</td><td class="num">${h.np}</td><td class="num">${h.tss}</td><td class="num">${h.score ?? '–'}</td></tr>`).join('')}</table>` +
     (store.get('lastRide') ? `<div class="toolbar"><button class="btn small" id="h-last">Letzte Fahrt öffnen / FIT erneut herunterladen</button></div>` : '') : 'Noch keine Fahrten.';
@@ -1291,14 +1312,117 @@ function renderLibrary() {
   $('#recovery').innerHTML = act && act.samples?.length > 10 ? `<div class="banner">Eine unterbrochene Fahrt wurde gefunden (${esc(act.name)}, ${fmtTime(act.samples.length)}). <button class="btn primary small" id="rec-open">Auswerten &amp; FIT speichern</button><button class="btn small" id="rec-del">Verwerfen</button></div>` : '';
   if (act && $('#rec-open')) { $('#rec-open').onclick = () => { store.del('activeRide'); store.set('lastRide', act); showSummary(act); }; $('#rec-del').onclick = () => { store.del('activeRide'); renderLibrary(); }; }
 }
+/* ---------------- Detailseite ---------------- */
+let libScroll = 0;
+function openDetail(id) {
+  const w = allWorkouts().find(x => x.id === id); if (!w) return;
+  libScroll = window.scrollY; $('#detail').innerHTML = w.route ? routeDetail(w) : workoutDetail(w);
+  showView('detail');
+  $('#dt-back').onclick = () => { showView('library'); window.scrollTo(0, libScroll); };
+  $('#dt-start').onclick = () => startRide(w);
+}
+const sameSeg = (a, b) => a.dur === b.dur && a.from === b.from && a.to === b.to && a.w === b.w && a.mode === b.mode && a.cad === b.cad && a.label === b.label;
+function compressSegs(segs) {
+  // Wiederholungen erkennen, z. B. 3 × (13 × (30 s / 15 s) + 3 min Pause)
+  const out = []; let i = 0;
+  while (i < segs.length) {
+    let best = null;
+    for (let p = 1; p <= Math.min(40, Math.floor((segs.length - i) / 2)); p++) {
+      let k = 1; while (i + (k + 1) * p <= segs.length && segs.slice(i + k * p, i + (k + 1) * p).every((s, j) => sameSeg(s, segs[i + j]))) k++;
+      if (k >= 2 && (!best || p * k > best.p * best.k)) best = { p, k };
+    }
+    if (best) { out.push({ rep: best.k, items: compressSegs(segs.slice(i, i + best.p)) }); i += best.p * best.k; } else { out.push({ seg: segs[i] }); i++; }
+  }
+  return out;
+}
+const durTxt = s => s >= 3600 ? fmtDur(s) : s % 60 ? (s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} min` : `${s} s`) : `${s / 60} min`;
+function segTxt(s) {
+  const watt = p => Math.round(p / 100 * settings.ftp);
+  const load = s.mode === 'gear' ? `<span style="color:var(--gear)">frei im Gang-Modus</span>` : s.w ? `${s.w} W` :
+    s.from === s.to ? `${Math.round(s.from)} % FTP · ${watt(s.from)} W` : `${Math.round(s.from)} → ${Math.round(s.to)} % · ${watt(s.from)} → ${watt(s.to)} W`;
+  const pct = s.w ? s.w / settings.ftp * 100 : (s.from + s.to) / 2;
+  return `<span class="num">${durTxt(s.dur)}</span><span><span class="swatch" style="background:${s.mode === 'gear' ? 'var(--gear)' : zoneHex(pct)}"></span>${load}${s.label ? ` · ${esc(s.label)}` : ''}${s.cad ? ` · <b>${s.cad} rpm</b>` : ''}</span>`;
+}
+function stepsHtml(items) {
+  return items.map(it => it.seg ? `<li>${segTxt(it.seg)}</li>` :
+    `<li><span class="rep">${it.rep} ×</span><span><ul>${stepsHtml(it.items)}</ul></span></li>`).join('');
+}
+function workoutDetail(w) {
+  const T = totalDur(w), tss = estTss(w), IF = Math.sqrt(tss * 36 / T);
+  const avgW = Math.round(w.segs.reduce((a, s) => a + s.dur * (s.w ?? (s.from + s.to) / 2 / 100 * settings.ftp), 0) / T);
+  const Z = [['Z1 Erholung', 0, 56], ['Z2 Grundlage', 56, 76], ['Z3 Tempo', 76, 91], ['Z4 Schwelle', 91, 106], ['Z5 VO2max', 106, 121], ['Z6 Anaerob', 121, 999]], zt = Z.map(() => 0); let gearT = 0;
+  for (const s of w.segs) { if (s.mode === 'gear') { gearT += s.dur; continue; } const pct = s.w ? s.w / settings.ftp * 100 : (s.from + s.to) / 2; zt[Z.findIndex(z => pct < z[2])] += s.dur; }
+  const zmax = Math.max(...zt, gearT, 1);
+  const zrows = Z.map((z, i) => zt[i] ? `<div class="zrow"><span>${z[0]}</span><div class="b"><i style="width:${zt[i] / zmax * 100}%;background:${zoneHex((z[1] + Math.min(z[2], 140)) / 2)}"></i></div><span class="num">${fmtDur(zt[i])}</span></div>` : '').join('') +
+    (gearT ? `<div class="zrow"><span>Gang-Modus</span><div class="b"><i style="width:${gearT / zmax * 100}%;background:var(--gear)"></i></div><span class="num">${fmtDur(gearT)}</span></div>` : '');
+  const notes = [w.segs.some(s => s.mode === 'gear') ? 'Gang-Abschnitte: Hier stellt der Trainer keine Watt ein – du schaltest selbst und fährst nach Gefühl bzw. Vorgabe.' : '',
+    w.segs.some(s => s.cad) ? 'Mit Ziel-Kadenz: Gladius zeigt sie an und bewertet sie im Workout-Score.' : '',
+    ADAPT_CATS[w.cat] ? `Gelernte Anpassung für ${ADAPT_CATS[w.cat]}: ${Math.round(adaptFactor(w.cat) * 1000) / 10} %. Die Tagesform wird beim Start abgefragt.` : ''].filter(Boolean);
+  return `<button class="dt-back" id="dt-back">← Zurück zu den Trainings</button>
+    <div class="dt-head"><div class="grow"><div class="cat" style="font-size:12px;letter-spacing:.14em;color:var(--accent2);font-weight:700">${(CATS[w.cat] || 'Importiert').toUpperCase()}</div><h1>${esc(w.name)}</h1><div class="muted">${esc(w.desc || '')}</div></div>
+    <button class="btn primary" id="dt-start" style="padding:12px 26px;font-size:16px">Workout starten</button></div>
+    <div class="stats dt-stats">${[['Dauer', fmtDur(T)], ['Training Load', `≈ ${tss} TSS`], ['Intensität', `IF ≈ ${IF.toFixed(2)}`], ['Ø Soll-Leistung', `${avgW} W`], ['Basis', `FTP ${settings.ftp} W`]].map(([l, v]) => `<div class="stat"><div class="l">${l}</div><div class="v num">${v}</div></div>`).join('')}</div>
+    <div class="dt-chart">${workoutDetailSvg(w)}</div>
+    <div class="dt-cols"><div class="dt-box"><h2>ABLAUF</h2><ul class="steps">${stepsHtml(compressSegs(w.segs))}</ul></div>
+      <div style="display:flex;flex-direction:column;gap:14px"><div class="dt-box"><h2>ZEIT IN DEN ZONEN</h2>${zrows}</div>
+      ${notes.length ? `<div class="dt-box"><h2>HINWEISE</h2><div class="muted" style="font-size:13.5px;line-height:1.55">${notes.map(esc).join('<br><br>')}</div></div>` : ''}</div></div>
+    ${w.sci ? `<div class="dt-box" style="margin-top:14px"><h2>WARUM DIESES TRAINING?</h2><div class="dt-sci">${esc(w.sci)}</div></div>` : ''}`;
+}
+function workoutDetailSvg(w) {
+  const W = 1000, H = 270, L = 46, R = 10, Tp = 22, B = 26, T = totalDur(w), fw = s => s.w ?? null;
+  const maxW = Math.max(settings.ftp * 1.3, ...w.segs.map(s => fw(s) ?? Math.max(s.from, s.to) / 100 * settings.ftp).filter(x => x < settings.ftp * 3)) * 1.08;
+  const X = t => L + t / T * (W - L - R), Y = v => Tp + (1 - Math.min(v, maxW) / maxW) * (H - Tp - B);
+  let g = '', t = 0;
+  const ps = niceStep(maxW / 4); for (let v = 0; v <= maxW; v += ps) g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.07)"/><text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="12" fill="#8b97a7">${v}</text>`;
+  const st = [60, 120, 300, 600, 900, 1200, 1800, 3600].find(x => T / x <= 10) || 3600;
+  for (let x = 0; x <= T; x += st) g += `<text x="${X(x)}" y="${H - 6}" text-anchor="middle" font-size="12" fill="#8b97a7">${Math.round(x / 60)} min</text>`;
+  for (const s of w.segs) { const a = fw(s) ?? s.from / 100 * settings.ftp, b = fw(s) ?? s.to / 100 * settings.ftp;
+    g += `<polygon points="${X(t)},${Y(0)} ${X(t)},${Y(a)} ${X(t + s.dur)},${Y(b)} ${X(t + s.dur)},${Y(0)}" fill="${s.mode === 'gear' ? '#a98bff' : zoneHex((a + b) / 2 / settings.ftp * 100)}" opacity=".85"/>`; t += s.dur; }
+  g += `<line x1="${L}" x2="${W - R}" y1="${Y(settings.ftp)}" y2="${Y(settings.ftp)}" stroke="rgba(255,255,255,.5)" stroke-dasharray="5 5"/><text x="${W - R - 4}" y="${Y(settings.ftp) - 6}" text-anchor="end" font-size="12" fill="#c5ccd6">FTP ${settings.ftp} W</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Leistungsprofil in Watt über die Zeit"><text x="4" y="14" font-size="12" fill="#8b97a7">W</text>${g}</svg>`;
+}
+function routeTimeAt(rt, P) {
+  // Fahrzeit bei konstanter Leistung P: pro 25 m die Geschwindigkeit aus dem Kräftegleichgewicht
+  let t = 0;
+  for (let d = 0; d < rt.len; d += RSTEP) { const g = clamp(gradeAt(rt, d + RSTEP / 2), -0.25, 0.25); let lo = 0.3, hi = 19.4;
+    if (powerAtSpeed(hi, g) <= P) { t += RSTEP / hi; continue; }
+    for (let i = 0; i < 30; i++) { const m = (lo + hi) / 2; powerAtSpeed(m, g) > P ? hi = m : lo = m; } t += RSTEP / Math.max(lo, coastSpeed(g), 0.3); }
+  return t;
+}
+function routeDetail(w) {
+  const rt = w.route, lo = Math.min(...rt.ele), hi = Math.max(...rt.ele);
+  let maxG = 0; for (let d = 0; d + 500 <= rt.len; d += 250) maxG = Math.max(maxG, (eleAt(rt, d + 500) - eleAt(rt, d)) / 5);
+  const kms = []; for (let d = 0; d < rt.len - 1; d += 1000) { const d2 = Math.min(rt.len, d + 1000); kms.push({ km: d / 1000 + 1, g: (eleAt(rt, d2) - eleAt(rt, d)) / (d2 - d) * 100, part: d2 - d < 1000 }); }
+  const times = [0.65, 0.75, 0.85].map(f => [f, routeTimeAt(rt, settings.ftp * f)]);
+  return `<button class="dt-back" id="dt-back">← Zurück zu den Trainings</button>
+    <div class="dt-head"><div class="grow"><div class="cat" style="font-size:12px;letter-spacing:.14em;color:var(--accent2);font-weight:700">STRECKE${w.imported ? ' · IMPORTIERT' : ''}</div><h1>${esc(w.name)}</h1><div class="muted">${esc(w.desc || '')}</div></div>
+    <button class="btn primary" id="dt-start" style="padding:12px 26px;font-size:16px">Losfahren</button></div>
+    <div class="stats dt-stats">${[['Länge', `${(rt.len / 1000).toFixed(1)} km`], ['Höhenmeter', `${rt.gain} hm`], ['Ø Steigung', `${(rt.gain / rt.len * 100).toFixed(1)} %`], ['Max. 500 m', `${maxG.toFixed(1)} %`], ['Höhe', `${Math.round(lo)} → ${Math.round(hi)} m`]].map(([l, v]) => `<div class="stat"><div class="l">${l}</div><div class="v num">${v}</div></div>`).join('')}</div>
+    <div class="dt-chart">${routeDetailSvg(rt)}</div>
+    <div class="dt-cols"><div class="dt-box"><h2>STEIGUNG PRO KILOMETER</h2><div class="kmgrid">${kms.map(k => `<div style="background:${gradeColor(k.g)}"><small>km ${k.km}${k.part ? '*' : ''}</small>${k.g.toFixed(1)} %</div>`).join('')}</div>
+      ${kms.some(k => k.part) ? '<div class="muted" style="font-size:12px;margin-top:8px">* letzter, angebrochener Kilometer</div>' : ''}</div>
+      <div style="display:flex;flex-direction:column;gap:14px"><div class="dt-box"><h2>GESCHÄTZTE FAHRZEIT</h2>${times.map(([f, t]) => `<div class="zrow"><span>${Math.round(f * 100)} % FTP · ${Math.round(settings.ftp * f)} W</span><span></span><span class="num">${fmtTime(t)}</span></div>`).join('')}
+        <div class="muted" style="font-size:12.5px;line-height:1.45;margin-top:6px">Bei konstanter Leistung, ${settings.weight} kg + ${settings.bikeWeight} kg Velo, ohne Wind.</div></div>
+      <div class="dt-box"><h2>SO FUNKTIONIERT ES</h2><div class="muted" style="font-size:13.5px;line-height:1.55">Gladius berechnet aus Kadenz, virtuellem Gang, Gewicht und der Steigung an deiner Position die Leistung, die du draussen treten müsstest (Luft- und Rollwiderstand, Hangabtrieb), und stellt sie am Trainer ein. Schalte wie am echten Pass. Bergab rollst du ohne Treten weiter.<br><br>${esc(rt.source || '')}</div></div></div></div>`;
+}
+function routeDetailSvg(rt) {
+  const W = 1000, H = 270, L = 50, R = 10, Tp = 22, B = 26, lo = Math.min(...rt.ele), hi = Math.max(...rt.ele), pad = Math.max(30, (hi - lo) * .08), eLo = lo - pad, eHi = hi + pad;
+  const X = d => L + d / rt.len * (W - L - R), Y = e => Tp + (1 - (e - eLo) / (eHi - eLo)) * (H - Tp - B);
+  let g = '';
+  const es = niceStep((eHi - eLo) / 4); for (let v = Math.ceil(eLo / es) * es; v <= eHi; v += es) g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.07)"/><text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="12" fill="#8b97a7">${Math.round(v)}</text>`;
+  const km = rt.len / 1000, ks = niceStep(km / 10); for (let k = 0; k <= km + 1e-9; k += ks) g += `<text x="${X(k * 1000)}" y="${H - 6}" text-anchor="middle" font-size="12" fill="#8b97a7">${+k.toFixed(1)} km</text>`;
+  for (let d = 0; d < rt.len; d += 250) { const d2 = Math.min(rt.len, d + 250), gr = (eleAt(rt, d2) - eleAt(rt, d)) / (d2 - d) * 100;
+    g += `<polygon points="${X(d)},${Y(eLo)} ${X(d)},${Y(eleAt(rt, d))} ${X(d2)},${Y(eleAt(rt, d2))} ${X(d2)},${Y(eLo)}" fill="${gradeColor(gr)}" opacity=".9"/>`; }
+  let path = ''; for (let d = 0; d <= rt.len; d += 50) path += `${d ? 'L' : 'M'}${X(d).toFixed(1)},${Y(eleAt(rt, d)).toFixed(1)}`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Höhenprofil, eingefärbt nach Steigung"><text x="4" y="14" font-size="12" fill="#8b97a7">m</text>${g}<path d="${path}" fill="none" stroke="#e9edf2" stroke-width="1.5"/></svg>`;
+}
 function routeCard(w) {
   const rt = w.route, avg = rt.gain / rt.len * 100;
   let maxG = 0; for (let d = 0; d + 500 <= rt.len; d += 250) maxG = Math.max(maxG, (eleAt(rt, d + 500) - eleAt(rt, d)) / 5);
-  return `<div class="card"><div class="cat">Strecke${w.imported ? ' · importiert' : ''}</div><h3>${esc(w.name)}</h3>
+  return `<div class="card" data-open="${w.id}" tabindex="0" role="button" aria-label="${esc(w.name)} – Details"><div class="cat">Strecke${w.imported ? ' · importiert' : ''}</div><h3>${esc(w.name)}</h3>
     <div class="meta num">${(rt.len / 1000).toFixed(1)} km · ${rt.gain} hm · Ø ${avg.toFixed(1)} % · max. ${maxG.toFixed(1)} % (500 m) · ${Math.round(Math.min(...rt.ele))} → ${Math.round(Math.max(...rt.ele))} m</div>
     ${routeSvg(rt)}<p>${esc(w.desc || '')}</p>
-    <details><summary>Wie funktioniert das?</summary>Gladius berechnet aus Kadenz, virtuellem Gang, Gewicht und der Steigung an deiner Position die Leistung, die du draussen treten müsstest (Luft- und Rollwiderstand, Hangabtrieb), und stellt sie am Trainer ein. Schalte wie am echten Pass. ${esc(rt.source || '')}</details>
-    <div class="actions"><button class="btn primary small" data-start="${w.id}">Losfahren</button>${w.imported ? `<button class="btn small" data-delroute="${w.id}">Löschen</button>` : ''}</div></div>`;
+    <div class="actions"><button class="btn primary small" data-start="${w.id}">Losfahren</button>${w.imported ? `<button class="btn small" data-delroute="${w.id}">Löschen</button>` : ''}<span class="more">Details ansehen →</span></div></div>`;
 }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function updateFtpLabel() { $('#lbl-ftp').textContent = settings.ftp; }
@@ -1541,9 +1665,11 @@ $('#set-save').onclick = () => {
 };
 $('#tabs').onclick = e => { const c = e.target.dataset.cat; if (c) { activeCat = c; renderLibrary(); } };
 $('#lib').onclick = e => {
-  const id = e.target.dataset.start; if (id) startRide(allWorkouts().find(w => w.id === id));
+  const id = e.target.dataset.start; if (id) { startRide(allWorkouts().find(w => w.id === id)); return; }
+  const card = e.target.closest('[data-open]'); if (card && !e.target.dataset.delroute) { openDetail(card.dataset.open); return; }
   const del = e.target.dataset.delroute; if (del) askConfirm('Diese importierte Strecke löschen?', 'Löschen').then(ok => { if (ok) { store.set('routes', store.get('routes', []).filter(r => 'r-' + r.id !== del)); renderLibrary(); } });
 };
+$('#lib').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset.open) { e.preventDefault(); openDetail(e.target.dataset.open); } });
 $('#gpx').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   try {
