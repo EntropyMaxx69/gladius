@@ -219,8 +219,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <!-- RIDE -->
   <section class="view" id="view-settings">
     <button class="dt-back" id="st-back">← Zurück</button>
-    <div class="dt-head"><div class="grow"><h1>Einstellungen</h1><div class="muted">Änderungen gelten ab dem nächsten Training. Velo-Angaben fliessen direkt in die Simulation ein.</div></div>
-      <button class="btn" id="st-reset">Verwerfen</button><button class="btn primary" id="st-save" style="padding:12px 26px">Speichern</button></div>
+    <div class="dt-head"><div class="grow"><h1>Einstellungen</h1><div class="muted">Änderungen gelten ab dem nächsten Training. Velo-Angaben fliessen direkt in die Simulation ein. Beim Verlassen fragt Gladius, ob du speichern möchtest.</div></div></div>
     <div class="st-layout">
       <nav class="st-nav" id="st-nav">
         <a href="#st-person">Persönlich</a><a href="#st-perf">Leistung &amp; Puls</a><a href="#st-bike">Velo</a><a href="#st-ride">Fahren</a><a href="#st-look">Farben &amp; HUD</a><a href="#st-profiles">Profile</a><a href="#st-data">Daten</a>
@@ -353,6 +352,10 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <h2 style="margin-top:0" id="tx-title"></h2>
   <input type="text" id="tx-input" maxlength="40" style="width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:10px;font:inherit;font-size:16px">
   <div class="toolbar" style="justify-content:flex-end"><button class="btn" id="tx-no">Abbrechen</button><button class="btn primary" id="tx-yes">OK</button></div>
+</dialog>
+<dialog id="dlg-choice" style="max-width:540px">
+  <p id="ch-msg" style="margin-top:0;font-size:16px;line-height:1.45"></p>
+  <div class="toolbar" style="justify-content:flex-end" id="ch-btns"></div>
 </dialog>
 <dialog id="dlg-confirm">
   <p id="cf-msg" style="margin-top:0;font-size:16px;line-height:1.45"></p>
@@ -1799,7 +1802,7 @@ function fillSettings() {
   $('#s-vshift').checked = settings.virtualShift; $('#s-autopause').checked = settings.autoPause; $('#s-beeps').checked = settings.beeps;
   v('s-accent', settings.accent || DEFAULT_LOOK.accent); v('s-hudc', settings.hudColor || DEFAULT_LOOK.hudColor); v('s-hudok', settings.hudOk || DEFAULT_LOOK.hudOk);
   v('s-hudscale', settings.hudScale); v('s-hudop', settings.hudOpacity);
-  settingsPreview();
+  settingsPreview(); stSnap = JSON.stringify(stValues());
 }
 function settingsPreview() {
   $('#s-hudscale-o').textContent = $('#s-hudscale').value + ' %'; $('#s-hudop-o').textContent = $('#s-hudop').value + ' %';
@@ -1810,7 +1813,7 @@ function settingsPreview() {
     : 'Den Schwellenpuls ermittelst du mit dem Puls-Zonentest, die FTP mit dem Ramp-Test. Trägst du dein Geburtsjahr ein, zeigt Gladius einen Richtwert für den Maximalpuls.';
   document.querySelectorAll('.st-presets').forEach(box => { if (!box.childElementCount) box.innerHTML = PRESETS[box.dataset.for].map(c => `<button type="button" style="background:${c}" data-c="${c}" title="${c}" aria-label="Farbe ${c}"></button>`).join(''); });
 }
-function saveSettings() {
+function saveSettings(navigate = true) {
   const num = (id, lo, hi, dflt) => { const x = +$('#' + id).value; return x ? clamp(x, lo, hi) : dflt; };
   settings.name = $('#s-name').value.trim(); settings.born = num('s-born', 1930, 2020, null); settings.weight = num('s-weight', 30, 200, 75); settings.height = num('s-height', 120, 230, null);
   settings.lthr = num('s-lthr', 90, 220, null); settings.hrMax = num('s-hrmax', 100, 230, null);
@@ -1822,13 +1825,33 @@ function saveSettings() {
   settings.hudScale = +$('#s-hudscale').value; settings.hudOpacity = +$('#s-hudop').value;
   store.set('settings', settings); renderProfiles();
   const newFtp = num('s-ftp', 50, 600, 200); if (newFtp !== settings.ftp) setFtp(newFtp, 'Einstellungen');
-  applyBike(); applyLook(); updateFtpLabel(); toast('Einstellungen gespeichert.');
-  showView(settingsFrom === 'settings' ? 'library' : settingsFrom);
+  applyBike(); applyLook(); updateFtpLabel(); toast('Einstellungen gespeichert.'); stSnap = JSON.stringify(stValues());
+  if (navigate) showView(settingsFrom === 'settings' ? 'library' : settingsFrom);
 }
 $('#chip-settings').onclick = openSettings;
-$('#st-back').onclick = () => applyLook() || showView(settingsFrom === 'settings' ? 'library' : settingsFrom);
-$('#st-save').onclick = saveSettings;
-$('#st-reset').onclick = () => { fillSettings(); toast('Änderungen verworfen.'); };
+// Auswahl-Dialog mit mehreren Knöpfen: [[wert, beschriftung, 'primary'?], …]
+function askChoice(msg, buttons) {
+  return new Promise(res => {
+    const d = $('#dlg-choice'); $('#ch-msg').textContent = msg;
+    $('#ch-btns').innerHTML = buttons.map(([v, l, cls]) => `<button class="btn ${cls || ''}" data-ch="${v}">${l}</button>`).join('');
+    $('#ch-btns').onclick = e => { const b = e.target.closest('[data-ch]'); if (b) { d.close(); res(b.dataset.ch); } };
+    d.oncancel = () => res(null); d.showModal();
+  });
+}
+// Ungespeicherte Änderungen erkennen: Formularwerte beim Öffnen merken und beim Verlassen vergleichen
+let stSnap = null;
+const stValues = () => Object.fromEntries([...document.querySelectorAll('#view-settings input[id^="s-"], #view-settings select[id^="s-"]')].filter(e => e.type !== 'file').map(e => [e.id, e.type === 'checkbox' ? e.checked : e.value]));
+const settingsDirty = () => $('#view-settings').classList.contains('active') && stSnap != null && JSON.stringify(stValues()) !== stSnap;
+async function leaveSettings(then) {
+  if (settingsDirty()) {
+    const c = await askChoice('Du hast Einstellungen geändert. Möchtest du sie speichern?', [['stay', 'Weiter bearbeiten'], ['discard', 'Verwerfen'], ['save', 'Speichern', 'primary']]);
+    if (c === 'save') saveSettings(false);
+    else if (c === 'discard') { fillSettings(); applyLook(); toast('Änderungen verworfen.'); }
+    else return false;
+  } else applyLook();
+  then(); return true;
+}
+$('#st-back').onclick = () => leaveSettings(() => showView(settingsFrom === 'settings' ? 'library' : settingsFrom));
 $('#view-settings').addEventListener('input', settingsPreview);
 $('#s-wheel').onchange = () => { $('#s-wheelc-wrap').hidden = $('#s-wheel').value !== 'custom'; };
 $('#view-settings').addEventListener('click', e => { const c = e.target.dataset.c; if (c) { const inp = $('#' + e.target.parentElement.dataset.for); inp.value = c; settingsPreview(); } });
@@ -1844,9 +1867,10 @@ function askText(title, value = '') {
   });
 }
 // ---------- Profile ----------
-function switchProfile(id) { if (ride.active) { toast('Profil wechseln geht nach der Fahrt.'); return; } LS.set('gladius.activeProfile', id); location.reload(); }
+function switchProfile(id) { if (ride.active) { toast('Profil wechseln geht nach der Fahrt.'); return; } leaveSettings(() => { LS.set('gladius.activeProfile', id); location.reload(); }); }
 async function newProfile() {
   if (ride.active) { toast('Profil anlegen geht nach der Fahrt.'); return; }
+  if (settingsDirty() && !(await leaveSettings(() => { }))) return;
   const name = await askText('Name des neuen Profils'); if (!name) return;
   const id = Date.now().toString(36), list = profileList(); list.push(id); LS.set('gladius.profiles', JSON.stringify(list));
   LS.set(profilePrefix(id) + 'settings', JSON.stringify({ name }));
@@ -1854,7 +1878,7 @@ async function newProfile() {
 }
 async function renameProfile(id) {
   const name = await askText('Profil umbenennen', profileName(id)); if (!name) return;
-  if (id === PROFILE) { settings.name = name; store.set('settings', settings); if ($('#s-name')) $('#s-name').value = name; applyLook(); }
+  if (id === PROFILE) { settings.name = name; store.set('settings', settings); if ($('#s-name')) { $('#s-name').value = name; if (stSnap) { const o = JSON.parse(stSnap); o['s-name'] = name; stSnap = JSON.stringify(o); } } applyLook(); }
   else { const key = profilePrefix(id) + 'settings'; let st = {}; try { st = JSON.parse(LS.get(key) || '{}'); } catch (e) { } st.name = name; LS.set(key, JSON.stringify(st)); }
   renderProfiles(); toast(`Profil heisst jetzt „${name}“.`);
 }
@@ -1867,7 +1891,7 @@ async function deleteProfile(id) {
 function renderProfiles() {
   const name = profileName(PROFILE); $('#pf-name').textContent = name; $('#pf-av').textContent = name.charAt(0).toUpperCase();
   $('#pf-menu').innerHTML = profileList().map(id => `<button data-pf="${id}" class="${id === PROFILE ? 'cur' : ''}"><span class="pf-av">${esc(profileName(id).charAt(0).toUpperCase())}</span>${esc(profileName(id))}${id === PROFILE ? ' ✓' : ''}</button>`).join('') +
-    '<hr><button data-pfren="' + PROFILE + '">✎ Profil umbenennen</button><button data-pfnew="1">＋ Neues Profil</button><button data-pfmanage="1">Profile verwalten</button>';
+    '<hr><button data-pfnew="1">＋ Neues Profil</button><button data-pfmanage="1">Profile verwalten</button>';
   if ($('#pf-list')) $('#pf-list').innerHTML = profileList().map(id => { const h = (() => { try { return JSON.parse(LS.get(profilePrefix(id) + 'history') || '[]').length; } catch (e) { return 0; } })();
     return `<div class="pf-row"><span class="pf-av">${esc(profileName(id).charAt(0).toUpperCase())}</span><div class="grow"><b>${esc(profileName(id))}</b>${id === PROFILE ? ' <span class="muted">· aktiv</span>' : ''}<div class="muted" style="font-size:12.5px">${h} Fahrten</div></div>
       <button class="btn small" data-pfren="${id}">Umbenennen</button>${id === PROFILE ? '' : `<button class="btn small" data-pf="${id}">Wechseln</button>`}${id === 'default' || id === PROFILE ? '' : `<button class="btn small danger" data-pfdel="${id}">Löschen</button>`}</div>`; }).join('');
