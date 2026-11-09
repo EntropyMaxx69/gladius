@@ -710,12 +710,12 @@ async function onTrainerDisconnect() {
 const CLICK_SVC_V2 = 0xFC82, CLICK_SVC_V1 = '00000001-19ca-4651-86e5-fa29dcdd09d1';
 const CLICK_ASYNC = '00000002-19ca-4651-86e5-fa29dcdd09d1', CLICK_RX = '00000003-19ca-4651-86e5-fa29dcdd09d1', CLICK_TX = '00000004-19ca-4651-86e5-fa29dcdd09d1';
 const RIDE_ON = [0x52, 0x69, 0x64, 0x65, 0x4F, 0x6E];
-const CLICK_BITS = { 0x1: 'Links', 0x2: 'Hoch', 0x4: 'Rechts', 0x8: 'Runter', 0x10: 'A', 0x20: 'B', 0x40: 'Y', 0x80: 'Z',
-  0x100: 'Schalttaste links ▲', 0x200: 'Schalttaste links ▼ (−)', 0x400: 'Power-up links', 0x800: 'Ein/Aus links',
-  0x1000: 'Schalttaste rechts ▲ (+)', 0x2000: 'Schalttaste rechts ▼', 0x4000: 'Power-up rechts', 0x8000: 'Ein/Aus rechts' };
+// Belegung im Click-Test mit Darios Click v2 bestätigt: Steuerkreuz, A/B/Y/Z, − = 0x0100, + = 0x1000
+const CLICK_BITS = { 0x1: 'Steuerkreuz links', 0x2: 'Steuerkreuz hoch', 0x4: 'Steuerkreuz rechts', 0x8: 'Steuerkreuz runter', 0x10: 'Taste A', 0x20: 'Taste B', 0x40: 'Taste Y', 0x80: 'Taste Z',
+  0x100: 'Schalttaste −', 0x200: 'Taste 0x0200', 0x400: 'Taste 0x0400', 0x800: 'Taste 0x0800', 0x1000: 'Schalttaste +', 0x2000: 'Taste 0x2000', 0x4000: 'Taste 0x4000', 0x8000: 'Taste 0x8000' };
 const clickBitName = b => CLICK_BITS[b] || `Taste 0x${b.toString(16)}`;
 const CLICK_ACTIONS = { up: 'Hochschalten', down: 'Runterschalten', pause: 'Pause / Weiter', skip: 'Nächstes Intervall', intup: 'Intensität +5 %', intdn: 'Intensität −5 %', mode: 'ERG ⇄ Gang-Modus', hud: 'HUD ein/aus', none: 'Keine Funktion' };
-const CLICK_DEFAULT = [{ bit: 0x1000, action: 'up' }, { bit: 0x200, action: 'down' }, { bit: 0x100, action: 'up' }, { bit: 0x2000, action: 'down' }];
+const CLICK_DEFAULT = [[0x1000, 'up'], [0x100, 'down'], [0x1, 'none'], [0x2, 'none'], [0x4, 'none'], [0x8, 'none'], [0x10, 'none'], [0x20, 'none'], [0x40, 'none'], [0x80, 'none']].map(([bit, action]) => ({ bit, action }));
 const clickMap = () => Array.isArray(settings.clickMap) ? settings.clickMap : CLICK_DEFAULT;
 const click = { pods: [], learn: null };
 function pbField(b, start, field) {
@@ -749,7 +749,7 @@ function onClickRelease(bit) { if (click.rep?.[bit]) { clearTimeout(click.rep[bi
 function onClickAsync(p, dv) {
   const b = new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength); let map = null;
   if (b[0] === 0x23) { const v = pbField(b, 1, 1); map = v === null ? null : (v ?? 0); }
-  else if (b[0] === 0x37) { const plus = pbField(b, 1, 1) ?? 0, minus = pbField(b, 1, 2) ?? 0; map = 0xffffffff & ~(plus === 0 ? 0x1000 : 0) & ~(minus === 0 ? 0x0200 : 0); }   // Click v1
+  else if (b[0] === 0x37) { const plus = pbField(b, 1, 1) ?? 0, minus = pbField(b, 1, 2) ?? 0; map = 0xffffffff & ~(plus === 0 ? 0x1000 : 0) & ~(minus === 0 ? 0x0100 : 0); }   // Click v1 → gleiche Bits wie v2
   if (map === null) return;
   map = map >>> 0;
   const changed = (p.map ^ map) & 0xffff;
