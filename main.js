@@ -12,7 +12,7 @@ app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(
 function createMain() {
   win = new BrowserWindow({
     width: 1320, height: 900, minWidth: 900, minHeight: 600,
-    backgroundColor: '#0d1014', title: 'Gladius', autoHideMenuBar: true,
+    backgroundColor: '#0d1014', title: 'Gladius', autoHideMenuBar: true, icon: path.join(__dirname, 'app', 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true, nodeIntegration: false,
