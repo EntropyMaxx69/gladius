@@ -177,6 +177,8 @@ table.hist th{color:var(--muted);font-weight:600}
 .xp-up{color:#ffc53d;font-weight:700}.banner.pr{background:rgba(255,197,61,.1);border-color:rgba(255,197,61,.45)}
 table.prs tr.pr1 td{color:#ffc53d}
 .lv-row .rbadge{flex:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))}
+.lv-toggle{background:none;border:0;padding:0;color:inherit;cursor:pointer;text-align:left;border-radius:10px}.lv-toggle:hover .rbadge{transform:scale(1.04)}.lv-toggle .rbadge{transition:transform .15s}
+.lv-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.lv-caret{font-size:14px;color:var(--muted);font-family:Inter,system-ui,sans-serif}
 .ladder{display:flex;gap:2px;margin-top:14px;overflow-x:auto;padding-bottom:2px}.ladder>div{flex:1;min-width:46px;display:flex;flex-direction:column;align-items:center;font-size:10.5px;color:var(--muted);padding:4px 0;border-radius:8px}
 .ladder>div.cur{background:rgba(255,122,47,.12);color:var(--text);font-weight:700}
 .trophies{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}.trophies>div{display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--muted)}
@@ -1441,6 +1443,7 @@ const classTable = () => settings.sex === 'f' ? CLASSES_M.map(([v, n]) => [Math.
 function classOf(wkg) { const C = classTable(); let i = 0; C.forEach((c, j) => { if (wkg >= c[0]) i = j; }); return { i, name: C[i][1], next: C[i + 1] || null }; }
 function addXpLog(k, xp, why) { const l = store.get('xpLog', []).filter(x => x.k !== k); if (xp) l.push({ k, t: Math.floor(clock.now() / 1000), xp, why }); store.set('xpLog', l); }
 
+let ladderOpen = false;
 function renderLevelCard() {
   const box = $('#d-level'); if (!box) return;
   const now = Math.floor(clock.now() / 1000), L = levelOf(totalXp()), SR = seasonRank(now), S = SR.season, wk = totalXp() - totalXp(now - 7 * DAY);
@@ -1450,13 +1453,13 @@ function renderLevelCard() {
   const nextW = C.next ? Math.ceil(C.next[0] * settings.weight - settings.ftp) : 0, trophies = updateTrophies();
   box.innerHTML = `<div class="dcard lvcard"><div class="lv-l">
       <div class="t"><span>RANG · SAISON ${S.label}</span><span>${wk ? `+${wk} XP in 7 Tagen` : ''}</span></div>
-      <div class="lv-row">${rankBadge(SR.tier, true, 104)}
-        <div style="min-width:0;flex:1"><div class="lv-rank">${esc(SR.name)}</div>
+      <div class="lv-row"><button class="lv-toggle" id="lv-toggle" aria-expanded="${ladderOpen}" title="Alle Ränge ${ladderOpen ? 'ausblenden' : 'anzeigen'}">${rankBadge(SR.tier, true, 104)}</button>
+        <div style="min-width:0;flex:1"><button class="lv-toggle lv-rank" id="lv-toggle2" aria-expanded="${ladderOpen}">${esc(SR.name)} <span class="lv-caret">${ladderOpen ? '▴' : '▾'}</span></button>
         <div class="muted" style="font-size:13px">${SR.xp.toLocaleString('de-CH')} Saison-XP · Level ${L.level} (${L.xp.toLocaleString('de-CH')} XP gesamt)</div>
         <div class="lv-bar" style="margin-top:10px"><i style="width:${pct}%"></i></div>
         <div class="muted num" style="font-size:12.5px;display:flex;justify-content:space-between;gap:8px"><span>${SR.next ? `Noch ${(SR.to - SR.xp).toLocaleString('de-CH')} XP bis ${esc(SR.next)}` : 'Höchster Rang erreicht!'}</span><span>Reset in ${daysLeft} Tagen (1. Mai)</span></div></div></div>
-      <div class="ladder">${TIERS.map((T, i) => `<div class="${i === SR.tier ? 'cur' : ''}" title="${T.name} ab ${T.xp.toLocaleString('de-CH')} Saison-XP">${rankBadge(i, 0, 40, { locked: i > SR.tier })}<span>${T.name}</span></div>`).join('')}</div>
-      ${trophies.length ? `<div class="t" style="margin-top:12px"><span>TROPHÄEN</span></div><div class="trophies">${trophies.map(x => `<div title="Saison ${x.season}: ${TIERS[x.tier].name} · ${x.xp.toLocaleString('de-CH')} XP">${rankBadge(x.tier, true, 76)}<span>Saison ${x.season}</span></div>`).join('')}</div>` : ''}
+      <div class="ladder" ${ladderOpen ? '' : 'hidden'}>${TIERS.map((T, i) => `<div class="${i === SR.tier ? 'cur' : ''}" title="${T.name} ab ${T.xp.toLocaleString('de-CH')} Saison-XP">${rankBadge(i, 0, 40, { locked: i > SR.tier })}<span>${T.name}</span></div>`).join('')}</div>
+      ${trophies.length ? `<div class="t" style="margin-top:14px"><span>TROPHÄEN</span></div><div class="trophies">${trophies.map(x => `<div title="Saison ${x.season}: ${TIERS[x.tier].name} · ${x.xp.toLocaleString('de-CH')} XP">${rankBadge(x.tier, true, 76)}<span>Saison ${x.season}</span></div>`).join('')}</div>` : ''}
     </div><div class="lv-r">
       <div class="t"><span>LEISTUNGSKLASSE</span><span>${wkg.toFixed(2)} W/kg</span></div>
       <div class="lv-rank" style="margin-top:6px">${C.name}</div>
@@ -2786,6 +2789,7 @@ $('#planwiz').onchange = e => {
   else if (e.target.id === 'wz-start' && e.target.value) wiz.start = e.target.value;
   renderWizard();
 };
+$('#d-level').onclick = e => { if (e.target.closest('.lv-toggle')) { ladderOpen = !ladderOpen; renderLevelCard(); } };
 $('#lib-sort').onchange = e => { store.set('libSort', e.target.value); renderLibrary(); };
 $('#tabs').onclick = e => { const c = e.target.dataset.cat; if (c) { activeCat = c; renderLibrary(); } };
 $('#lib').onclick = e => {
