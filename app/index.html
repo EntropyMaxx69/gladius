@@ -27,6 +27,11 @@ header{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:
 .chip.on .dot{background:var(--ok);box-shadow:0 0 8px var(--ok)}
 .chip.busy .dot{background:var(--warn)}
 .chip:hover{border-color:var(--muted)}
+.pf-wrap{position:relative}.pf-av{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#14100c;display:inline-grid;place-items:center;font-weight:800;font-size:12px}
+.pf-menu{position:absolute;right:0;top:calc(100% + 6px);min-width:220px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px;z-index:30;box-shadow:0 10px 30px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:2px}
+.pf-menu[hidden]{display:none}.pf-menu button{background:none;border:0;text-align:left;padding:9px 10px;border-radius:8px;display:flex;gap:10px;align-items:center;font-size:14px}.pf-menu button:hover{background:var(--panel)}
+.pf-menu .cur{font-weight:700}.pf-menu hr{border:0;border-top:1px solid var(--line);margin:4px 0;width:100%}
+.pf-list{display:flex;flex-direction:column;gap:8px}.pf-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}.pf-row .grow{flex:1;min-width:0}
 .chip-icon{padding:7px 11px;font-size:17px;line-height:1}
 main{max-width:1200px;margin:0 auto;padding:20px}
 .view{display:none}.view.active{display:block}
@@ -86,7 +91,7 @@ h2{font-size:18px;margin:28px 0 10px}
 .st-color{display:flex;gap:8px;align-items:center}.st-color input[type=color]{width:44px;height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:2px}
 .st-presets{display:flex;gap:6px}.st-presets button{width:22px;height:22px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line);padding:0}
 .st-preview{margin-top:14px;display:flex;gap:18px;align-items:baseline;flex-wrap:wrap;padding:14px 18px;border-radius:10px;background:linear-gradient(160deg,#6fb8f0,#e6f2fa 55%,#6f9a5c 56%,#4f7d3c)}
-.st-preview .pv-l{font-size:12px;letter-spacing:.18em;font-weight:700}.st-preview .pv-v{font-size:52px;font-weight:800;line-height:1}
+.st-preview{--s:1}.st-preview .pv-l{font-size:calc(12px * var(--s));letter-spacing:.18em;font-weight:700}.st-preview .pv-v{font-size:calc(52px * var(--s));font-weight:800;line-height:1}
 .st-preview span{color:var(--hudc);text-shadow:0 0 2px #000,0 0 3px #000,0 1px 8px rgba(0,0,0,.85)}.st-preview .ok{color:var(--hudok)}
 @media (max-width:760px){.st-layout{grid-template-columns:1fr}.st-nav{position:static;flex-direction:row;flex-wrap:wrap}}
 .dt-sci{font-size:14px;line-height:1.6;color:#c5ccd6;max-width:75ch}
@@ -173,6 +178,8 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <button class="chip" id="chip-trainer" title="Smart-Trainer per Bluetooth (FTMS) verbinden"><span class="dot"></span><span id="lbl-trainer">Trainer verbinden</span></button>
     <button class="chip" id="chip-hr" title="Pulsgurt per Bluetooth verbinden"><span class="dot"></span><span id="lbl-hr">Puls verbinden</span></button>
     <button class="chip" id="chip-demo" title="Simulierter Trainer zum Ausprobieren ohne Hardware"><span class="dot"></span><span>Demo</span></button>
+    <div class="pf-wrap"><button class="chip" id="chip-profile" aria-haspopup="true" aria-expanded="false" title="Profil wechseln"><span class="pf-av" id="pf-av"></span><span id="pf-name"></span><span aria-hidden="true" style="color:var(--muted)">▾</span></button>
+      <div class="pf-menu" id="pf-menu" hidden></div></div>
     <button class="chip chip-icon" id="chip-settings" title="Einstellungen" aria-label="Einstellungen"><span aria-hidden="true">⚙</span></button>
   </div>
 </header>
@@ -216,7 +223,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
       <button class="btn" id="st-reset">Verwerfen</button><button class="btn primary" id="st-save" style="padding:12px 26px">Speichern</button></div>
     <div class="st-layout">
       <nav class="st-nav" id="st-nav">
-        <a href="#st-person">Persönlich</a><a href="#st-perf">Leistung &amp; Puls</a><a href="#st-bike">Velo</a><a href="#st-ride">Fahren</a><a href="#st-look">Farben &amp; HUD</a><a href="#st-data">Daten</a>
+        <a href="#st-person">Persönlich</a><a href="#st-perf">Leistung &amp; Puls</a><a href="#st-bike">Velo</a><a href="#st-ride">Fahren</a><a href="#st-look">Farben &amp; HUD</a><a href="#st-profiles">Profile</a><a href="#st-data">Daten</a>
       </nav>
       <div class="st-main">
         <section class="dt-box st-sec" id="st-person"><h2>PERSÖNLICH</h2>
@@ -268,9 +275,17 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
           </div>
           <div class="st-preview" id="s-hudprev"><span class="pv-l">LEISTUNG</span><span class="pv-v" id="pv-a">231</span><span class="pv-v ok" id="pv-b">228</span><span class="pv-l">← ausserhalb · im Ziel →</span></div>
         </section>
+        <section class="dt-box st-sec" id="st-profiles"><h2>PROFILE</h2>
+          <p class="st-hint" style="margin-top:0">Jedes Profil hat eigene Einstellungen, Fahrten, FTP-Verlauf, Anpassungen und importierte Strecken – z. B. für Mitbewohner oder ein zweites Velo.</p>
+          <div class="pf-list" id="pf-list"></div>
+          <div class="toolbar"><button class="btn" id="pf-new">Neues Profil anlegen</button></div>
+        </section>
         <section class="dt-box st-sec" id="st-data"><h2>DATEN</h2>
           <p class="st-hint" style="margin-top:0">Alle Fahrten, der FTP-Verlauf, importierte Strecken und Einstellungen liegen nur auf diesem Gerät. Sichere sie regelmässig, z. B. auf OneDrive.</p>
           <div class="toolbar"><button class="btn" id="s-export">Daten sichern (.json)</button><label class="btn">Sicherung wiederherstellen<input type="file" id="s-import" accept=".json,application/json" hidden></label></div>
+          <h2 style="margin-top:20px">ZURÜCKSETZEN</h2>
+          <div class="toolbar"><button class="btn" id="s-reset-settings">Einstellungen zurücksetzen</button><button class="btn danger" id="s-reset-all">Alle Daten dieses Profils löschen</button></div>
+          <p class="st-hint">„Einstellungen zurücksetzen“ stellt Werkeinstellungen wieder her (FTP, Puls, Velo, Farben, HUD), Fahrten und Verlauf bleiben erhalten. „Alle Daten löschen“ setzt das Profil komplett auf den Anfang zurück. Beides lässt sich nicht rückgängig machen – sichere vorher deine Daten.</p>
         </section>
       </div>
     </div>
@@ -334,6 +349,11 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <div class="feels col" id="bt-list"></div>
   <div class="toolbar" style="justify-content:flex-end"><button class="btn" id="bt-cancel">Abbrechen</button></div>
 </dialog>
+<dialog id="dlg-text">
+  <h2 style="margin-top:0" id="tx-title"></h2>
+  <input type="text" id="tx-input" maxlength="40" style="width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:10px;font:inherit;font-size:16px">
+  <div class="toolbar" style="justify-content:flex-end"><button class="btn" id="tx-no">Abbrechen</button><button class="btn primary" id="tx-yes">OK</button></div>
+</dialog>
 <dialog id="dlg-confirm">
   <p id="cf-msg" style="margin-top:0;font-size:16px;line-height:1.45"></p>
   <div class="toolbar" style="justify-content:flex-end"><button class="btn" id="cf-no">Abbrechen</button><button class="btn primary" id="cf-yes">OK</button></div>
@@ -371,10 +391,20 @@ const fmtDur = s => { const m = Math.round(s / 60); return m >= 60 ? `${Math.flo
 const clock = { offset: 0, now() { return Date.now() + this.offset; } };   // Uhr (für Tests verschiebbar)
 
 /* ---------------- Speicher ---------------- */
+// Mehrere Profile: das erste Profil ("default") nutzt die bisherigen Schlüssel, weitere einen eigenen Präfix
+const LS = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }, del(k) { try { localStorage.removeItem(k); } catch (e) { } },
+  keys() { try { return Object.keys(localStorage); } catch (e) { return []; } } };
+const GLOBAL_KEYS = ['gladius.profiles', 'gladius.activeProfile'];
+const profilePrefix = id => id === 'default' ? 'gladius.' : `gladius.p.${id}.`;
+const profileKeys = id => LS.keys().filter(k => id === 'default' ? k.startsWith('gladius.') && !k.startsWith('gladius.p.') && !GLOBAL_KEYS.includes(k) : k.startsWith(profilePrefix(id)));
+let PROFILE = LS.get('gladius.activeProfile') || 'default';
+const profileList = () => { let l = []; try { l = JSON.parse(LS.get('gladius.profiles') || '[]'); } catch (e) { } if (!l.includes('default')) l.unshift('default'); return l; };
+if (!profileList().includes(PROFILE)) PROFILE = 'default';
+const profileName = id => { try { const st = JSON.parse(LS.get(profilePrefix(id) + 'settings') || '{}'); return (st.name || '').trim() || (id === 'default' ? 'Profil 1' : 'Neues Profil'); } catch (e) { return 'Profil'; } };
 const store = {
-  get(k, d) { try { const v = localStorage.getItem('gladius.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
-  set(k, v) { try { localStorage.setItem('gladius.' + k, JSON.stringify(v)); } catch (e) { } },
-  del(k) { try { localStorage.removeItem('gladius.' + k); } catch (e) { } }
+  get(k, d) { try { const v = localStorage.getItem(profilePrefix(PROFILE) + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(profilePrefix(PROFILE) + k, JSON.stringify(v)); } catch (e) { } },
+  del(k) { try { localStorage.removeItem(profilePrefix(PROFILE) + k); } catch (e) { } }
 };
 const settings = Object.assign({ ftp: 200, weight: 75, bikeWeight: 9, beeps: true, autoPause: true, lthr: null, hrMax: null, hudScale: 100, hudOpacity: 92, virtualShift: true }, store.get('settings', {}));
 // FTP-Verlauf: [{t: Unix-Sekunden, ftp, src}]
@@ -1758,6 +1788,7 @@ function openSettings() {
   fillSettings(); showView('settings');
 }
 function fillSettings() {
+  renderProfiles();
   const v = (id, x) => { $('#' + id).value = x ?? ''; };
   v('s-name', settings.name); v('s-born', settings.born); v('s-weight', settings.weight); v('s-height', settings.height);
   v('s-ftp', settings.ftp); v('s-lthr', settings.lthr); v('s-hrmax', settings.hrMax);
@@ -1773,7 +1804,7 @@ function fillSettings() {
 function settingsPreview() {
   $('#s-hudscale-o').textContent = $('#s-hudscale').value + ' %'; $('#s-hudop-o').textContent = $('#s-hudop').value + ' %';
   const ac = $('#s-accent').value; document.documentElement.style.setProperty('--accent', ac); document.documentElement.style.setProperty('--accent2', `color-mix(in srgb, ${ac} 55%, #ffffff)`);
-  const pv = $('#s-hudprev'); pv.style.setProperty('--hudc', $('#s-hudc').value); pv.style.setProperty('--hudok', $('#s-hudok').value); pv.style.opacity = $('#s-hudop').value / 100;
+  const pv = $('#s-hudprev'); pv.style.setProperty('--hudc', $('#s-hudc').value); pv.style.setProperty('--hudok', $('#s-hudok').value); pv.style.opacity = $('#s-hudop').value / 100; pv.style.setProperty('--s', $('#s-hudscale').value / 100);
   const by = +$('#s-born').value, age = by ? new Date().getFullYear() - by : null;
   $('#s-hrhint').textContent = age ? `Alter ${age}: Maximalpuls nach der Formel von Tanaka (208 − 0,7 × Alter) ≈ ${Math.round(208 - 0.7 * age)} bpm – nur ein Richtwert, dein echter Wert kann ±10 bpm abweichen. Gemessene Werte sind besser: Gladius übernimmt den höchsten Puls aus deinen Fahrten automatisch.`
     : 'Den Schwellenpuls ermittelst du mit dem Puls-Zonentest, die FTP mit dem Ramp-Test. Trägst du dein Geburtsjahr ein, zeigt Gladius einen Richtwert für den Maximalpuls.';
@@ -1789,7 +1820,7 @@ function saveSettings() {
   settings.virtualShift = $('#s-vshift').checked; settings.autoPause = $('#s-autopause').checked; settings.beeps = $('#s-beeps').checked;
   settings.accent = $('#s-accent').value; settings.hudColor = $('#s-hudc').value; settings.hudOk = $('#s-hudok').value;
   settings.hudScale = +$('#s-hudscale').value; settings.hudOpacity = +$('#s-hudop').value;
-  store.set('settings', settings);
+  store.set('settings', settings); renderProfiles();
   const newFtp = num('s-ftp', 50, 600, 200); if (newFtp !== settings.ftp) setFtp(newFtp, 'Einstellungen');
   applyBike(); applyLook(); updateFtpLabel(); toast('Einstellungen gespeichert.');
   showView(settingsFrom === 'settings' ? 'library' : settingsFrom);
@@ -1802,6 +1833,57 @@ $('#view-settings').addEventListener('input', settingsPreview);
 $('#s-wheel').onchange = () => { $('#s-wheelc-wrap').hidden = $('#s-wheel').value !== 'custom'; };
 $('#view-settings').addEventListener('click', e => { const c = e.target.dataset.c; if (c) { const inp = $('#' + e.target.parentElement.dataset.for); inp.value = c; settingsPreview(); } });
 $('#st-nav').onclick = e => { const a = e.target.closest('a'); if (!a) return; e.preventDefault(); $(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+// Texteingabe-Dialog
+function askText(title, value = '') {
+  return new Promise(res => {
+    const d = $('#dlg-text'); $('#tx-title').textContent = title; $('#tx-input').value = value;
+    const done = v => { d.close(); res(v); };
+    $('#tx-yes').onclick = () => done($('#tx-input').value.trim()); $('#tx-no').onclick = () => done(null); d.oncancel = () => res(null);
+    $('#tx-input').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); done($('#tx-input').value.trim()); } };
+    d.showModal(); $('#tx-input').focus();
+  });
+}
+// ---------- Profile ----------
+function switchProfile(id) { if (ride.active) { toast('Profil wechseln geht nach der Fahrt.'); return; } LS.set('gladius.activeProfile', id); location.reload(); }
+async function newProfile() {
+  if (ride.active) { toast('Profil anlegen geht nach der Fahrt.'); return; }
+  const name = await askText('Name des neuen Profils'); if (!name) return;
+  const id = Date.now().toString(36), list = profileList(); list.push(id); LS.set('gladius.profiles', JSON.stringify(list));
+  LS.set(profilePrefix(id) + 'settings', JSON.stringify({ name }));
+  switchProfile(id);
+}
+async function deleteProfile(id) {
+  if (id === 'default' || id === PROFILE) return;
+  if (!(await askConfirm(`Profil „${profileName(id)}“ mit allen Fahrten und Einstellungen löschen? Das lässt sich nicht rückgängig machen.`, 'Profil löschen'))) return;
+  profileKeys(id).forEach(k => LS.del(k)); LS.set('gladius.profiles', JSON.stringify(profileList().filter(x => x !== id)));
+  renderProfiles(); toast('Profil gelöscht.');
+}
+function renderProfiles() {
+  const name = profileName(PROFILE); $('#pf-name').textContent = name; $('#pf-av').textContent = name.charAt(0).toUpperCase();
+  $('#pf-menu').innerHTML = profileList().map(id => `<button data-pf="${id}" class="${id === PROFILE ? 'cur' : ''}"><span class="pf-av">${esc(profileName(id).charAt(0).toUpperCase())}</span>${esc(profileName(id))}${id === PROFILE ? ' ✓' : ''}</button>`).join('') +
+    '<hr><button data-pfnew="1">＋ Neues Profil</button><button data-pfmanage="1">Profile verwalten</button>';
+  if ($('#pf-list')) $('#pf-list').innerHTML = profileList().map(id => { const h = (() => { try { return JSON.parse(LS.get(profilePrefix(id) + 'history') || '[]').length; } catch (e) { return 0; } })();
+    return `<div class="pf-row"><span class="pf-av">${esc(profileName(id).charAt(0).toUpperCase())}</span><div class="grow"><b>${esc(profileName(id))}</b>${id === PROFILE ? ' <span class="muted">· aktiv</span>' : ''}<div class="muted" style="font-size:12.5px">${h} Fahrten</div></div>
+      ${id === PROFILE ? '' : `<button class="btn small" data-pf="${id}">Wechseln</button>`}${id === 'default' || id === PROFILE ? '' : `<button class="btn small danger" data-pfdel="${id}">Löschen</button>`}</div>`; }).join('');
+}
+$('#chip-profile').onclick = e => { e.stopPropagation(); const m = $('#pf-menu'); m.hidden = !m.hidden; $('#chip-profile').setAttribute('aria-expanded', String(!m.hidden)); };
+document.addEventListener('click', e => {
+  if (!e.target.closest('.pf-wrap')) $('#pf-menu').hidden = true;
+  const sw = e.target.closest('[data-pf]'); if (sw) { if (sw.dataset.pf !== PROFILE) switchProfile(sw.dataset.pf); else $('#pf-menu').hidden = true; }
+  if (e.target.closest('[data-pfnew]')) newProfile();
+  if (e.target.closest('[data-pfmanage]')) { $('#pf-menu').hidden = true; openSettings(); setTimeout(() => $('#st-profiles').scrollIntoView({ block: 'start' }), 50); }
+  const del = e.target.closest('[data-pfdel]'); if (del) deleteProfile(del.dataset.pfdel);
+});
+$('#pf-new').onclick = newProfile;
+// ---------- Zurücksetzen ----------
+$('#s-reset-settings').onclick = async () => {
+  if (!(await askConfirm('Alle Einstellungen dieses Profils auf Werkeinstellungen zurücksetzen? Deine Fahrten bleiben erhalten.', 'Zurücksetzen'))) return;
+  const keepName = settings.name; store.set('settings', { name: keepName }); store.del('adapt'); location.reload();
+};
+$('#s-reset-all').onclick = async () => {
+  if (!(await askConfirm(`Wirklich ALLE Daten von „${profileName(PROFILE)}“ löschen – Fahrten, FTP-Verlauf, Strecken und Einstellungen?`, 'Alles löschen'))) return;
+  profileKeys(PROFILE).forEach(k => LS.del(k)); location.reload();
+};
 // Datensicherung
 const BACKUP_KEYS = ['settings', 'history', 'ftpHistory', 'adapt', 'routes', 'lastRide', 'onboarded'];
 $('#s-export').onclick = () => {
@@ -1907,7 +1989,7 @@ if (EMBEDDED && !DESKTOP) {
   bar.onclick = e => { const v = +e.target.dataset.speed; if (v) { speed = v; mark(); } };
   setInterval(() => { if (speed > 1 && ride.active && !ride.paused) clock.offset += 250 * (speed - 1); }, 250);
 }
-applyBike(); applyLook();
+applyBike(); applyLook(); renderProfiles();
 updateFtpLabel(); renderLibrary();
 if (!store.get('onboarded')) { $('#w-weight').value = settings.weight; $('#dlg-welcome').showModal(); }
 if (!navigator.bluetooth && !EMBEDDED) setTimeout(() => toast('Hinweis: Bluetooth funktioniert nur in Chrome oder Edge. Demo-Modus geht überall.', 6000), 600);
