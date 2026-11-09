@@ -1,0 +1,23 @@
+{
+  "name": "gladius",
+  "productName": "Gladius",
+  "version": "0.5.0",
+  "description": "Gladius – Indoor-Cycling-Training mit transparentem HUD",
+  "author": "Dario Zerla",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "latest",
+    "electron-builder": "latest"
+  },
+  "build": {
+    "appId": "app.gladius.trainer",
+    "productName": "Gladius",
+    "files": ["main.js", "preload.js", "overlay-preload.js", "app/**/*"],
+    "win": { "target": "nsis" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
+  }
+}

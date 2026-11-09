@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Gladius HUD</title>
+<style>
+:root { --c: #ff2b2b; --s: 1; --o: .92; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+body { font-family: "Segoe UI", system-ui, sans-serif; user-select: none; cursor: none; }
+.b { position: absolute; color: var(--c); opacity: var(--o); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums;
+     text-shadow: 0 0 2px #000, 0 0 3px #000, 0 1px 8px rgba(0,0,0,.85); white-space: nowrap; }
+.l { font-size: calc(15px * var(--s)); letter-spacing: .2em; font-weight: 700; }
+.v { font-size: calc(84px * var(--s)); }
+.u { font-size: calc(24px * var(--s)); margin-left: calc(6px * var(--s)); font-weight: 700; }
+.sub { font-size: calc(19px * var(--s)); font-weight: 700; margin-top: calc(5px * var(--s)); }
+.mid { font-size: calc(46px * var(--s)); }
+.tl { top: 3.5vh; left: 2.5vw; }
+.tr { top: 3.5vh; right: 2.5vw; text-align: right; }
+.bl { bottom: 4.5vh; left: 2.5vw; }
+.br { bottom: 4.5vh; right: 2.5vw; text-align: right; }
+.tc { top: 3.5vh; left: 50%; transform: translateX(-50%); text-align: center; }
+.bc { bottom: 4.5vh; left: 50%; transform: translateX(-50%); text-align: center; }
+#prog { position: absolute; left: 0; bottom: 0; height: calc(6px * var(--s)); width: 0; background: var(--c); opacity: calc(var(--o) * .85);
+        box-shadow: 0 0 6px rgba(0,0,0,.8); }
+#seg-edge { position: absolute; left: 0; top: 0; height: calc(4px * var(--s)); width: 0; background: var(--c); opacity: calc(var(--o) * .6); }
+#pause { top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: calc(72px * var(--s)); letter-spacing: .2em; display: none; }
+.flash { animation: f .5s steps(2) infinite; } @keyframes f { 50% { opacity: .25; } }
+.hide { display: none; }
+</style>
+</head>
+<body>
+  <div id="seg-edge"></div>
+  <div class="b tl"><div class="l">SOLL</div><div><span class="v" id="target">–</span><span class="u">W</span></div><div class="sub" id="seg"></div></div>
+  <div class="b tr"><div class="l">LEISTUNG</div><div><span class="u" id="dev"></span><span class="v" id="power">–</span><span class="u">W</span></div><div class="sub" id="mode"></div></div>
+  <div class="b tc"><div class="l" id="seglbl">INTERVALL</div><div class="mid" id="segtime">–</div><div class="sub" id="msg"></div></div>
+  <div class="b bl"><div class="l">PULS <span id="zone"></span></div><div><span class="v" id="hr">–</span><span class="u">bpm</span></div></div>
+  <div class="b br"><div class="l">KADENZ <span id="cadt"></span></div><div><span class="v" id="cad">–</span><span class="u">rpm</span></div></div>
+  <div class="b bc"><div class="sub" id="next"></div><div class="l" style="margin-top:6px" id="total"></div></div>
+  <div class="b" id="pause">PAUSE</div>
+  <div id="prog"></div>
+<script>
+const $ = id => document.getElementById(id);
+const fmt = s => { if (s == null) return '–'; s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+  return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`; };
+let lastAt = 0;
+function update(s) {
+  lastAt = Date.now();
+  const r = document.documentElement.style;
+  r.setProperty('--s', s.scale || 1); r.setProperty('--o', s.opacity || .92); if (s.color) r.setProperty('--c', s.color);
+  document.body.style.visibility = 'visible';
+  if (!s.active) {
+    ['target', 'power', 'hr', 'cad'].forEach(k => $(k).textContent = s[k] ?? '–');
+    $('target').textContent = '–'; $('seg').textContent = 'Kein Training aktiv'; $('segtime').textContent = ''; $('seglbl').textContent = 'GLADIUS';
+    $('msg').textContent = ''; $('next').textContent = ''; $('total').textContent = ''; $('mode').textContent = ''; $('dev').textContent = '';
+    $('zone').textContent = s.zone || ''; $('cadt').textContent = ''; $('prog').style.width = '0'; $('seg-edge').style.width = '0'; $('pause').style.display = 'none';
+    return;
+  }
+  $('target').textContent = s.target ?? '–';
+  $('power').textContent = s.power ?? '–';
+  $('dev').textContent = s.dev === 'low' ? '▲ ' : s.dev === 'high' ? '▼ ' : '';   // ▲ = mehr treten, ▼ = weniger
+  $('hr').textContent = s.hr ?? '–';
+  $('zone').textContent = s.zone || '';
+  $('cad').textContent = s.cad ?? '–';
+  $('cadt').textContent = s.cadTarget ? `· ZIEL ${s.cadTarget}` : '';
+  $('seg').textContent = s.segLabel || '';
+  $('mode').textContent = s.gm ? `GANG ${s.gear}/${s.gears}` : `ERG ${s.intensity}%`;
+  $('seglbl').textContent = s.segRem == null ? 'DAUER' : 'INTERVALL';
+  $('segtime').textContent = s.segRem == null ? fmt(s.elapsed) : fmt(s.segRem);
+  $('segtime').className = 'mid' + (s.flash ? ' flash' : '');
+  $('msg').textContent = s.msg || '';
+  $('next').textContent = s.next || '';
+  $('total').textContent = s.totalRem == null ? '' : `NOCH ${fmt(s.totalRem)}`;
+  $('prog').style.width = ((s.progress || 0) * 100).toFixed(2) + '%';
+  $('seg-edge').style.width = ((s.segProgress || 0) * 100).toFixed(2) + '%';
+  $('pause').style.display = s.paused ? 'block' : 'none';
+  $('pause').textContent = s.paused ? 'PAUSE' : '';
+}
+if (window.overlayBridge) window.overlayBridge.onHud(update);
+// Kommen 5 s lang keine Daten (App geschlossen/abgestürzt), HUD ausblenden statt alte Werte zu zeigen
+setInterval(() => { if (Date.now() - lastAt > 5000) document.body.style.visibility = 'hidden'; }, 1000);
+document.body.style.visibility = 'hidden';
+// Vorschau im normalen Browser: overlay.html?preview
+if (!window.overlayBridge && location.search.includes('preview')) {
+  document.body.style.background = 'url(preview-bg.jpg) center/cover, #333';
+  update({ active: true, target: 285, power: 279, dev: 'low', hr: 164, zone: 'Z5b', cad: 94, cadTarget: 95, segLabel: 'VO2max 3/4', gm: false, intensity: 100,
+    segRem: 2.4 * 60 + 3, elapsed: 1820, flash: false, msg: 'Ruhig atmen, Oberkörper locker', next: 'Als Nächstes: Erholung 110 W', totalRem: 1460, progress: .55, segProgress: .4 });
+}
+</script>
+</body>
+</html>

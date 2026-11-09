@@ -1,0 +1,44 @@
+# Baut bei jeder Änderung auf "main" automatisch das Windows-Installationsprogramm
+# und stellt es unter "Releases" zum Herunterladen bereit.
+name: Windows-Installer bauen
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Abhängigkeiten installieren
+        run: npm install
+
+      - name: Installer bauen
+        run: npx electron-builder --win --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Version bestimmen
+        id: ver
+        shell: bash
+        run: echo "tag=v$(node -p "require('./package.json').version")-build${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
+      - name: Release veröffentlichen
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: Gladius ${{ steps.ver.outputs.tag }}
+          body: |
+            Automatisch gebaut aus Commit ${{ github.sha }}.
+            Herunterladen: **Gladius Setup …exe** unten bei „Assets“, doppelklicken, installieren.
+          files: dist/*.exe
