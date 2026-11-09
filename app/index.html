@@ -18,9 +18,9 @@ html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI"
 button{font:inherit;color:inherit;cursor:pointer}
 .num{font-variant-numeric:tabular-nums}
 header{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5;flex-wrap:wrap}
-.logo{font-weight:800;letter-spacing:.32em;font-size:20px;border-left:3px solid var(--accent);padding-left:12px}
-.logo span{color:var(--accent)}
-.logo small{display:block;font-size:10px;letter-spacing:.3em;color:var(--muted);font-weight:600}
+.logo{display:flex;flex-direction:column;gap:1px;line-height:1}
+.logo svg{display:block;height:36px;width:auto;overflow:visible}
+.logo small{display:block;font-size:10px;letter-spacing:.3em;color:var(--muted);font-weight:600;padding-left:40px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
 .chip{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:14px}
 .chip .dot{width:9px;height:9px;border-radius:50%;background:var(--z1)}
@@ -94,6 +94,8 @@ h2{font-size:18px;margin:28px 0 10px}
 .st-preview{--s:1}.st-preview .pv-l{font-size:calc(12px * var(--s));letter-spacing:.18em;font-weight:700}.st-preview .pv-v{font-size:calc(52px * var(--s));font-weight:800;line-height:1}
 .st-preview span{color:var(--hudc);text-shadow:0 0 2px #000,0 0 3px #000,0 1px 8px rgba(0,0,0,.85)}.st-preview .ok{color:var(--hudok)}
 @media (max-width:760px){.st-layout{grid-template-columns:1fr}.st-nav{position:static;flex-direction:row;flex-wrap:wrap}}
+.greet{margin:6px 0 18px}.greet .g1{font-size:clamp(24px,3.2vw,34px);font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+.greet .g1 span{color:var(--accent)}.greet .g2{font-size:16px;color:#c5ccd6;margin-top:6px;max-width:70ch;line-height:1.45;text-wrap:pretty}
 .dt-sci{font-size:14px;line-height:1.6;color:#c5ccd6;max-width:75ch}
 @media (max-width:860px){.dt-cols{grid-template-columns:1fr}}
 .profile{width:100%;height:54px;display:block;background:var(--panel2);border-radius:8px}
@@ -173,7 +175,23 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 </head>
 <body>
 <header>
-  <div class="logo">GLADIUS<small>INDOOR CYCLING TRAINING</small></div>
+  <div class="logo" role="img" aria-label="Gladius – Indoor Cycling Training">
+    <svg viewBox="0 0 240 34" aria-hidden="true">
+      <defs>
+        <linearGradient id="lg-blade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#c3ccd6"/><stop offset="1" stop-color="#8a95a3"/></linearGradient>
+        <linearGradient id="lg-grip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5a35"/><stop offset="1" stop-color="#4a2c17"/></linearGradient>
+      </defs>
+      <text x="40" y="27" font-family="'Segoe UI',system-ui,sans-serif" font-size="25" font-weight="800" letter-spacing="6" fill="var(--text)">GLADIUS</text>
+      <!-- schlanke Klinge sticht waagrecht durch den Schriftzug; die dunkle Kontur schneidet die Buchstaben -->
+      <path d="M31 16.2 L218 16.2 L238 17.8 L218 19.4 L31 19.4 Z" fill="url(#lg-blade)" stroke="var(--panel)" stroke-width="1.6" paint-order="stroke" stroke-linejoin="round"/>
+      <!-- Parierstange, Griff mit Rillen, Kugelknauf -->
+      <rect x="26" y="10.3" width="5.6" height="15" rx="2.6" fill="var(--accent)" stroke="var(--panel)" stroke-width="1"/>
+      <rect x="11" y="15.1" width="15.5" height="5.4" rx="2" fill="url(#lg-grip)"/>
+      <path d="M14.5 15.3v5M18 15.3v5M21.5 15.3v5" stroke="#2c180b" stroke-width=".9" opacity=".7"/>
+      <ellipse cx="7" cy="17.8" rx="4.8" ry="4.4" fill="var(--accent)" stroke="var(--panel)" stroke-width="1"/>
+    </svg>
+    <small>INDOOR CYCLING TRAINING</small>
+  </div>
   <div class="chips">
     <button class="chip" id="chip-trainer" title="Smart-Trainer per Bluetooth (FTMS) verbinden"><span class="dot"></span><span id="lbl-trainer">Trainer verbinden</span></button>
     <button class="chip" id="chip-hr" title="Pulsgurt per Bluetooth verbinden"><span class="dot"></span><span id="lbl-hr">Puls verbinden</span></button>
@@ -189,6 +207,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <section class="view active" id="view-library">
     <div id="embedded"></div>
     <div id="recovery"></div>
+    <div class="greet" id="greet"><div class="g1" id="greet-1"></div><div class="g2" id="greet-2"></div></div>
     <h1>Übersicht</h1>
     <div id="d-setup"></div>
     <div id="d-day" class="dayrow"></div>
@@ -1721,6 +1740,7 @@ function renderSetupHint() {
     <button class="btn small" data-go="settings">Werte eintragen</button></div>`;
 }
 function renderDash() {
+  renderGreeting();
   renderSetupHint();
   const rd = readinessToday(), ad = store.get('adapt', {});
   const adTxt = Object.entries(ADAPT_CATS).map(([k, n]) => { const f = ad[k] || 1; return `${n} <b class="num">${Math.round(f * 1000) / 10} %</b>`; }).join(' · ');
@@ -1786,11 +1806,37 @@ $('#chip-demo').onclick = () => { demo.on = !demo.on; setChip('demo', demo.on ? 
 // ---------- Einstellungsseite ----------
 const DEFAULT_LOOK = { accent: '#ff7a2f', hudColor: '#ff2b2b', hudOk: '#6dff9a' };
 const PRESETS = { 's-accent': ['#ff7a2f', '#3d8bfd', '#3ecf8e', '#a98bff', '#ffc53d', '#ff4d6a'], 's-hudc': ['#ff2b2b', '#ffffff', '#ffc53d', '#4fc3f7'], 's-hudok': ['#6dff9a', '#3ecf8e', '#4fc3f7', '#ffffff'] };
+// Willkommenssatz: Tageszeit + Name, dazu ein Satz passend zur Lage (neu, erschöpft, Pause, FTP gestiegen …)
+const MOTTOS = [
+  'Jeder Tritt bringt dich ein Stück weiter.', 'Kleine Fortschritte, jeden Tag – daraus werden grosse Ergebnisse.', 'Der Berg wird nicht flacher. Du wirst stärker.',
+  'Konstanz schlägt Intensität. Bleib dran.', 'Heute ist ein guter Tag für eine starke Einheit.', 'Fortes fortuna adiuvat – das Glück hilft den Tapferen.',
+  'Stark ist, wer weitertritt, wenn es brennt.', 'Disziplin bringt dich dorthin, wo Motivation allein nicht hinkommt.', 'Die Arena wartet. Zeig, was in dir steckt.',
+  'Training ist eine Investition, die immer Zinsen bringt.', 'Ein Gladiator gewinnt den Kampf im Training, nicht in der Arena.', 'Schritt für Schritt, Watt für Watt.',
+];
+function renderGreeting() {
+  if (!$('#greet-1')) return;
+  const now = new Date(clock.now()), h = now.getHours(), name = (settings.name || '').trim();
+  const tod = h < 5 ? 'Noch wach' : h < 11 ? 'Guten Morgen' : h < 14 ? 'Hallo' : h < 18 ? 'Guten Nachmittag' : 'Guten Abend';
+  $('#greet-1').innerHTML = `${tod}${name ? `, <span>${esc(name)}</span>` : ''}.`;
+  const hist = store.get('history', []), t = Math.floor(clock.now() / 1000), last = hist[0], rd = readinessToday();
+  const daysSince = last ? Math.floor((t - last.date) / 86400) : null, ls = loadSeries(hist), cur = ls[ls.length - 1], tsb = cur ? cur.ctl - cur.atl : 0;
+  const fh = store.get('ftpHistory', []), ftpUp = fh.length > 1 && fh[fh.length - 1].ftp > fh[fh.length - 2].ftp && t - fh[fh.length - 1].t < 14 * 86400;
+  let line;
+  if (!hist.length) line = 'Willkommen in der Arena. Starte mit dem Ramp-Test und finde heraus, wo du stehst.';
+  else if (rd && rd.v <= 2) line = 'Heute zählt Erholung. Lockere Beine von heute sind die schnellen Beine von morgen.';
+  else if (daysSince === 0) line = `Training erledigt${last.score >= 90 ? ' – und wie' : ''}. Der Rest des Tages gehört der Erholung.`;
+  else if (ftpUp) line = `Deine FTP ist auf ${fh[fh.length - 1].ftp} W gestiegen. Die Arbeit zahlt sich aus.`;
+  else if (tsb < -25) line = 'Du hast in den letzten Tagen hart gearbeitet. Gönn dir eine lockere Einheit – Fitness entsteht in der Erholung.';
+  else if (daysSince >= 4) line = 'Schön, dass du wieder da bist. Jede Fahrt zählt – auch eine kurze.';
+  else if (tsb > 15) line = 'Du bist ausgeruht und frisch – perfekt für eine harte Einheit oder einen Test.';
+  else line = MOTTOS[(now.getFullYear() * 400 + now.getMonth() * 31 + now.getDate()) % MOTTOS.length];   // ein Satz pro Tag
+  $('#greet-2').textContent = line;
+}
 function applyLook() {
   const a = settings.accent || DEFAULT_LOOK.accent, r = document.documentElement.style;
   r.setProperty('--accent', a); r.setProperty('--accent2', `color-mix(in srgb, ${a} 55%, #ffffff)`);
   r.setProperty('--hudc', settings.hudColor || DEFAULT_LOOK.hudColor); r.setProperty('--hudok', settings.hudOk || DEFAULT_LOOK.hudOk);
-  const name = (settings.name || '').trim(); const h = $('#view-library h1'); if (h) h.textContent = name ? `Übersicht · ${name}` : 'Übersicht';
+  renderGreeting();
 }
 let settingsFrom = 'library';
 function openSettings() {
