@@ -127,7 +127,7 @@ table.hist th{color:var(--muted);font-weight:600}
 .sc-bar{height:8px;background:var(--panel2);border-radius:4px;overflow:hidden}.sc-bar i{display:block;height:100%;background:var(--text);border-radius:4px}
 /* dashboard */
 .plancard{background:linear-gradient(135deg,rgba(255,122,47,.10),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 14px}
-.plancard.empty{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.plancard.pc-empty{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .plancard .t,.plancard .t2{font-size:12px;letter-spacing:.14em;color:var(--muted);font-weight:700}.plancard .t2{color:var(--accent2);margin-top:4px}
 .pc-top{display:flex;gap:8px 16px;align-items:center;flex-wrap:wrap}.pc-top .t{margin-right:auto}
 .pc-h{font-size:22px;font-weight:800;margin:4px 0 4px}
@@ -155,6 +155,20 @@ table.hist th{color:var(--muted);font-weight:600}
 .pz-ease{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pz-e{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);font:inherit;display:flex;flex-direction:column;gap:4px;cursor:pointer}
 .pz-e span{font-size:12.5px;color:var(--muted);line-height:1.4}.pz-e .rec{font-size:11px;color:#3ecf8e;border:1px solid #3ecf8e;border-radius:6px;padding:1px 5px;margin-left:6px;font-weight:600}
 @media (max-width:560px){.pz-reasons{grid-template-columns:1fr 1fr}.pz-ease{grid-template-columns:1fr}}
+.diff{display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--muted);margin:6px 0 2px}.diff i{width:10px;height:6px;border-radius:2px;background:rgba(255,255,255,.12)}.diff i.on{background:var(--dc)}.diff b{margin-left:6px;font-weight:600;color:var(--dc)}
+.diff.big{margin:8px 0 4px;font-size:13.5px}.diff.big i{width:16px;height:8px}
+.prchip{color:#ffc53d;font-weight:600}
+.lvcard{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:14px}.lv-row{display:flex;align-items:center;gap:14px;margin:10px 0 12px}
+.lv-badge{position:relative;width:58px;height:64px;flex:none}.lv-badge svg{position:absolute;inset:0;width:100%;height:100%}.lv-badge span{position:absolute;inset:0;display:grid;place-items:center;font-size:24px;font-weight:800;padding-bottom:4px}
+.lv-rank{font-family:Cinzel,Georgia,serif;font-size:24px;font-weight:700;letter-spacing:.04em}
+.lv-bar{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:6px}.lv-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#ffc53d)}
+.cl-scale{position:relative;height:10px;border-radius:5px;margin:14px 0 4px;background:linear-gradient(90deg,#3d8bfd,#3ecf8e,#ffc53d,#ff8a3d,#ff4d6a)}.cl-scale i{position:absolute;top:0;bottom:0;width:2px;background:rgba(0,0,0,.45)}
+.cl-scale b{position:absolute;top:-5px;width:4px;height:20px;margin-left:-2px;border-radius:2px;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.5)}
+.cl-lab{position:relative;height:14px;font-size:11px;color:var(--muted)}.cl-lab span{position:absolute;transform:translateX(-50%)}
+@media (max-width:760px){.lvcard{grid-template-columns:1fr}}
+.xpbox{display:flex;gap:10px 18px;align-items:center;flex-wrap:wrap;margin:10px 0;font-size:15px}.xp-gain{background:linear-gradient(90deg,var(--accent),#ffc53d);color:#14100a;font-weight:800;border-radius:8px;padding:4px 10px}
+.xp-up{color:#ffc53d;font-weight:700}.banner.pr{background:rgba(255,197,61,.1);border-color:rgba(255,197,61,.45)}
+table.prs tr.pr1 td{color:#ffc53d}
 .wz-goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
 .wz-goal{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--text);display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit}
 .wz-goal span:last-child{font-size:13px;color:var(--muted);line-height:1.4}.wz-goal .ic{font-size:22px;color:var(--accent)}.wz-goal:hover{border-color:var(--muted)}.wz-goal.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:rgba(255,122,47,.08)}
@@ -251,6 +265,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <div id="d-setup"></div>
     <div id="d-day" class="dayrow"></div>
     <div id="d-plan"></div>
+    <div id="d-level"></div>
     <div class="dash">
       <div class="dcard"><div class="t"><span>PULS JETZT</span><span id="d-hrsrc"></span></div>
         <div class="big num" id="d-hr">–<small>bpm</small></div><div class="note" id="d-hrzone"></div>
@@ -391,7 +406,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <section class="view" id="view-summary">
     <h1 id="s-title">Fahrt beendet</h1>
     <div class="muted" id="s-sub"></div>
-    <div id="s-score"></div>
+    <div id="s-xp"></div><div id="s-score"></div>
     <div class="stats" id="s-stats"></div>
     <div id="s-ftpdetect"></div><div id="s-feedback"></div><div id="s-extra"></div>
     <canvas id="s-chart" style="width:100%;height:330px;display:block;background:var(--panel);border:1px solid var(--line);border-radius:14px"></canvas>
@@ -968,7 +983,7 @@ const getPlan = () => store.get('plan', null);
 function planWorkout(s) {
   let base;
   if (s.ref) base = LIBRARY.find(w => w.id === s.ref);
-  else if (s.routeRef) base = ROUTES.find(r => r.id === s.routeRef);
+  else if (s.routeRef) { base = ROUTES.find(r => r.id === s.routeRef); if (base) base = { ...base, routeId: base.id }; }
   else base = { ...s, sci: s.sciRef ? (LIBRARY.find(w => w.id === s.sciRef) || {}).sci : null };
   if (!base) return null;
   return { ...base, id: 'plan-' + s.idx, planIdx: s.idx, planDate: s.date, hard: s.hard, estMin: s.estMin };
@@ -1021,8 +1036,12 @@ function togglePlanDone(idx) {
   const p = getPlan(), s = p && p.sessions[idx]; if (!s) return;
   if (s.done && !s.done.manual) { toast('Diese Einheit wurde mit Gladius gefahren und bleibt erledigt.'); return; }
   if (s.done) { delete s.done; toast('Abhaken rückgängig gemacht.'); }
-  else { s.done = { t: Math.floor(clock.now() / 1000), manual: true, score: null }; toast(`Abgehakt: ${planWorkout(s)?.name || 'Einheit'} ✓`); }
+  else { s.done = { t: Math.floor(clock.now() / 1000), manual: true, score: null }; }
   store.set('plan', p);
+  // Abgehakte Einheiten zählen mit 80 % der geschätzten XP (nicht gemessen)
+  const w = planWorkout(s), k = `plan-${p.created}-${s.date}-${s.idx}`;
+  if (s.done) { const xp = Math.round((w.route ? (s.estMin || 60) * 0.8 : estTss(w)) * (1 + 0.1 * ((workoutDifficulty(w) || 2) - 1)) * 0.8) + 10; addXpLog(k, xp, w.name); toast(`Abgehakt: ${w.name} ✓ · +${xp} XP`); }
+  else addXpLog(k, 0);
 }
 function movePlanSession(idx, date) {
   const p = getPlan(), s = p && p.sessions[idx]; if (!s || s.done || date === s.date) return false;
@@ -1056,7 +1075,7 @@ function bindPlanDnD(root) {
 }
 function renderPlanCard() {
   const box = $('#d-plan'), p = getPlan();
-  if (!p) { box.innerHTML = `<div class="plancard empty"><div><div class="t">TRAININGSPLAN</div><div class="pc-h">Trainiere gezielt auf ein Ziel hin</div>
+  if (!p) { box.innerHTML = `<div class="plancard pc-empty"><div><div class="t">TRAININGSPLAN</div><div class="pc-h">Trainiere gezielt auf ein Ziel hin</div>
     <div class="muted" style="font-size:14px">Gib an, wie viel Zeit du an welchen Tagen hast – Gladius plant die passenden Einheiten Woche für Woche.</div></div>
     <button class="btn primary" data-plan="new">Plan erstellen</button></div>`; return; }
   const today = planToday(), G = PLAN_GOALS[p.goal], ss = planSorted(p).filter(s => !s.old), nW = calWeeks(p);
@@ -1229,6 +1248,103 @@ function createPlanFromWizard() {
     if (keep.length) { p.sessions = [...keep.map(s => ({ ...s, old: true })), ...p.sessions]; p.sessions.forEach((s, i) => s.idx = i); }
   }
   store.set('plan', p); toast(`Plan erstellt: ${p.sessions.filter(s => !s.old).length} Einheiten in ${p.weeks} Wochen.`); showView('library');
+}
+
+
+/* =========================================================
+   Schwierigkeit, Level & Rang, Bestzeiten
+   ========================================================= */
+const DIFF = [null, ['Leicht', '#3ecf8e'], ['Moderat', '#9bd35b'], ['Anspruchsvoll', '#ffc53d'], ['Hart', '#ff8a3d'], ['Sehr hart', '#ff4d6a']];
+function routeClimbScore(rt) { return rt.gain * rt.gain / (rt.len * 10) + Math.max(0, Math.max(...rt.ele) - 1000) / 1000; }   // FIETS-Index
+function workoutDifficulty(w) {
+  if (!w || !w.segs) return null;
+  if (w.route) { const c = routeClimbScore(w.route); return c < 1.5 ? 1 : c < 3.5 ? 2 : c < 6 ? 3 : c < 8.5 ? 4 : 5; }
+  if (w.open) return null;
+  const T = totalDur(w), tss = estTss(w), IF = Math.sqrt(tss * 36 / T);
+  const peak = Math.max(...w.segs.filter(s => s.dur >= 10).map(s => s.w ? s.w / settings.ftp * 100 : Math.max(s.from, s.to)));
+  let sc = 10 * (IF - 0.5) + tss / 40 + (peak >= 150 ? 2.5 : peak >= 120 ? 1 : peak >= 106 ? 0.5 : 0);
+  if (w.test === 'ramp' || w.test === 'map5') sc = Math.max(sc, 4.6);
+  if (w.test === 'hr') sc = Math.max(sc, 6);
+  return sc < 1.5 ? 1 : sc < 3 ? 2 : sc < 4.5 ? 3 : sc < 6 ? 4 : 5;
+}
+function diffBadge(w, big) {
+  const d = workoutDifficulty(w); if (!d) return '';
+  return `<span class="diff${big ? ' big' : ''}" style="--dc:${DIFF[d][1]}" title="Schwierigkeit ${d} von 5 · ${DIFF[d][0]}">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= d ? 'on' : ''}"></i>`).join('')}<b>${DIFF[d][0]}</b></span>`;
+}
+
+// ---------- Erfahrungspunkte ----------
+// XP = Training Load (TSS) × Schwierigkeitsfaktor + Boni: Plan-Einheit, Test, neue Bestzeit
+function rideXp(h) {
+  if (!h) return 0;
+  const base = (h.tss || 0) * (1 + 0.1 * ((h.diff || 2) - 1));
+  return Math.round(Math.max(h.dur >= 600 ? 5 : 0, base) + (h.plan ? 15 : 0) + (h.cat === 'test' ? 20 : 0) + (h.pr ? 25 : 0));
+}
+const xpNeed = n => Math.round(150 * Math.pow(Math.max(0, n - 1), 1.6));   // Gesamt-XP für Level n
+function totalXp(until = Infinity) {
+  return store.get('history', []).filter(h => h.date <= until).reduce((a, h) => a + rideXp(h), 0)
+    + store.get('xpLog', []).filter(x => x.t <= until).reduce((a, x) => a + x.xp, 0);
+}
+function levelOf(xp) { let n = 1; while (xpNeed(n + 1) <= xp) n++; return { level: n, xp, from: xpNeed(n), to: xpNeed(n + 1) }; }
+const RANKS = [[1, 'Tiro', 'Rekrut'], [5, 'Miles', 'Legionär'], [10, 'Tesserarius', 'Wachführer'], [15, 'Optio', 'Stellvertreter des Centurio'], [20, 'Signifer', 'Feldzeichenträger'],
+  [25, 'Centurio', 'Befehlshaber einer Hundertschaft'], [30, 'Primus Pilus', 'Erster Centurio der Legion'], [36, 'Tribunus', 'Stabsoffizier'], [43, 'Legatus', 'Kommandant der Legion'], [50, 'Imperator', 'Oberbefehlshaber']];
+const rankOf = lv => { let r = RANKS[0], i = 0; RANKS.forEach((x, j) => { if (lv >= x[0]) { r = x; i = j; } }); return { name: r[1], desc: r[2], idx: i, next: RANKS[i + 1] || null }; };
+// Leistungsklasse nach FTP in W/kg – grobe Richtwerte nach dem Power-Profil von Allen & Coggan (Männer)
+const CLASSES = [[0, 'Einsteiger'], [2.0, 'Freizeit'], [2.6, 'Hobby'], [3.2, 'Ambitioniert'], [3.8, 'Stark'], [4.4, 'Sehr stark'], [5.0, 'Elite'], [5.6, 'Weltklasse']];
+function classOf(wkg) { let i = 0; CLASSES.forEach((c, j) => { if (wkg >= c[0]) i = j; }); return { i, name: CLASSES[i][1], next: CLASSES[i + 1] || null }; }
+function addXpLog(k, xp, why) { const l = store.get('xpLog', []).filter(x => x.k !== k); if (xp) l.push({ k, t: Math.floor(clock.now() / 1000), xp, why }); store.set('xpLog', l); }
+
+function renderLevelCard() {
+  const box = $('#d-level'); if (!box) return;
+  const now = Math.floor(clock.now() / 1000), L = levelOf(totalXp()), R = rankOf(L.level), wk = totalXp() - totalXp(now - 7 * DAY);
+  const pct = (L.xp - L.from) / (L.to - L.from) * 100, wkg = settings.ftp / settings.weight, C = classOf(wkg);
+  const lo = 1.5, hi = 6.2, pos = v => clamp((v - lo) / (hi - lo) * 100, 0, 100);
+  const nextW = C.next ? Math.ceil(C.next[0] * settings.weight - settings.ftp) : 0;
+  box.innerHTML = `<div class="dcard lvcard"><div class="lv-l">
+      <div class="t"><span>LEVEL & RANG</span><span>${wk ? `+${wk} XP in 7 Tagen` : ''}</span></div>
+      <div class="lv-row"><div class="lv-badge"><svg viewBox="0 0 64 72" aria-hidden="true"><path d="M32 2 60 14v22c0 17-12 28-28 34C16 64 4 53 4 36V14Z" fill="none" stroke="var(--accent)" stroke-width="3"/></svg><span class="num">${L.level}</span></div>
+        <div><div class="lv-rank">${esc(R.name)}</div><div class="muted" style="font-size:13px">${esc(R.desc)}</div></div></div>
+      <div class="lv-bar"><i style="width:${pct}%"></i></div>
+      <div class="muted num" style="font-size:12.5px;display:flex;justify-content:space-between"><span>${L.xp - L.from} / ${L.to - L.from} XP bis Level ${L.level + 1}</span><span>${R.next ? `${esc(R.next[1])} ab Level ${R.next[0]}` : 'Höchster Rang'}</span></div>
+    </div><div class="lv-r">
+      <div class="t"><span>LEISTUNGSKLASSE</span><span>${wkg.toFixed(2)} W/kg</span></div>
+      <div class="lv-rank" style="margin-top:6px">${C.name}</div>
+      <div class="muted" style="font-size:13px">${C.next ? `Noch <b style="color:var(--text)">${nextW} W</b> FTP bis „${C.next[1]}“ (${C.next[0].toFixed(1)} W/kg)` : 'Die Spitze – Respekt.'}</div>
+      <div class="cl-scale">${CLASSES.slice(1).map((c, i) => `<i style="left:${pos(c[0])}%"></i>`).join('')}<b style="left:${pos(wkg)}%"></b></div>
+      <div class="cl-lab">${CLASSES.slice(1).filter((_, i) => i % 2 === 0).map(c => `<span style="left:${pos(c[0])}%">${c[0].toFixed(1)}</span>`).join('')}</div>
+      <div class="muted" style="font-size:11.5px;margin-top:6px">Richtwerte nach Allen & Coggan (Männer, FTP pro kg); bei Frauen liegen die Klassen rund 15 % tiefer. Level und XP sammelst du mit jedem Training: Training Load × Schwierigkeit, plus Boni für Plan-Einheiten, Tests und Bestzeiten.</div>
+    </div></div>`;
+}
+
+// ---------- Bestzeiten auf Strecken ----------
+function routePrs(id) { return (store.get('routePRs', {})[id] || []).slice().sort((a, b) => a.time - b.time); }
+function recordRoutePr(result, w) {
+  const rt = w.route, s = result.samples, i = s.findIndex(x => x.d >= rt.len - 1);
+  if (i < 0) return null;
+  const id = w.routeId || w.id, seg = s.slice(0, i + 1), avg = k => { const v = seg.map(x => x[k]).filter(x => x != null); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
+  const e = { t: s[0].t, time: i + 1, avgP: avg('p'), hr: avg('hr'), wkg: +(avg('p') / settings.weight).toFixed(2), ftp: settings.ftp };
+  const all = store.get('routePRs', {}), list = all[id] || [], prev = list.slice().sort((a, b) => a.time - b.time)[0];
+  list.push(e); all[id] = list.slice(-100); store.set('routePRs', all);
+  const rank = routePrs(id).findIndex(x => x.t === e.t) + 1;
+  return { id, time: e.time, rank, of: list.length, prev: prev ? prev.time : null, pr: rank === 1 };
+}
+function prBox(w) {
+  const id = w.routeId || w.id, list = routePrs(id);
+  if (!list.length) return `<div class="dt-box" style="margin-top:14px"><h2>BESTZEITEN</h2><div class="muted" style="font-size:13.5px">Noch keine vollständige Fahrt. Sobald du oben ankommst, erscheint deine Zeit hier – und jede neue Bestzeit gibt Bonus-XP.</div></div>`;
+  const best = list[0].time;
+  return `<div class="dt-box" style="margin-top:14px"><h2>BESTZEITEN · ${list.length} FAHRT${list.length === 1 ? '' : 'EN'}</h2><table class="hist prs"><tr><th>#</th><th>Zeit</th><th>Rückstand</th><th>Datum</th><th>Ø W</th><th>W/kg</th><th>Ø Puls</th></tr>
+    ${list.slice(0, 10).map((e, i) => `<tr class="${i === 0 ? 'pr1' : ''}"><td class="num">${i === 0 ? '🏆' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td><td class="num"><b>${fmtTime(e.time)}</b></td><td class="num">${i ? '+' + fmtTime(e.time - best) : '–'}</td><td>${fmtDate(e.t)}</td><td class="num">${e.avgP ?? '–'}</td><td class="num">${e.wkg ?? '–'}</td><td class="num">${e.hr ?? '–'}</td></tr>`).join('')}</table></div>`;
+}
+const prChip = w => { const l = w.route ? routePrs(w.routeId || w.id) : []; return l.length ? ` · <span class="prchip" title="Deine Bestzeit">🏆 ${fmtTime(l[0].time)}</span>` : ''; };
+
+function renderXpBox(r) {
+  const box = $('#s-xp'); if (!box) return;
+  const x = r.xpInfo; if (!x) { box.innerHTML = ''; return; }
+  const parts = [`<span class="xp-gain num">+${x.gain} XP</span><span>Level ${x.after.level} · ${esc(rankOf(x.after.level).name)}</span>`];
+  if (x.after.level > x.before.level) parts.push(`<span class="xp-up">⚔ Level-Up! ${rankOf(x.after.level).name !== rankOf(x.before.level).name ? `Neuer Rang: <b>${esc(rankOf(x.after.level).name)}</b>` : `Level ${x.after.level} erreicht`}</span>`);
+  let pr = '';
+  if (r.prInfo) { const p = r.prInfo; pr = p.pr ? `<div class="banner pr">🏆 <b>Neue Bestzeit: ${fmtTime(p.time)}</b>${p.prev ? ` – ${fmtTime(p.prev - p.time)} schneller als bisher` : ' – deine erste Zeit auf dieser Strecke'} · +25 Bonus-XP</div>`
+      : `<div class="banner" style="background:var(--panel);border-color:var(--line)">Zeit: <b>${fmtTime(p.time)}</b> · Platz ${p.rank} von ${p.of} · ${fmtTime(p.time - p.prev)} hinter deiner Bestzeit</div>`; }
+  box.innerHTML = `<div class="xpbox">${parts.join('')}</div>${pr}`;
 }
 
 function estTss(w) {
@@ -1434,9 +1550,14 @@ function finishRide() {
   const sum = summarize(result);
   const hist = store.get('history', []);
   const sc = scoreRide(result);
-  hist.unshift({ date: result.samples[0].t, score: sc ? sc.total : null, cat: result.cat, readiness: result.readiness, name: result.name, dur: sum.dur, np: sum.np, tss: sum.tss, avgP: sum.avgP, best300: sum.best300, maxHr: sum.maxHr,
-    vo2: sum.dur >= 300 ? +vo2FromPower(sum.best300, settings.weight).toFixed(1) : null });
+  const lvBefore = levelOf(totalXp());
+  if (ride.w.route) { result.prInfo = recordRoutePr(result, ride.w); result.routeId = ride.w.routeId || ride.w.id; }
+  const entry = { date: result.samples[0].t, score: sc ? sc.total : null, cat: result.cat, readiness: result.readiness, name: result.name, dur: sum.dur, np: sum.np, tss: sum.tss, avgP: sum.avgP, best300: sum.best300, maxHr: sum.maxHr,
+    vo2: sum.dur >= 300 ? +vo2FromPower(sum.best300, settings.weight).toFixed(1) : null, diff: workoutDifficulty(ride.w) || null, plan: ride.w.planIdx != null || undefined, pr: result.prInfo?.pr || undefined };
+  hist.unshift(entry);
   store.set('history', hist.slice(0, 400));
+  result.xpInfo = { gain: rideXp(entry), before: lvBefore, after: levelOf(totalXp()) };
+  store.set('lastRide', result);
   if (ride.w.planIdx != null) markPlanDone(ride.w.planIdx, result.completion, sc ? sc.total : null);
   if (sum.maxHr && (!settings.hrMax || sum.maxHr > settings.hrMax)) { settings.hrMax = sum.maxHr; store.set('settings', settings); }
   showSummary(result);
@@ -1465,6 +1586,7 @@ function showSummary(r) {
     ['Training Load (TSS)', m.tss], ['Arbeit', m.kj + ' kJ'], ['Ø Puls', m.avgHr ?? '–'], ['Max Puls', m.maxHr ?? '–'], ['Ø Kadenz', m.avgCad ?? '–'], ['Distanz (virtuell)', (m.dist / 1000).toFixed(1) + ' km']];
   $('#s-stats').innerHTML = st.map(([l, v]) => `<div class="stat"><div class="l">${l}</div><div class="v num">${v}</div></div>`).join('');
   $('#s-extra').innerHTML = '';
+  renderXpBox(r);
   renderScore(r);
   renderFeedback(r, m);
   if (r.test === 'ramp' && m.best60) {
@@ -1919,11 +2041,11 @@ function renderLibrary() {
   const list = allWorkouts().filter(w => activeCat === 'all' || w.cat === activeCat);
   $('#lib').innerHTML = list.map(w => w.route ? routeCard(w) : `<div class="card" data-open="${w.id}" tabindex="0" role="button" aria-label="${esc(w.name)} – Details">
     <div class="cat">${CATS[w.cat] || 'Importiert'}</div><h3>${esc(w.name)}</h3>
-    <div class="meta num">${fmtDur(totalDur(w))} ·≈ ${estTss(w)} TSS${w.segs.some(s => s.mode === 'gear') ? ' · <span style="color:var(--gear)">mit Gang-Abschnitten</span>' : ''}</div>
+    <div class="meta num">${fmtDur(totalDur(w))} ·≈ ${estTss(w)} TSS${w.segs.some(s => s.mode === 'gear') ? ' · <span style="color:var(--gear)">mit Gang-Abschnitten</span>' : ''}</div>${diffBadge(w)}
     ${profileSvg(w)}<p>${esc(w.desc || '')}</p>
     <div class="actions"><button class="btn primary small" data-start="${w.id}">Starten</button><span class="more">Details ansehen →</span></div></div>`).join('');
   const hist = store.get('history', []);
-  $('#history').innerHTML = hist.length ? `<table class="hist"><tr><th>Datum</th><th>Training</th><th>Dauer</th><th>Ø W</th><th>NP</th><th>TSS</th><th>Score</th></tr>${hist.map((h, i) => `<tr><td>${new Date(h.date * 1000).toLocaleDateString('de-CH')}</td><td>${esc(h.name)}</td><td class="num">${fmtTime(h.dur)}</td><td class="num">${h.avgP}</td><td class="num">${h.np}</td><td class="num">${h.tss}</td><td class="num">${h.score ?? '–'}</td></tr>`).join('')}</table>` +
+  $('#history').innerHTML = hist.length ? `<table class="hist"><tr><th>Datum</th><th>Training</th><th>Dauer</th><th>Ø W</th><th>NP</th><th>TSS</th><th>Score</th><th>XP</th></tr>${hist.map((h, i) => `<tr><td>${new Date(h.date * 1000).toLocaleDateString('de-CH')}</td><td>${esc(h.name)}${h.pr ? ' 🏆' : ''}</td><td class="num">${fmtTime(h.dur)}</td><td class="num">${h.avgP}</td><td class="num">${h.np}</td><td class="num">${h.tss}</td><td class="num">${h.score ?? '–'}</td><td class="num">+${rideXp(h)}</td></tr>`).join('')}</table>` +
     (store.get('lastRide') ? `<div class="toolbar"><button class="btn small" id="h-last">Letzte Fahrt öffnen / FIT erneut herunterladen</button></div>` : '') : 'Noch keine Fahrten.';
   const hl = $('#h-last'); if (hl) hl.onclick = () => showSummary(store.get('lastRide'));
   const act = store.get('activeRide');
@@ -1996,7 +2118,7 @@ function workoutDetail(w) {
     w.segs.some(s => s.cad) ? 'Mit Ziel-Kadenz: Gladius zeigt sie an und bewertet sie im Workout-Score.' : '',
     ADAPT_CATS[w.cat] ? `Gelernte Anpassung für ${ADAPT_CATS[w.cat]}: ${Math.round(adaptFactor(w.cat) * 1000) / 10} %. Die Tagesform wird beim Start abgefragt.` : ''].filter(Boolean);
   return `<button class="dt-back" id="dt-back">← Zurück zu den Trainings</button>
-    <div class="dt-head"><div class="grow"><div class="cat" style="font-size:12px;letter-spacing:.14em;color:var(--accent2);font-weight:700">${(CATS[w.cat] || 'Importiert').toUpperCase()}</div><h1>${esc(w.name)}</h1><div class="muted">${esc(w.desc || '')}</div></div>
+    <div class="dt-head"><div class="grow"><div class="cat" style="font-size:12px;letter-spacing:.14em;color:var(--accent2);font-weight:700">${(CATS[w.cat] || 'Importiert').toUpperCase()}</div><h1>${esc(w.name)}</h1>${diffBadge(w, true)}<div class="muted">${esc(w.desc || '')}</div></div>
     <button class="btn primary" id="dt-start" style="padding:12px 26px;font-size:16px">Workout starten</button></div>
     <div class="stats dt-stats">${[['Dauer', fmtDur(T)], ['Training Load', `≈ ${tss} TSS`], ['Intensität', `IF ≈ ${IF.toFixed(2)}`], ['Ø Soll-Leistung', `${avgW} W`], ['Basis', `FTP ${settings.ftp} W`]].map(([l, v]) => `<div class="stat"><div class="l">${l}</div><div class="v num">${v}</div></div>`).join('')}</div>
     <div class="dt-chart">${workoutDetailSvg(w)}</div>
@@ -2033,7 +2155,7 @@ function routeDetail(w) {
   const kms = []; for (let d = 0; d < rt.len - 1; d += 1000) { const d2 = Math.min(rt.len, d + 1000); kms.push({ km: d / 1000 + 1, g: (eleAt(rt, d2) - eleAt(rt, d)) / (d2 - d) * 100, part: d2 - d < 1000 }); }
   const times = [0.65, 0.75, 0.85].map(f => [f, routeTimeAt(rt, settings.ftp * f)]);
   return `<button class="dt-back" id="dt-back">← Zurück zu den Trainings</button>
-    <div class="dt-head"><div class="grow"><div class="cat" style="font-size:12px;letter-spacing:.14em;color:var(--accent2);font-weight:700">STRECKE${w.imported ? ' · IMPORTIERT' : ''}</div><h1>${esc(w.name)}</h1><div class="muted">${esc(w.desc || '')}</div></div>
+    <div class="dt-head"><div class="grow"><div class="cat" style="font-size:12px;letter-spacing:.14em;color:var(--accent2);font-weight:700">STRECKE${w.imported ? ' · IMPORTIERT' : ''}</div><h1>${esc(w.name)}</h1>${diffBadge(w, true)}<div class="muted">${esc(w.desc || '')}</div></div>
     <button class="btn primary" id="dt-start" style="padding:12px 26px;font-size:16px">Losfahren</button></div>
     <div class="stats dt-stats">${[['Länge', `${(rt.len / 1000).toFixed(1)} km`], ['Höhenmeter', `${rt.gain} hm`], ['Ø Steigung', `${(rt.gain / rt.len * 100).toFixed(1)} %`], ['Max. 500 m', `${maxG.toFixed(1)} %`], ['Höhe', `${Math.round(lo)} → ${Math.round(hi)} m`]].map(([l, v]) => `<div class="stat"><div class="l">${l}</div><div class="v num">${v}</div></div>`).join('')}</div>
     <div class="dt-chart">${routeDetailSvg(rt)}</div>
@@ -2041,7 +2163,8 @@ function routeDetail(w) {
       ${kms.some(k => k.part) ? '<div class="muted" style="font-size:12px;margin-top:8px">* letzter, angebrochener Kilometer</div>' : ''}</div>
       <div style="display:flex;flex-direction:column;gap:14px"><div class="dt-box"><h2>GESCHÄTZTE FAHRZEIT</h2>${times.map(([f, t]) => `<div class="zrow"><span>${Math.round(f * 100)} % FTP · ${Math.round(settings.ftp * f)} W</span><span></span><span class="num">${fmtTime(t)}</span></div>`).join('')}
         <div class="muted" style="font-size:12.5px;line-height:1.45;margin-top:6px">Bei konstanter Leistung, ${settings.weight} kg + ${settings.bikeWeight} kg Velo, ohne Wind.</div></div>
-      <div class="dt-box"><h2>SO FUNKTIONIERT ES</h2><div class="muted" style="font-size:13.5px;line-height:1.55">Gladius berechnet aus Kadenz, virtuellem Gang, Gewicht und der Steigung an deiner Position die Leistung, die du draussen treten müsstest (Luft- und Rollwiderstand, Hangabtrieb), und stellt sie am Trainer ein. Schalte wie am echten Pass. Bergab rollst du ohne Treten weiter.<br><br>${esc(rt.source || '')}</div></div></div></div>`;
+      <div class="dt-box"><h2>SO FUNKTIONIERT ES</h2><div class="muted" style="font-size:13.5px;line-height:1.55">Gladius berechnet aus Kadenz, virtuellem Gang, Gewicht und der Steigung an deiner Position die Leistung, die du draussen treten müsstest (Luft- und Rollwiderstand, Hangabtrieb), und stellt sie am Trainer ein. Schalte wie am echten Pass. Bergab rollst du ohne Treten weiter.<br><br>${esc(rt.source || '')}</div></div></div></div>
+    ${prBox(w)}`;
 }
 function routeDetailSvg(rt) {
   const W = 1000, H = 270, L = 50, R = 10, Tp = 22, B = 26, lo = Math.min(...rt.ele), hi = Math.max(...rt.ele), pad = Math.max(30, (hi - lo) * .08), eLo = lo - pad, eHi = hi + pad;
@@ -2059,7 +2182,7 @@ function routeCard(w) {
   let maxG = 0; for (let d = 0; d + 500 <= rt.len; d += 250) maxG = Math.max(maxG, (eleAt(rt, d + 500) - eleAt(rt, d)) / 5);
   return `<div class="card" data-open="${w.id}" tabindex="0" role="button" aria-label="${esc(w.name)} – Details"><div class="cat">Strecke${w.imported ? ' · importiert' : ''}</div><h3>${esc(w.name)}</h3>
     <div class="meta num">${(rt.len / 1000).toFixed(1)} km · ${rt.gain} hm · Ø ${avg.toFixed(1)} % · max. ${maxG.toFixed(1)} % (500 m) · ${Math.round(Math.min(...rt.ele))} → ${Math.round(Math.max(...rt.ele))} m</div>
-    ${routeSvg(rt)}<p>${esc(w.desc || '')}</p>
+    ${diffBadge(w)}${routeSvg(rt)}<p>${esc(w.desc || '')}${prChip(w) ? `<br><span class="muted">Bestzeit</span>${prChip(w).replace(' · ', ' ')}` : ''}</p>
     <div class="actions"><button class="btn primary small" data-start="${w.id}">Losfahren</button>${w.imported ? `<button class="btn small" data-delroute="${w.id}">Löschen</button>` : ''}<span class="more">Details ansehen →</span></div></div>`;
 }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -2226,6 +2349,7 @@ function renderDash() {
   renderGreeting();
   renderSetupHint();
   renderPlanCard();
+  renderLevelCard();
   const rd = readinessToday(), ad = store.get('adapt', {});
   const adTxt = Object.entries(ADAPT_CATS).map(([k, n]) => { const f = ad[k] || 1; return `${n} <b class="num">${Math.round(f * 1000) / 10} %</b>`; }).join(' · ');
   $('#d-day').innerHTML = `<span>Tagesform heute: ${rd ? `<b style="color:${rd.col}">${rd.label}</b>` : '<b>noch nicht erfasst</b>'} <button class="btn small" id="d-dayset">${rd ? 'ändern' : 'erfassen'}</button></span><span title="Gelernte Anpassung der Zielwerte pro Trainingsart">Anpassung: ${adTxt}</span>`;
@@ -2455,7 +2579,7 @@ $('#s-reset-all').onclick = async () => {
   profileKeys(PROFILE).forEach(k => LS.del(k)); location.reload();
 };
 // Datensicherung
-const BACKUP_KEYS = ['settings', 'history', 'ftpHistory', 'adapt', 'routes', 'lastRide', 'onboarded', 'plan'];
+const BACKUP_KEYS = ['settings', 'history', 'ftpHistory', 'adapt', 'routes', 'lastRide', 'onboarded', 'plan', 'routePRs', 'xpLog'];
 $('#s-export').onclick = () => {
   const data = { app: 'Gladius', version: 1, created: new Date().toISOString(), data: Object.fromEntries(BACKUP_KEYS.map(k => [k, store.get(k, null)])) };
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
@@ -2593,7 +2717,7 @@ updateFtpLabel(); renderLibrary();
 if (!store.get('onboarded')) { $('#w-weight').value = settings.weight; $('#dlg-welcome').showModal(); }
 if (!navigator.bluetooth && !EMBEDDED) setTimeout(() => toast('Hinweis: Bluetooth funktioniert nur in Chrome oder Edge. Demo-Modus geht überall.', 6000), 600);
 // Testschnittstelle
-window.__gladius = { togglePlanDone, rebuildFrom, resumePlan, openPauseDialog, movePlanSession, generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
+window.__gladius = { workoutDifficulty, ROUTES, routeClimbScore, levelOf, totalXp, xpNeed, togglePlanDone, rebuildFrom, resumePlan, openPauseDialog, movePlanSession, generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
 </script>
 </body>
 </html>
