@@ -1852,6 +1852,12 @@ async function newProfile() {
   LS.set(profilePrefix(id) + 'settings', JSON.stringify({ name }));
   switchProfile(id);
 }
+async function renameProfile(id) {
+  const name = await askText('Profil umbenennen', profileName(id)); if (!name) return;
+  if (id === PROFILE) { settings.name = name; store.set('settings', settings); if ($('#s-name')) $('#s-name').value = name; applyLook(); }
+  else { const key = profilePrefix(id) + 'settings'; let st = {}; try { st = JSON.parse(LS.get(key) || '{}'); } catch (e) { } st.name = name; LS.set(key, JSON.stringify(st)); }
+  renderProfiles(); toast(`Profil heisst jetzt „${name}“.`);
+}
 async function deleteProfile(id) {
   if (id === 'default' || id === PROFILE) return;
   if (!(await askConfirm(`Profil „${profileName(id)}“ mit allen Fahrten und Einstellungen löschen? Das lässt sich nicht rückgängig machen.`, 'Profil löschen'))) return;
@@ -1861,10 +1867,10 @@ async function deleteProfile(id) {
 function renderProfiles() {
   const name = profileName(PROFILE); $('#pf-name').textContent = name; $('#pf-av').textContent = name.charAt(0).toUpperCase();
   $('#pf-menu').innerHTML = profileList().map(id => `<button data-pf="${id}" class="${id === PROFILE ? 'cur' : ''}"><span class="pf-av">${esc(profileName(id).charAt(0).toUpperCase())}</span>${esc(profileName(id))}${id === PROFILE ? ' ✓' : ''}</button>`).join('') +
-    '<hr><button data-pfnew="1">＋ Neues Profil</button><button data-pfmanage="1">Profile verwalten</button>';
+    '<hr><button data-pfren="' + PROFILE + '">✎ Profil umbenennen</button><button data-pfnew="1">＋ Neues Profil</button><button data-pfmanage="1">Profile verwalten</button>';
   if ($('#pf-list')) $('#pf-list').innerHTML = profileList().map(id => { const h = (() => { try { return JSON.parse(LS.get(profilePrefix(id) + 'history') || '[]').length; } catch (e) { return 0; } })();
     return `<div class="pf-row"><span class="pf-av">${esc(profileName(id).charAt(0).toUpperCase())}</span><div class="grow"><b>${esc(profileName(id))}</b>${id === PROFILE ? ' <span class="muted">· aktiv</span>' : ''}<div class="muted" style="font-size:12.5px">${h} Fahrten</div></div>
-      ${id === PROFILE ? '' : `<button class="btn small" data-pf="${id}">Wechseln</button>`}${id === 'default' || id === PROFILE ? '' : `<button class="btn small danger" data-pfdel="${id}">Löschen</button>`}</div>`; }).join('');
+      <button class="btn small" data-pfren="${id}">Umbenennen</button>${id === PROFILE ? '' : `<button class="btn small" data-pf="${id}">Wechseln</button>`}${id === 'default' || id === PROFILE ? '' : `<button class="btn small danger" data-pfdel="${id}">Löschen</button>`}</div>`; }).join('');
 }
 $('#chip-profile').onclick = e => { e.stopPropagation(); const m = $('#pf-menu'); m.hidden = !m.hidden; $('#chip-profile').setAttribute('aria-expanded', String(!m.hidden)); };
 document.addEventListener('click', e => {
@@ -1873,6 +1879,7 @@ document.addEventListener('click', e => {
   if (e.target.closest('[data-pfnew]')) newProfile();
   if (e.target.closest('[data-pfmanage]')) { $('#pf-menu').hidden = true; openSettings(); setTimeout(() => $('#st-profiles').scrollIntoView({ block: 'start' }), 50); }
   const del = e.target.closest('[data-pfdel]'); if (del) deleteProfile(del.dataset.pfdel);
+  const ren = e.target.closest('[data-pfren]'); if (ren) { $('#pf-menu').hidden = true; renameProfile(ren.dataset.pfren); }
 });
 $('#pf-new').onclick = newProfile;
 // ---------- Zurücksetzen ----------
