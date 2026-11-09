@@ -190,6 +190,9 @@ table.prs tr.pr1 td{color:#ffc53d}
 .rider{display:flex;gap:14px 22px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin:10px 0}
 .rider .t{font-size:11px;letter-spacing:.14em;color:var(--muted);font-weight:700;margin-bottom:2px}.rider-av{width:44px;height:44px;font-size:20px}.rider-n b{font-size:18px}.rider-tr{margin-left:auto;min-width:0}.rider-tr .trophies{margin-top:2px}
 .banner.bonus{background:rgba(62,207,142,.08);border-color:rgba(62,207,142,.4)}
+.ck-head{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:14px}
+.ck-key{flex:1;font-size:14.5px}.ck-key small{display:block;font-size:11.5px;color:var(--muted)}
+.ck-row select{min-width:190px}@keyframes ckhit{from{background:rgba(255,122,47,.35);border-color:var(--accent)}to{}}.ck-row.hit{animation:ckhit 1s ease-out}
 .wz-goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
 .wz-goal{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--text);display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit}
 .wz-goal span:last-child{font-size:13px;color:var(--muted);line-height:1.4}.wz-goal .ic{font-size:22px;color:var(--accent)}.wz-goal:hover{border-color:var(--muted)}.wz-goal.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:rgba(255,122,47,.08)}
@@ -270,6 +273,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <div class="chips">
     <button class="chip" id="chip-trainer" title="Smart-Trainer per Bluetooth (FTMS) verbinden"><span class="dot"></span><span id="lbl-trainer">Trainer verbinden</span></button>
     <button class="chip" id="chip-hr" title="Pulsgurt per Bluetooth verbinden"><span class="dot"></span><span id="lbl-hr">Puls verbinden</span></button>
+    <button class="chip" id="chip-click" title="Zwift Click verbinden (jeden Pod einzeln)"><span class="dot"></span><span id="lbl-click">Click verbinden</span></button>
     <button class="chip" id="chip-demo" title="Simulierter Trainer zum Ausprobieren ohne Hardware"><span class="dot"></span><span>Demo</span></button>
     <div class="pf-wrap"><button class="chip" id="chip-profile" aria-haspopup="true" aria-expanded="false" title="Profil wechseln"><span class="pf-av" id="pf-av"></span><span id="pf-name"></span><span aria-hidden="true" style="color:var(--muted)">▾</span></button>
       <div class="pf-menu" id="pf-menu" hidden></div></div>
@@ -320,7 +324,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <div class="dt-head"><div class="grow"><h1>Einstellungen</h1><div class="muted">Änderungen gelten ab dem nächsten Training. Velo-Angaben fliessen direkt in die Simulation ein. Beim Verlassen fragt Gladius, ob du speichern möchtest.</div></div></div>
     <div class="st-layout">
       <nav class="st-nav" id="st-nav">
-        <a href="#st-person">Persönlich</a><a href="#st-perf">Leistung &amp; Puls</a><a href="#st-bike">Velo</a><a href="#st-ride">Fahren</a><a href="#st-dash">Übersicht</a><a href="#st-look">Farben &amp; HUD</a><a href="#st-profiles">Profile</a><a href="#st-data">Daten</a>
+        <a href="#st-person">Persönlich</a><a href="#st-perf">Leistung &amp; Puls</a><a href="#st-bike">Velo</a><a href="#st-ride">Fahren</a><a href="#st-keys">Tastenbelegungen</a><a href="#st-dash">Übersicht</a><a href="#st-look">Farben &amp; HUD</a><a href="#st-profiles">Profile</a><a href="#st-data">Daten</a>
       </nav>
       <div class="st-main">
         <section class="dt-box st-sec" id="st-person"><h2>PERSÖNLICH</h2>
@@ -364,6 +368,17 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
           <label class="st-check"><input type="checkbox" id="s-vshift"><span><b>Selbst virtuell schalten</b><br><small>Aus = der Trainer hält die Soll-Watt (ERG). Tests laufen immer in ERG.</small></span></label>
           <label class="st-check"><input type="checkbox" id="s-autopause"><span><b>Auto-Pause</b><br><small>Die Zeit stoppt, wenn du nicht trittst.</small></span></label>
           <label class="st-check"><input type="checkbox" id="s-beeps"><span><b>Countdown-Töne</b><br><small>Piepen in den letzten 3 Sekunden eines Intervalls.</small></span></label>
+        </section>
+        <section class="dt-box st-sec" id="st-keys"><h2>TASTENBELEGUNGEN</h2>
+          <div class="ck-head"><span id="ck-status" class="muted">Click nicht verbunden.</span><button type="button" class="btn small" id="ck-connect">Click-Pod verbinden</button></div>
+          <p class="st-hint" style="margin-top:6px">Lege fest, was die Tasten deines Zwift Click tun. Drückst du eine Taste, leuchtet ihre Zeile kurz auf. Gedrückt halten beim Hoch- oder Runterschalten = mehrere Gänge. Die Tasten wirken auch, wenn YouTube im Vordergrund ist.</p>
+          <div class="dbl" id="s-ckl"></div><input type="hidden" id="s-ck-order">
+          <div class="toolbar"><button type="button" class="btn small" id="ck-learn">+ Taste hinzufügen</button><button type="button" class="btn small" id="ck-reset">Standardbelegung</button></div>
+          <div id="ck-learnmsg"></div>
+          <label class="st-check" style="margin-top:10px"><input type="checkbox" id="s-ckact"><span><b>Aktivierungsbefehle senden</b><br><small>Nur nötig, wenn ein Click v2 verbunden ist, aber keine Tasten meldet (sendet 00 08 00 / 00 08 10 nach dem Handshake).</small></span></label>
+          <h3 style="font-size:14px;margin:16px 0 6px">Tastatur</h3>
+          <div class="muted" style="font-size:13px;line-height:1.6">Im Gladius-Fenster: <b>↑</b>/<b>+</b> hochschalten · <b>↓</b>/<b>−</b> runterschalten · <b>P</b> Pause · <b>N</b> nächstes Intervall · <b>M</b> ERG/Gang · <b>H</b> HUD<br>
+            Überall (Desktop-App): <b>Ctrl+Shift+↑/↓</b> hochschalten / runterschalten · <b>Ctrl+Alt+P</b> Pause · <b>Ctrl+Alt+N</b> nächstes Intervall · <b>Ctrl+Alt+H</b> HUD</div>
         </section>
         <section class="dt-box st-sec" id="st-dash"><h2>ÜBERSICHT</h2>
           <p class="st-hint" style="margin-top:0">Lege fest, welche Kästchen auf der Übersicht erscheinen, in welcher Reihenfolge und wie breit. Auf schmalen Fenstern nehmen alle die ganze Breite ein.</p>
@@ -426,12 +441,12 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
       <button class="btn" id="c-pause">Pause</button>
       <button class="btn" id="c-skip">Intervall überspringen</button>
       <div class="grp"><span>Intensität</span><button class="btn small" id="c-intdn">−5%</button><button class="btn small" id="c-intup">+5%</button></div>
-      <div class="grp"><span>Gang</span><button class="btn small" id="c-geardn">◀ leichter</button><button class="btn small" id="c-gearup">schwerer ▶</button></div>
+      <div class="grp"><span>Gang</span><button class="btn small" id="c-geardn">◀ Runterschalten</button><button class="btn small" id="c-gearup">Hochschalten ▶</button></div>
       <button class="btn" id="c-mode" title="Zwischen ERG und virtuellen Gängen wechseln">ERG ⇄ Gang</button>
       <button class="btn danger" id="c-stop" style="margin-left:auto">Beenden</button>
     </div>
-    <div class="kbd" id="kbd-desk" style="display:none">Überall (auch wenn YouTube vorne ist): <b>Ctrl+Alt+H</b> HUD ein/aus · <b>Ctrl+Shift+↑/↓</b> Gang · <b>Ctrl+Alt+P</b> Pause · <b>Ctrl+Alt+N</b> nächstes Intervall</div>
-    <div class="kbd">Im Gladius-Fenster: <b>↑</b>/<b>+</b> schwerer · <b>↓</b>/<b>−</b> leichter · <b>P</b> Pause · <b>N</b> nächstes Intervall · <b>M</b> ERG/Gang · <b>H</b> HUD</div>
+    <div class="kbd" id="kbd-desk" style="display:none">Überall (auch wenn YouTube vorne ist): <b>Ctrl+Alt+H</b> HUD ein/aus · <b>Ctrl+Shift+↑/↓</b> hochschalten / runterschalten · <b>Ctrl+Alt+P</b> Pause · <b>Ctrl+Alt+N</b> nächstes Intervall</div>
+    <div class="kbd">Im Gladius-Fenster: <b>↑</b>/<b>+</b> hochschalten · <b>↓</b>/<b>−</b> runterschalten · <b>P</b> Pause · <b>N</b> nächstes Intervall · <b>M</b> ERG/Gang · <b>H</b> HUD</div>
   </section>
 
   <!-- SUMMARY -->
@@ -688,6 +703,113 @@ async function onTrainerDisconnect() {
   setChip('trainer', 'off', 'Trainer verbinden'); toast('Verbindung zum Trainer verloren.');
 }
 
+/* ---------------- Bluetooth: Zwift Click (v1 & v2) ----------------
+   Click v2 = zwei Pods, jeder ein eigenes BLE-Gerät (Dienst FC82, Ride-Protokoll).
+   Ablauf wie im Click-Test: Handshake „RideOn“ (+ 02 03 bei v2) auf SYNC_RX, Keepalive alle 3 s,
+   Tasten kommen als Protobuf auf ASYNC: Typ 0x23, Feld 1 = Tastenmaske (Bit = 0 → gedrückt). */
+const CLICK_SVC_V2 = 0xFC82, CLICK_SVC_V1 = '00000001-19ca-4651-86e5-fa29dcdd09d1';
+const CLICK_ASYNC = '00000002-19ca-4651-86e5-fa29dcdd09d1', CLICK_RX = '00000003-19ca-4651-86e5-fa29dcdd09d1', CLICK_TX = '00000004-19ca-4651-86e5-fa29dcdd09d1';
+const RIDE_ON = [0x52, 0x69, 0x64, 0x65, 0x4F, 0x6E];
+const CLICK_BITS = { 0x1: 'Links', 0x2: 'Hoch', 0x4: 'Rechts', 0x8: 'Runter', 0x10: 'A', 0x20: 'B', 0x40: 'Y', 0x80: 'Z',
+  0x100: 'Schalttaste links ▲', 0x200: 'Schalttaste links ▼ (−)', 0x400: 'Power-up links', 0x800: 'Ein/Aus links',
+  0x1000: 'Schalttaste rechts ▲ (+)', 0x2000: 'Schalttaste rechts ▼', 0x4000: 'Power-up rechts', 0x8000: 'Ein/Aus rechts' };
+const clickBitName = b => CLICK_BITS[b] || `Taste 0x${b.toString(16)}`;
+const CLICK_ACTIONS = { up: 'Hochschalten', down: 'Runterschalten', pause: 'Pause / Weiter', skip: 'Nächstes Intervall', intup: 'Intensität +5 %', intdn: 'Intensität −5 %', mode: 'ERG ⇄ Gang-Modus', hud: 'HUD ein/aus', none: 'Keine Funktion' };
+const CLICK_DEFAULT = [{ bit: 0x1000, action: 'up' }, { bit: 0x200, action: 'down' }, { bit: 0x100, action: 'up' }, { bit: 0x2000, action: 'down' }];
+const clickMap = () => Array.isArray(settings.clickMap) ? settings.clickMap : CLICK_DEFAULT;
+const click = { pods: [], learn: null };
+function pbField(b, start, field) {
+  let i = start;
+  const varint = () => { let v = 0, m = 1, x; do { x = b[i++]; if (x === undefined) throw 0; v += (x & 0x7f) * m; m *= 128; } while (x & 0x80); return v; };
+  try {
+    while (i < b.length) {
+      const key = varint(), f = Math.floor(key / 8), wt = key & 7;
+      if (wt === 0) { const v = varint(); if (f === field) return v; }
+      else if (wt === 2) { const n = varint(); i += n; } else if (wt === 5) i += 4; else if (wt === 1) i += 8; else return null;
+    }
+  } catch (e) { return null; }
+  return undefined;   // Feld fehlt = Wert 0 (Protobuf)
+}
+function runClickAction(a) {
+  if (a === 'up') shiftGear(1); else if (a === 'down') shiftGear(-1);
+  else if (a === 'pause') { if (ride.active) togglePause(); } else if (a === 'skip') { if (ride.active) skipSeg(); }
+  else if (a === 'intup') changeIntensity(0.05); else if (a === 'intdn') changeIntensity(-0.05);
+  else if (a === 'mode') toggleMode(); else if (a === 'hud') { if (ride.active) DESKTOP ? DESKTOP.toggleOverlay() : EMBEDDED ? toggleHudPreview() : openHud(); }
+}
+function onClickPress(bit) {
+  document.querySelectorAll(`.ck-row[data-bit="${bit}"]`).forEach(r => { r.classList.remove('hit'); void r.offsetWidth; r.classList.add('hit'); });
+  if (click.learn) { const cb = click.learn; click.learn = null; cb(bit); return; }
+  const m = clickMap().find(x => x.bit === bit); if (!m || m.action === 'none') return;
+  runClickAction(m.action);
+  // Gedrückt halten = mehrfach schalten
+  if (m.action === 'up' || m.action === 'down') { clearTimeout(click.rep?.[bit]); click.rep = click.rep || {};
+    click.rep[bit] = setTimeout(function again() { runClickAction(m.action); click.rep[bit] = setTimeout(again, 180); }, 450); }
+}
+function onClickRelease(bit) { if (click.rep?.[bit]) { clearTimeout(click.rep[bit]); delete click.rep[bit]; } }
+function onClickAsync(p, dv) {
+  const b = new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength); let map = null;
+  if (b[0] === 0x23) { const v = pbField(b, 1, 1); map = v === null ? null : (v ?? 0); }
+  else if (b[0] === 0x37) { const plus = pbField(b, 1, 1) ?? 0, minus = pbField(b, 1, 2) ?? 0; map = 0xffffffff & ~(plus === 0 ? 0x1000 : 0) & ~(minus === 0 ? 0x0200 : 0); }   // Click v1
+  if (map === null) return;
+  map = map >>> 0;
+  const changed = (p.map ^ map) & 0xffff;
+  for (let i = 0; i < 16; i++) { const bit = 1 << i; if (changed & bit) (map & bit ? onClickRelease : onClickPress)(bit); }
+  p.map = map;
+}
+function clickWrite(p, bytes) {
+  p.q = (p.q || Promise.resolve()).then(() => { if (!p.rx) return; const d = new Uint8Array(bytes); return p.rx.properties.writeWithoutResponse ? p.rx.writeValueWithoutResponse(d) : p.rx.writeValueWithResponse(d); }).catch(() => { });
+  return p.q;
+}
+async function setupClickPod(p) {
+  const server = await p.device.gatt.connect();
+  let svc, v2;
+  for (let i = 0; i < 4 && !svc; i++) {
+    try { svc = await server.getPrimaryService(CLICK_SVC_V2); v2 = true; break; } catch (e) { }
+    try { svc = await server.getPrimaryService(CLICK_SVC_V1); v2 = false; break; } catch (e) { }
+    await new Promise(r => setTimeout(r, 600));   // Windows liefert direkt nach dem Verbinden manchmal unvollständige Dienste
+  }
+  if (!svc) throw new Error('Zwift-Dienst nicht gefunden');
+  const a = await svc.getCharacteristic(CLICK_ASYNC), rx = await svc.getCharacteristic(CLICK_RX);
+  let tx = null; try { tx = await svc.getCharacteristic(CLICK_TX); } catch (e) { }
+  a.oncharacteristicvaluechanged = e => onClickAsync(p, e.target.value); await a.startNotifications();
+  if (tx) { tx.oncharacteristicvaluechanged = e => { const b = new Uint8Array(e.target.value.buffer); if (b[0] === 0xff && !p.warned) { p.warned = true; toast(`${p.name}: Der Click verlangt die Zwift-Verschlüsselung – Firmware prüfen.`, 8000); } }; await tx.startNotifications(); }
+  p.rx = rx; p.v2 = v2; p.map = 0xffffffff; p.connected = true;
+  p.hello = v2 ? [...RIDE_ON, 0x02, 0x03] : RIDE_ON;
+  await clickWrite(p, p.hello);
+  if (v2 && settings.clickActivate) { await clickWrite(p, [0x00, 0x08, 0x00]); await clickWrite(p, [0x00, 0x08, 0x10]); }
+  clearInterval(p.timer); p.timer = setInterval(() => { if (p.connected) clickWrite(p, p.hello); }, 3000);
+  updateClickChip();
+}
+function updateClickChip() {
+  const n = click.pods.filter(p => p.connected).length, busy = click.pods.some(p => !p.connected && p.retrying);
+  setChip('click', n ? 'on' : busy ? 'busy' : 'off', n ? `Click · ${n} Pod${n === 1 ? '' : 's'}` : busy ? 'Click verbindet …' : 'Click verbinden');
+  const st = $('#ck-status'); if (st) st.innerHTML = n ? `<span style="color:#3ecf8e">●</span> ${n} Pod${n === 1 ? '' : 's'} verbunden: ${click.pods.filter(p => p.connected).map(p => esc(p.name)).join(', ')}` : 'Click nicht verbunden.';
+}
+async function connectClick() {
+  if (!navigator.bluetooth) { toast(EMBEDDED ? 'In der Vorschau geht Bluetooth nicht – in der installierten App verbinden.' : 'Web Bluetooth fehlt. Bitte Chrome oder Edge verwenden.'); return; }
+  let device;
+  try {
+    device = await navigator.bluetooth.requestDevice({ filters: [{ manufacturerData: [{ companyIdentifier: 0x094A }] }, { namePrefix: 'Zwift' }], optionalServices: [CLICK_SVC_V2, CLICK_SVC_V1] });
+  } catch (e) { if (e.name !== 'NotFoundError') toast('Click: ' + e.message); return; }
+  if (click.pods.some(p => p.device.id === device.id && p.connected)) { toast(`${device.name || 'Pod'} ist schon verbunden.`); return; }
+  let p = click.pods.find(x => x.device.id === device.id);
+  if (!p) {
+    p = { device, name: `${device.name || 'Click'} ${click.pods.length + 1}`, map: 0xffffffff, connected: false };
+    click.pods.push(p);
+    device.addEventListener('gattserverdisconnected', async () => {
+      p.connected = false; p.rx = null; clearInterval(p.timer); p.retrying = true; updateClickChip();
+      for (let i = 0; i < 5; i++) { await new Promise(r => setTimeout(r, 1500 * (i + 1))); try { await setupClickPod(p); p.retrying = false; return; } catch (e) { } }
+      p.retrying = false; updateClickChip(); toast(`${p.name} getrennt – Taste drücken und neu verbinden.`);
+    });
+  }
+  setChip('click', 'busy', 'Click verbindet …');
+  try {
+    await setupClickPod(p);
+    const n = click.pods.filter(x => x.connected).length;
+    toast(n === 1 ? 'Click-Pod verbunden. Für den zweiten Pod: dort kurz eine Taste drücken und nochmals auf „Click“ klicken.' : 'Beide Click-Pods verbunden – Tastenbelegung unter ⚙ → Tastenbelegungen.', 6000);
+  } catch (e) { toast('Click: ' + e.message); updateClickChip(); }
+}
+
 /* ---------------- Bluetooth: Pulsgurt ---------------- */
 async function connectHr() {
   if (!navigator.bluetooth) { toast('Web Bluetooth fehlt. Bitte Chrome oder Edge verwenden.'); return; }
@@ -825,7 +947,7 @@ const LIBRARY = [
     segs: [...WU(12), S(3, 55, { label: 'Locker' }), ...rep(4, [S(4, 115, { label: 'VO2max' }), S(3, 55, { label: 'Erholung' })]), ...CD(8)] },
   { id: 'spr-8x10', cat: 'max', name: 'Sprints 8 × 10 s', desc: '8 maximale Sprints im Gang-Modus, je ~5 min volle Erholung.',
     sci: 'Kurze maximale Sprints mit langen Pausen trainieren Spitzenleistung und die Ansteuerung der Muskulatur. Die langen Pausen sind Absicht: Phosphokreatin braucht mehrere Minuten, um sich zu erholen (z. B. Bogdanis et al. 1996), sonst sinkt die Sprintqualität.',
-    segs: [...WU(12), S(1, 100, { label: 'Öffner' }), S(4, 55, { label: 'Locker' }), ...rep(8, [sec(10, 250, { mode: 'gear', gear: 21, label: 'SPRINT!', text: 'Volle Kraft – schalte bei Bedarf schwerer' }), sec(290, 50, { label: 'Volle Erholung' })]), ...CD(8)] },
+    segs: [...WU(12), S(1, 100, { label: 'Öffner' }), S(4, 55, { label: 'Locker' }), ...rep(8, [sec(10, 250, { mode: 'gear', gear: 21, label: 'SPRINT!', text: 'Volle Kraft – bei Bedarf hochschalten' }), sec(290, 50, { label: 'Volle Erholung' })]), ...CD(8)] },
   { id: 'sit-6x30', cat: 'max', name: 'All-out 6 × 30 s (SIT)', desc: '6 × 30 s maximal im Gang-Modus, 4 min Erholung.',
     sci: 'Sprint-Intervalltraining nach Burgomaster et al. (2005) und Gibala et al. (2006): 4–6 × 30 s all-out mit 4 min Pause steigerte in wenigen Wochen anaerobe Kapazität und auch die Ausdauerleistung. Sehr hart – höchstens 1–2× pro Woche.',
     segs: [...WU(12), S(4, 55, { label: 'Locker' }), ...rep(6, [sec(30, 180, { mode: 'gear', gear: 20, label: 'ALL-OUT 30 s', text: 'Alles geben – 30 Sekunden' }), S(4, 45, { label: 'Erholung' })]), ...CD(8)] },
@@ -2636,6 +2758,7 @@ function onKey(e) {
 document.addEventListener('keydown', onKey);
 $('#chip-trainer').onclick = connectTrainer;
 $('#chip-hr').onclick = connectHr;
+$('#chip-click').onclick = () => { if (click.pods.filter(p => p.connected).length >= 2) { openSettings('st-keys'); } else connectClick(); };
 $('#chip-demo').onclick = () => { demo.on = !demo.on; setChip('demo', demo.on ? 'on' : 'off'); toast(demo.on ? 'Demo-Modus an: simulierter Trainer und Puls.' : 'Demo-Modus aus.'); };
 // ---------- Einstellungsseite ----------
 const DEFAULT_LOOK = { accent: '#ff7a2f', hudColor: '#ff2b2b', hudOk: '#6dff9a' };
@@ -2673,10 +2796,11 @@ function applyLook() {
   renderGreeting();
 }
 let settingsFrom = 'library';
-function openSettings() {
+function openSettings(sec) {
   if (ride.active) { toast('Einstellungen kannst du nach der Fahrt ändern.'); return; }
   settingsFrom = document.querySelector('.view.active')?.id?.replace('view-', '') || 'library';
   fillSettings(); showView('settings');
+  if (typeof sec === 'string') setTimeout(() => $('#' + sec)?.scrollIntoView({ block: 'start' }), 60);
 }
 function fillSettings() {
   renderProfiles();
@@ -2690,7 +2814,7 @@ function fillSettings() {
   $('#s-vshift').checked = settings.virtualShift; $('#s-autopause').checked = settings.autoPause; $('#s-beeps').checked = settings.beeps;
   v('s-accent', settings.accent || DEFAULT_LOOK.accent); v('s-hudc', settings.hudColor || DEFAULT_LOOK.hudColor); v('s-hudok', settings.hudOk || DEFAULT_LOOK.hudOk);
   v('s-hudscale', settings.hudScale); v('s-hudop', settings.hudOpacity); v('s-gint', settings.globalInt || 100);
-  renderDashSettings(dashConfig());
+  renderDashSettings(dashConfig()); renderClickSettings(clickMap()); $('#s-ckact').checked = !!settings.clickActivate; updateClickChip();
   settingsPreview(); stSnap = JSON.stringify(stValues());
 }
 function settingsPreview() {
@@ -2705,6 +2829,27 @@ function settingsPreview() {
     : 'Den Schwellenpuls ermittelst du mit dem Puls-Zonentest, die FTP mit dem Ramp-Test. Trägst du dein Geburtsjahr ein, zeigt Gladius einen Richtwert für den Maximalpuls.';
   document.querySelectorAll('.st-presets').forEach(box => { if (!box.childElementCount) box.innerHTML = PRESETS[box.dataset.for].map(c => `<button type="button" style="background:${c}" data-c="${c}" title="${c}" aria-label="Farbe ${c}"></button>`).join(''); });
 }
+function renderClickSettings(map) {
+  $('#s-ckl').innerHTML = map.length ? map.map(m => `<div class="dbl-row ck-row" data-bit="${m.bit}"><span class="ck-key">${esc(clickBitName(m.bit))}<small>0x${m.bit.toString(16).padStart(4, '0')}</small></span>
+    <select id="s-ck-${m.bit}" aria-label="Funktion für ${esc(clickBitName(m.bit))}">${Object.entries(CLICK_ACTIONS).map(([k, l]) => `<option value="${k}" ${m.action === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
+    <button type="button" class="btn small" data-ckdel="${m.bit}" aria-label="Taste entfernen" title="Taste entfernen">✕</button></div>`).join('') : '<div class="muted" style="font-size:13px">Keine Tasten belegt.</div>';
+  $('#s-ck-order').value = map.map(m => m.bit).join(',');
+}
+const clickFromForm = () => $('#s-ck-order').value.split(',').filter(Boolean).map(b => ({ bit: +b, action: $(`#s-ck-${b}`).value }));
+$('#s-ckl').onclick = e => { const d = e.target.closest('[data-ckdel]'); if (d) renderClickSettings(clickFromForm().filter(m => m.bit !== +d.dataset.ckdel)); };
+$('#ck-reset').onclick = () => renderClickSettings(CLICK_DEFAULT.map(m => ({ ...m })));
+$('#ck-connect').onclick = connectClick;
+$('#ck-learn').onclick = () => {
+  if (!click.pods.some(p => p.connected)) { $('#ck-learnmsg').innerHTML = '<div class="banner" style="display:block;margin-top:10px">Zuerst einen Click-Pod verbinden – dann die gewünschte Taste drücken.</div>'; return; }
+  $('#ck-learnmsg').innerHTML = '<div class="banner" style="display:block;margin-top:10px">Drück jetzt die Taste am Click, die du belegen willst … <button type="button" class="btn small" id="ck-learn-x">Abbrechen</button></div>';
+  $('#ck-learn-x').onclick = () => { click.learn = null; $('#ck-learnmsg').innerHTML = ''; };
+  click.learn = bit => {
+    $('#ck-learnmsg').innerHTML = '';
+    const map = clickFromForm(); if (!map.some(m => m.bit === bit)) map.push({ bit, action: 'none' });
+    renderClickSettings(map); const row = $(`.ck-row[data-bit="${bit}"]`); row?.classList.add('hit'); row?.querySelector('select')?.focus();
+    toast(`Erkannt: ${clickBitName(bit)} – jetzt Funktion wählen.`);
+  };
+};
 function renderDashSettings(cfg) {
   $('#s-dbl').innerHTML = cfg.map((b, i) => `<div class="dbl-row" data-id="${b.id}"><span class="dbl-ord"><button type="button" class="btn small" data-mv="-1" ${i ? '' : 'disabled'} aria-label="nach oben">↑</button><button type="button" class="btn small" data-mv="1" ${i < cfg.length - 1 ? '' : 'disabled'} aria-label="nach unten">↓</button></span>
     <label class="dbl-on"><input type="checkbox" id="s-db-${b.id}-on" ${b.on ? 'checked' : ''}><span>${DASH_BLOCKS[b.id]}</span></label>
@@ -2731,6 +2876,7 @@ function saveSettings(navigate = true) {
   settings.accent = $('#s-accent').value; settings.hudColor = $('#s-hudc').value; settings.hudOk = $('#s-hudok').value;
   settings.hudScale = +$('#s-hudscale').value; settings.hudOpacity = +$('#s-hudop').value;
   settings.globalInt = +$('#s-gint').value || 100;
+  settings.clickMap = clickFromForm(); settings.clickActivate = $('#s-ckact').checked;
   settings.dash = $('#s-db-order').value.split(',').filter(Boolean).map(id => ({ id, on: $(`#s-db-${id}-on`).checked, w: +$(`#s-db-${id}-w`).value }));
   store.set('settings', settings);
   const newFtp = num('s-ftp', 50, 600, 200); if (newFtp !== settings.ftp) setFtp(newFtp, 'Einstellungen');
@@ -2977,7 +3123,7 @@ if (!store.get('onboarded')) { $('#w-weight').value = settings.weight; $('#dlg-w
 else setTimeout(dailyReadiness, 400);
 if (!navigator.bluetooth && !EMBEDDED) setTimeout(() => toast('Hinweis: Bluetooth funktioniert nur in Chrome oder Edge. Demo-Modus geht überall.', 6000), 600);
 // Testschnittstelle
-window.__gladius = { checkPlanBonuses, rankBadge, seasonRank, updateTrophies, rankFromXp, workoutDifficulty, ROUTES, routeClimbScore, levelOf, totalXp, xpNeed, togglePlanDone, rebuildFrom, resumePlan, openPauseDialog, movePlanSession, generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
+window.__gladius = { click, onClickAsync, clickMap, checkPlanBonuses, rankBadge, seasonRank, updateTrophies, rankFromXp, workoutDifficulty, ROUTES, routeClimbScore, levelOf, totalXp, xpNeed, togglePlanDone, rebuildFrom, resumePlan, openPauseDialog, movePlanSession, generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
 </script>
 </body>
 </html>

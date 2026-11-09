@@ -28,7 +28,7 @@ Windows zeigt beim ersten Start evtl. „Der Computer wurde durch Windows gesch�
 | Kürzel | Funktion |
 |---|---|
 | Ctrl+Alt+H | HUD ein/aus |
-| Ctrl+Shift+↑ / ↓ | Gang schwerer / leichter |
+| Ctrl+Shift+↑ / ↓ | Hochschalten / Runterschalten |
 | Ctrl+Alt+P | Pause / Weiter |
 | Ctrl+Alt+N | Nächstes Intervall |
 
