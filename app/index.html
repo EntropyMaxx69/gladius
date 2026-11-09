@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gladius</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&display=swap">
 <style>
 :root{
   color-scheme:dark;
@@ -18,9 +20,10 @@ html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI"
 button{font:inherit;color:inherit;cursor:pointer}
 .num{font-variant-numeric:tabular-nums}
 header{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5;flex-wrap:wrap}
-.logo{display:flex;flex-direction:column;gap:1px;line-height:1}
-.logo svg{display:block;height:36px;width:auto;overflow:visible}
-.logo small{display:block;font-size:10px;letter-spacing:.3em;color:var(--muted);font-weight:600;padding-left:40px}
+.logo{display:flex;flex-direction:column;gap:8px;line-height:1}
+.logo .wm{display:flex;align-items:center;font-family:'Cinzel','Trajan Pro','Times New Roman',serif;font-weight:800;font-size:25px;letter-spacing:.16em;color:var(--text);height:30px}
+.logo .sword-i{height:1.38em;width:auto;margin:0 .2em 0 .02em;transform:translateY(.08em);overflow:visible}
+.logo small{display:block;font-family:'Cinzel','Trajan Pro','Times New Roman',serif;font-size:10px;letter-spacing:.32em;color:var(--muted);font-weight:600}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
 .chip{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:14px}
 .chip .dot{width:9px;height:9px;border-radius:50%;background:var(--z1)}
@@ -176,21 +179,19 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 <body>
 <header>
   <div class="logo" role="img" aria-label="Gladius – Indoor Cycling Training">
-    <svg viewBox="0 0 226 34" aria-hidden="true">
-      <defs>
-        <linearGradient id="lg-blade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#c3ccd6"/><stop offset="1" stop-color="#8a95a3"/></linearGradient>
-        <linearGradient id="lg-grip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5a35"/><stop offset="1" stop-color="#4a2c17"/></linearGradient>
-      </defs>
-      <!-- kürzere Klinge, liegt hinter dem Schriftzug -->
-      <path d="M31 16 L188 16 L206 17.8 L188 19.6 L31 19.6 Z" fill="url(#lg-blade)"/>
-      <!-- Parierstange, Griff mit Rillen, Kugelknauf -->
-      <rect x="26" y="10.3" width="5.6" height="15" rx="2.6" fill="var(--accent)" stroke="var(--panel)" stroke-width="1"/>
-      <rect x="11" y="15.1" width="15.5" height="5.4" rx="2" fill="url(#lg-grip)"/>
-      <path d="M14.5 15.3v5M18 15.3v5M21.5 15.3v5" stroke="#2c180b" stroke-width=".9" opacity=".7"/>
-      <ellipse cx="7" cy="17.8" rx="4.8" ry="4.4" fill="var(--accent)" stroke="var(--panel)" stroke-width="1"/>
-      <!-- Schriftzug im Vordergrund, mit dunkler Kontur gegen die Klinge abgesetzt -->
-      <text x="40" y="27" font-family="'Segoe UI',system-ui,sans-serif" font-size="25" font-weight="800" letter-spacing="6" fill="var(--text)" stroke="var(--panel)" stroke-width="2.4" paint-order="stroke" stroke-linejoin="round">GLADIUS</text>
-    </svg>
+    <div class="wm"><span>GLAD</span><svg class="sword-i" viewBox="0 0 20 66" aria-hidden="true">
+      <defs><linearGradient id="sw-blade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#dfe5eb"/><stop offset="1" stop-color="#aeb8c4"/></linearGradient></defs>
+      <!-- Knauf (ausgestellt), Griff mit Rillen, Parierstange -->
+      <path d="M3 0.5 L17 0.5 L16 4.2 L12.6 5.4 L12.6 7.4 L7.4 7.4 L7.4 5.4 L4 4.2 Z" fill="var(--text)"/>
+      <rect x="7.6" y="7" width="4.8" height="12.6" rx="1" fill="var(--text)"/>
+      <path d="M7.6 10.2h4.8M7.6 16.4h4.8" stroke="var(--panel)" stroke-width=".9"/>
+      <circle cx="10" cy="13.3" r="1.25" fill="var(--accent)"/>
+      <path d="M3.6 19.4 L16.4 19.4 L15.4 23.4 L4.6 23.4 Z" fill="var(--text)"/>
+      <!-- Klinge mit Wespentaille und kantiger Spitze, Kantenschliff -->
+      <path d="M6.4 23.4 L13.6 23.4 L12.7 33.5 L14.4 50 L10 66 L5.6 50 L7.3 33.5 Z" fill="url(#sw-blade)"/>
+      <path d="M8 24.2 L12 24.2 L11.4 33.5 L12.8 49.6 L10 59.5 L7.2 49.6 L8.6 33.5 Z" fill="#8f9aa8"/>
+      <path d="M10 24.2 L10 59.5" stroke="#c9d1da" stroke-width=".5"/>
+    </svg><span>US</span></div>
     <small>INDOOR CYCLING TRAINING</small>
   </div>
   <div class="chips">
