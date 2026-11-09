@@ -93,7 +93,7 @@ table.hist th{color:var(--muted);font-weight:600}
 .sub .metric .v{font-size:clamp(22px,3.2vw,36px)}
 .flash .v{animation:fl .5s steps(2) infinite}
 @keyframes fl{50%{opacity:.35}}
-canvas#chart{width:100%;height:190px;display:block;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-top:12px}
+canvas#chart{width:100%;height:260px;display:block;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-top:12px}
 .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
 .controls .grp{display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px 6px}
 .controls .grp span{font-size:13px;color:var(--muted);padding:0 6px}
@@ -194,7 +194,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <div class="muted" id="s-sub"></div>
     <div class="stats" id="s-stats"></div>
     <div id="s-ftpdetect"></div><div id="s-feedback"></div><div id="s-extra"></div>
-    <canvas id="s-chart" style="width:100%;height:190px;display:block;background:var(--panel);border:1px solid var(--line);border-radius:14px"></canvas>
+    <canvas id="s-chart" style="width:100%;height:260px;display:block;background:var(--panel);border:1px solid var(--line);border-radius:14px"></canvas>
     <div class="toolbar">
       <button class="btn primary" id="s-fit">FIT-Datei herunterladen</button>
       <button class="btn" id="s-back">Zurück zu den Trainings</button>
@@ -853,39 +853,93 @@ function beep(freq, dur) {
 
 /* ---------------- Diagramm ---------------- */
 function sizeCanvas(c) { const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1; c.width = Math.max(300, r.width * dpr); c.height = Math.max(120, r.height * dpr); }
-function drawProfile(ctx, w, W, H, T, maxW) {
-  let x = 0;
-  for (const s of w.segs) {
-    const a = s.w ?? s.from / 100 * settings.ftp, b = s.w ?? s.to / 100 * settings.ftp, x2 = x + s.dur / T * W;
-    ctx.fillStyle = s.mode === 'gear' ? 'rgba(169,139,255,.55)' : zoneHex((a + b) / 2 / settings.ftp * 100) + '99';
-    ctx.beginPath(); ctx.moveTo(x, H); ctx.lineTo(x, H - a / maxW * H); ctx.lineTo(x2, H - b / maxW * H); ctx.lineTo(x2, H); ctx.fill();
-    x = x2;
+/* Fahrtdiagramm: oben Leistung (Watt) mit Soll-Profil, unten Puls (bpm) – gemeinsame Zeitachse */
+const CH = { ink: '#8b97a7', grid: 'rgba(255,255,255,.07)', power: '#ffffff', hr: '#ff5c5c', now: '#ff7a2f', font: '11px "Segoe UI",system-ui,sans-serif' };
+const fmtAxisTime = t => t >= 3600 ? (t % 3600 ? `${Math.floor(t / 3600)} h ${Math.round(t % 3600 / 60)}` : `${t / 3600} h`) : `${Math.round(t / 60)} min`;
+function smooth(samples, key, k = 3) {
+  const out = new Array(samples.length); let acc = 0, n = 0;
+  for (let i = 0; i < samples.length; i++) {
+    const v = samples[i][key]; if (v != null) { acc += v; n++; }
+    const o = samples[i - k]; if (i >= k && o && o[key] != null) { acc -= o[key]; n--; }
+    out[i] = samples[i][key] == null || !n ? null : acc / n;
   }
+  return out;
 }
-function drawTrace(ctx, samples, W, H, T, maxW, key = 'p', color = '#ffffff', toX) {
-  ctx.strokeStyle = color; ctx.lineWidth = Math.max(1.5, W / 700); ctx.beginPath(); let first = true;
-  samples.forEach((s, i) => { const v = s[key]; if (v == null) return; const x = toX(i), y = H - Math.min(v, maxW) / maxW * H; first ? ctx.moveTo(x, y) : ctx.lineTo(x, y); first = false; });
-  ctx.stroke();
+function drawRideGraph(c, o) {
+  // o: { T (s), samples, w (Workout oder null), now (s oder null), ftp }
+  const dpr = window.devicePixelRatio || 1, ctx = c.getContext('2d'), W = c.width / dpr, H = c.height / dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H); ctx.font = CH.font; ctx.textBaseline = 'middle';
+  const L = 52, Rp = 14, Tp = 26, Xh = 22, gap = 12, inner = H - Tp - Xh - gap;
+  const P = { x: L, y: Tp, w: W - L - Rp, h: Math.round(inner * 0.68) }, R = { x: L, y: Tp + Math.round(inner * 0.68) + gap, w: W - L - Rp, h: inner - Math.round(inner * 0.68) };
+  const T = Math.max(60, o.T), X = t => P.x + t / T * P.w;
+  const segW = s => s.w ?? null, pctW = v => v / 100 * o.ftp;
+  const profMax = o.w ? Math.max(...o.w.segs.map(s => segW(s) ?? pctW(Math.max(s.from, s.to))).filter(x => x < o.ftp * 3)) : 0;
+  const pw = smooth(o.samples, 'p'), hrs = o.samples.map(x => x.hr).filter(x => x != null);
+  const maxW = Math.max(o.ftp * 1.3, profMax, ...pw.filter(x => x != null)) * 1.08;
+  const Yp = v => P.y + P.h - Math.min(v, maxW) / maxW * P.h;
+  let hLo = hrs.length ? Math.min(...hrs) - 8 : 60, hHi = hrs.length ? Math.max(...hrs) + 8 : 180; if (hHi - hLo < 40) { const m = (hLo + hHi) / 2; hLo = m - 20; hHi = m + 20; }
+  const Yh = v => R.y + R.h - (v - hLo) / (hHi - hLo) * R.h;
+  // Raster + Y-Achsen
+  ctx.textAlign = 'right';
+  const ps = niceStep(maxW / 4); for (let v = 0; v <= maxW; v += ps) { ctx.strokeStyle = CH.grid; ctx.beginPath(); ctx.moveTo(P.x, Yp(v)); ctx.lineTo(P.x + P.w, Yp(v)); ctx.stroke(); ctx.fillStyle = CH.ink; ctx.fillText(v, P.x - 8, Yp(v)); }
+  const hs = niceStep((hHi - hLo) / 3); for (let v = Math.ceil(hLo / hs) * hs; v <= hHi; v += hs) { ctx.strokeStyle = CH.grid; ctx.beginPath(); ctx.moveTo(R.x, Yh(v)); ctx.lineTo(R.x + R.w, Yh(v)); ctx.stroke(); ctx.fillStyle = CH.ink; ctx.fillText(v, R.x - 8, Yh(v)); }
+  ctx.textAlign = 'left'; ctx.fillStyle = CH.ink;
+  const vlabel = (txt, cy, col) => { ctx.save(); ctx.translate(11, cy); ctx.rotate(-Math.PI / 2); ctx.textAlign = 'center'; ctx.fillStyle = col; ctx.fillText(txt, 0, 0); ctx.restore(); };
+  vlabel('Leistung (W)', P.y + P.h / 2, CH.ink); vlabel('Puls (bpm)', R.y + R.h / 2, CH.hr);
+  // X-Achse (Zeit)
+  const steps = [60, 120, 300, 600, 900, 1200, 1800, 3600, 7200], st = steps.find(x => T / x <= 8) || 7200;
+  ctx.textAlign = 'center';
+  for (let t = 0; t <= T; t += st) { const x = X(t); ctx.strokeStyle = CH.grid; ctx.beginPath(); ctx.moveTo(x, P.y); ctx.lineTo(x, R.y + R.h); ctx.stroke(); ctx.fillStyle = CH.ink; ctx.fillText(fmtAxisTime(t), Math.min(Math.max(x, P.x + 18), P.x + P.w - 18), H - Xh / 2); }
+  // Soll-Profil
+  if (o.w) {
+    let t = 0;
+    for (const s of o.w.segs) {
+      const a = segW(s) ?? pctW(s.from), b = segW(s) ?? pctW(s.to), x1 = X(t), x2 = X(Math.min(T, t + s.dur));
+      if (x1 < P.x + P.w) {
+        ctx.fillStyle = s.mode === 'gear' ? 'rgba(169,139,255,.45)' : zoneHex((a + b) / 2 / o.ftp * 100) + '80';
+        const bb = s.dur ? a + (b - a) * (Math.min(T, t + s.dur) - t) / s.dur : b;
+        ctx.beginPath(); ctx.moveTo(x1, P.y + P.h); ctx.lineTo(x1, Yp(a)); ctx.lineTo(x2, Yp(bb)); ctx.lineTo(x2, P.y + P.h); ctx.fill();
+      }
+      t += s.dur;
+    }
+  }
+  // FTP-Linie
+  ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(P.x, Yp(o.ftp)); ctx.lineTo(P.x + P.w, Yp(o.ftp)); ctx.stroke(); ctx.setLineDash([]);
+  // Linien: Leistung (oben), Puls (unten)
+  const line = (vals, color, Y) => { ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.beginPath(); let pen = false;
+    vals.forEach((v, i) => { if (v == null) { pen = false; return; } const x = X(i), y = Y(v); pen ? ctx.lineTo(x, y) : ctx.moveTo(x, y); pen = true; }); ctx.stroke(); ctx.lineWidth = 1; };
+  line(pw, CH.power, Yp); line(o.samples.map(x => x.hr), CH.hr, Yh);
+  // aktuelle Position
+  if (o.now != null) { ctx.fillStyle = CH.now; ctx.fillRect(X(o.now) - 1, P.y, 2, R.y + R.h - P.y); }
+  // Legende
+  ctx.textAlign = 'left'; let lx = P.x;
+  const leg = (draw, label) => { draw(lx); ctx.fillStyle = CH.ink; ctx.fillText(label, lx + 22, Tp - 12); lx += 30 + ctx.measureText(label).width; };
+  leg(x => { ctx.strokeStyle = CH.power; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, Tp - 12); ctx.lineTo(x + 16, Tp - 12); ctx.stroke(); ctx.lineWidth = 1; }, 'Leistung (W)');
+  if (o.w) leg(x => { ctx.fillStyle = zoneHex(95) + 'a0'; ctx.fillRect(x, Tp - 17, 16, 10); }, 'Soll-Leistung');
+  leg(x => { ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(x, Tp - 12); ctx.lineTo(x + 16, Tp - 12); ctx.stroke(); ctx.setLineDash([]); }, `FTP ${o.ftp} W`);
+  leg(x => { ctx.strokeStyle = CH.hr; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, Tp - 12); ctx.lineTo(x + 16, Tp - 12); ctx.stroke(); ctx.lineWidth = 1; }, 'Puls (bpm)');
+  c._graph = { o, P, R, T, X, pw };
 }
+// Werte beim Drüberfahren
+let chartTip = null;
+function chartHover(e) {
+  const c = e.currentTarget, g = c._graph; if (!g) return;
+  const r = c.getBoundingClientRect(), mx = e.clientX - r.left, t = Math.round((mx - g.P.x) / g.P.w * g.T);
+  if (!chartTip) { chartTip = document.createElement('div'); chartTip.className = 'toast'; chartTip.style.cssText += ';position:fixed;transform:none;bottom:auto;pointer-events:none;padding:8px 12px;font-size:13px;line-height:1.5'; document.body.appendChild(chartTip); }
+  if (t < 0 || t > g.T) { chartTip.style.display = 'none'; return; }
+  const sm = g.o.samples[Math.min(t, g.o.samples.length - 1)], has = t < g.o.samples.length;
+  let soll = null; if (g.o.w) { let a = 0; for (const s of g.o.w.segs) { if (t < a + s.dur) { soll = s.mode === 'gear' ? 'frei (Gang)' : Math.round(s.w ?? (s.from + (s.to - s.from) * (t - a) / s.dur) / 100 * g.o.ftp * (g.o.int || 1)) + ' W'; break; } a += s.dur; } }
+  chartTip.innerHTML = `<b>${fmtTime(t)}</b>${soll ? `<br>Soll: ${soll}` : ''}${has ? `<br>Leistung: <b>${sm.p ?? '–'} W</b><br><span style="color:${CH.hr}">Puls: <b>${sm.hr ?? '–'} bpm</b></span><br>Kadenz: ${sm.cad ?? '–'} rpm` : ''}`;
+  chartTip.style.display = 'block'; chartTip.style.left = Math.min(e.clientX + 14, innerWidth - 180) + 'px'; chartTip.style.top = (e.clientY - 20) + 'px';
+}
+function chartLeave() { if (chartTip) chartTip.style.display = 'none'; }
 function drawLiveChart() {
-  const c = $('#chart'), ctx = c.getContext('2d'), W = c.width, H = c.height; ctx.clearRect(0, 0, W, H);
-  const w = ride.w; if (!w) return;
-  const T = w.open ? Math.max(1200, ride.elapsed + 300) : ride.total;
-  const maxW = Math.max(settings.ftp * 1.6, ...w.segs.map(s => s.w ?? Math.max(s.from, s.to) / 100 * settings.ftp).filter(x => x < settings.ftp * 3), ...ride.samples.map(s => s.p || 0)) * 1.05;
-  if (!w.open) drawProfile(ctx, w, W, H, T, maxW);
-  ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(0, H - settings.ftp / maxW * H); ctx.lineTo(W, H - settings.ftp / maxW * H); ctx.stroke(); ctx.setLineDash([]);
-  // Leistungskurve über die Workout-Zeit (Sample i ≈ Sekunde i gefahrene Zeit)
-  drawTrace(ctx, ride.samples, W, H, T, maxW, 'p', '#ffffff', i => i / T * W);
-  drawTrace(ctx, ride.samples, W, H, T, Math.max(200, maxW / settings.ftp * 200), 'hr', 'rgba(255,92,92,.8)', i => i / T * W);
-  const x = ride.elapsed / T * W; ctx.fillStyle = '#ff7a2f'; ctx.fillRect(x - 1.5, 0, 3, H);
+  if (!ride.w) return;
+  const T = ride.w.open ? Math.max(1200, ride.elapsed + 300) : ride.total;
+  drawRideGraph($('#chart'), { T, samples: ride.samples, w: ride.w.open ? null : ride.w, now: ride.elapsed, ftp: settings.ftp, int: ride.intensity });
 }
-function drawRideChart(c, r) {
-  const ctx = c.getContext('2d'), W = c.width, H = c.height; ctx.clearRect(0, 0, W, H);
-  const T = r.samples.length, maxW = Math.max(r.ftp * 1.5, ...r.samples.map(s => s.p || 0)) * 1.05;
-  ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(0, H - r.ftp / maxW * H); ctx.lineTo(W, H - r.ftp / maxW * H); ctx.stroke(); ctx.setLineDash([]);
-  drawTrace(ctx, r.samples, W, H, T, maxW, 'p', '#ff7a2f', i => i / T * W);
-  drawTrace(ctx, r.samples, W, H, T, 210, 'hr', 'rgba(255,92,92,.8)', i => i / T * W);
-}
+function drawRideChart(c, r) { drawRideGraph(c, { T: r.samples.length, samples: r.samples, w: null, now: null, ftp: r.ftp }); }
+['#chart', '#s-chart'].forEach(id => { const c = $(id); c.addEventListener('mousemove', chartHover); c.addEventListener('mouseleave', chartLeave); });
 
 /* ---------------- HUD (Document Picture-in-Picture) ---------------- */
 const HUD_CSS = `
