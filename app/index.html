@@ -169,6 +169,11 @@ table.hist th{color:var(--muted);font-weight:600}
 .xpbox{display:flex;gap:10px 18px;align-items:center;flex-wrap:wrap;margin:10px 0;font-size:15px}.xp-gain{background:linear-gradient(90deg,var(--accent),#ffc53d);color:#14100a;font-weight:800;border-radius:8px;padding:4px 10px}
 .xp-up{color:#ffc53d;font-weight:700}.banner.pr{background:rgba(255,197,61,.1);border-color:rgba(255,197,61,.45)}
 table.prs tr.pr1 td{color:#ffc53d}
+.lv-row .rbadge{flex:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))}
+.ladder{display:flex;gap:2px;margin-top:14px;overflow-x:auto;padding-bottom:2px}.ladder>div{flex:1;min-width:46px;display:flex;flex-direction:column;align-items:center;font-size:10.5px;color:var(--muted);padding:4px 0;border-radius:8px}
+.ladder>div.cur{background:rgba(255,122,47,.12);color:var(--text);font-weight:700}
+.trophies{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}.trophies>div{display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--muted)}
+.xpbox .rbadge{margin:-8px 0}
 .wz-goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
 .wz-goal{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--text);display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit}
 .wz-goal span:last-child{font-size:13px;color:var(--muted);line-height:1.4}.wz-goal .ic{font-size:22px;color:var(--accent)}.wz-goal:hover{border-color:var(--muted)}.wz-goal.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:rgba(255,122,47,.08)}
@@ -303,6 +308,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
           <div class="st-grid">
             <label class="st-f"><span>Dein Name</span><input type="text" id="s-name" maxlength="40" placeholder="z. B. Dario" autocomplete="given-name"></label>
             <label class="st-f"><span>Geburtsjahr</span><input type="number" id="s-born" min="1930" max="2020" placeholder="–"></label>
+            <label class="st-f"><span>Geschlecht</span><select id="s-sex"><option value="">keine Angabe</option><option value="m">Mann</option><option value="f">Frau</option></select></label>
             <label class="st-f"><span>Körpergewicht (kg)</span><input type="number" id="s-weight" min="30" max="200" step="0.5"></label>
             <label class="st-f"><span>Grösse (cm)</span><input type="number" id="s-height" min="120" max="230" placeholder="–"></label>
           </div>
@@ -1285,33 +1291,172 @@ function totalXp(until = Infinity) {
     + store.get('xpLog', []).filter(x => x.t <= until).reduce((a, x) => a + x.xp, 0);
 }
 function levelOf(xp) { let n = 1; while (xpNeed(n + 1) <= xp) n++; return { level: n, xp, from: xpNeed(n), to: xpNeed(n + 1) }; }
-const RANKS = [[1, 'Tiro', 'Rekrut'], [5, 'Miles', 'Legionär'], [10, 'Tesserarius', 'Wachführer'], [15, 'Optio', 'Stellvertreter des Centurio'], [20, 'Signifer', 'Feldzeichenträger'],
-  [25, 'Centurio', 'Befehlshaber einer Hundertschaft'], [30, 'Primus Pilus', 'Erster Centurio der Legion'], [36, 'Tribunus', 'Stabsoffizier'], [43, 'Legatus', 'Kommandant der Legion'], [50, 'Imperator', 'Oberbefehlshaber']];
-const rankOf = lv => { let r = RANKS[0], i = 0; RANKS.forEach((x, j) => { if (lv >= x[0]) { r = x; i = j; } }); return { name: r[1], desc: r[2], idx: i, next: RANKS[i + 1] || null }; };
+// ---------- Rang-Abzeichen (SVG) ----------
+const TIERS = [
+  { name: 'Erde', xp: 0, c: ['#b08a5e', '#6e4b2c', '#3a2614'], txt: '#f3e3cf' },
+  { name: 'Holz', xp: 500, c: ['#e2ad6c', '#a8693a', '#5a3519'], txt: '#fff1df' },
+  { name: 'Stein', xp: 1500, c: ['#d0d3d7', '#8c9198', '#474c52'], txt: '#ffffff' },
+  { name: 'Aluminium', xp: 3000, c: ['#ffffff', '#c3cbd4', '#7c8794'], txt: '#26303b' },
+  { name: 'Bronze', xp: 5000, c: ['#ffcf98', '#c8783a', '#6e3a14'], txt: '#fff3e6' },
+  { name: 'Silber', xp: 7500, c: ['#ffffff', '#cfd7e0', '#76828f'], txt: '#1f2933' },
+  { name: 'Gold', xp: 10500, c: ['#fff6bf', '#f5c431', '#9c6a06'], txt: '#4a3200' },
+  { name: 'Titan', xp: 14000, c: ['#dbe8f5', '#7189a2', '#253343'], txt: '#ffffff' },
+  { name: 'Carbon', xp: 18000, c: ['#4a4e55', '#202327', '#08090a'], txt: '#ffffff' },
+  { name: 'Diamant', xp: 23000, c: ['#f2feff', '#86e6ff', '#2b86d8'], txt: '#06324f' },
+];
+let badgeUid = 0;
+const SHIELD = 'M50 6 L88 19 V50 C88 76 72 94 50 104 C28 94 12 76 12 50 V19 Z';
+const SHIELD_SHARP = 'M50 2 L70 10 L92 8 L88 46 C86 76 70 94 50 106 C30 94 14 76 12 46 L8 8 L30 10 Z';
+function gladiusSvg(fill, stroke, y = 0, s = 1) {
+  return `<g transform="translate(50 ${58 + y}) scale(${s}) translate(-50 -58)" stroke="${stroke}" stroke-width="1.6" stroke-linejoin="round">
+    <path d="M50 22 L55.5 31 L55.5 67 L44.5 67 L44.5 31 Z" fill="${fill}"/><path d="M50 26 V65" stroke="${stroke}" stroke-width="1" opacity=".5"/>
+    <rect x="36" y="66" width="28" height="6" rx="3" fill="${fill}"/><rect x="47" y="72" width="6" height="11" rx="2" fill="${fill}"/><circle cx="50" cy="87" r="4.5" fill="${fill}"/></g>`;
+}
+function laurel(cx, cy, r, from, to, n, fill, stroke, flip) {
+  let g = '';
+  for (let i = 0; i < n; i++) {
+    const a = (from + (to - from) * i / (n - 1)) * Math.PI / 180, x = cx + r * Math.cos(a), y = cy + r * Math.sin(a), rot = a * 180 / Math.PI + (flip ? -60 : 60);
+    g += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="7.5" ry="3.2" transform="rotate(${rot.toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})" fill="${fill}" stroke="${stroke}" stroke-width="1"/>`;
+  }
+  return g;
+}
+function wings(fill, stroke, big) {
+  const w = side => { const k = side < 0 ? '' : 'transform="translate(100 0) scale(-1 1)"';
+    return `<g ${k} fill="${fill}" stroke="${stroke}" stroke-width="1.4" stroke-linejoin="round">
+      <path d="M16 34 C2 30 -8 38 -12 50 C-4 46 4 46 12 50 Z"/><path d="M14 46 C0 46 -9 56 -10 68 C-2 62 6 60 13 62 Z"/>${big ? '<path d="M15 58 C3 62 -4 72 -3 84 C3 76 10 72 17 72 Z"/>' : ''}</g>`; };
+  return w(-1) + w(1);
+}
+function rankBadge(tier, div, size = 64, opt = {}) {
+  const T = TIERS[tier], u = 'b' + (++badgeUid), [l, m, d] = T.c;
+  const defs = `<defs><linearGradient id="${u}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${l}"/><stop offset=".5" stop-color="${m}"/><stop offset="1" stop-color="${d}"/></linearGradient>
+    <linearGradient id="${u}r" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${l}"/><stop offset="1" stop-color="${d}"/></linearGradient>
+    <radialGradient id="${u}s" cx=".35" cy=".25" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <pattern id="${u}cf" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#141618"/><rect width="4" height="4" fill="#2c3035"/><rect x="4" y="4" width="4" height="4" fill="#2c3035"/><path d="M0 4h4M4 0v4M4 8V4h4" stroke="#0b0c0d" stroke-width=".6"/></pattern>
+    <radialGradient id="${u}glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${tier === 9 ? '#9ff0ff' : tier === 8 ? '#ff3b3b' : '#7fb6ff'}" stop-opacity=".55"/><stop offset="1" stop-opacity="0" stop-color="#000"/></radialGradient></defs>`;
+  let g = '';
+  const G = `url(#${u}g)`, R = `url(#${u}r)`, S = `url(#${u}s)`;
+  switch (tier) {
+    case 0: // Erde: Erdscholle mit Spross
+      g = `<path d="M50 30 C70 28 88 40 90 60 C92 82 72 98 50 98 C28 98 8 84 10 62 C12 42 30 32 50 30 Z" fill="${G}" stroke="${d}" stroke-width="3"/>
+        ${[[30, 60, 4], [62, 52, 3], [44, 80, 3.5], [72, 76, 4.5], [24, 78, 2.5], [56, 68, 2], [38, 48, 2.5]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${d}" opacity=".55"/>`).join('')}
+        <path d="M50 32 C50 22 50 16 50 10" stroke="#5a8f2e" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M50 18 C40 8 30 12 28 18 C36 22 44 22 50 18 Z" fill="#7cc242" stroke="#3f6b1d" stroke-width="1.5"/>
+        <path d="M50 14 C58 2 70 4 73 10 C66 16 58 16 50 14 Z" fill="#8fd350" stroke="#3f6b1d" stroke-width="1.5"/><path d="M50 30 C70 28 88 40 90 60" fill="none" stroke="${l}" stroke-width="2" opacity=".6"/>`; break;
+    case 1: // Holz: Holzschild mit Maserung und Nägeln
+      g = `<path d="${SHIELD}" fill="${G}" stroke="${d}" stroke-width="4"/>
+        <g fill="none" stroke="${d}" stroke-width="1.6" opacity=".55"><path d="M30 20 C26 45 34 70 30 95"/><path d="M50 10 C46 40 54 70 50 102"/><path d="M70 20 C74 45 66 70 70 95"/><ellipse cx="38" cy="58" rx="4" ry="7"/><ellipse cx="62" cy="40" rx="3" ry="5"/></g>
+        <path d="M14 36 H86 M14 70 H84" stroke="#4b4f55" stroke-width="5" opacity=".85"/>${[[20, 36], [80, 36], [22, 70], [78, 70]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.6" fill="#b8bec6" stroke="#2a2d31"/>`).join('')}`; break;
+    case 2: // Stein: behauenes Sechseck mit Riss und Rune
+      g = `<path d="M50 6 L88 26 L90 74 L50 104 L10 74 L12 26 Z" fill="${G}" stroke="${d}" stroke-width="4"/>
+        <path d="M50 6 L50 104 M12 26 L50 50 L88 26 M10 74 L50 50 L90 74" stroke="${l}" stroke-width="1" opacity=".35"/>
+        <path d="M26 30 L36 44 L32 52 L42 64" stroke="${d}" stroke-width="2" fill="none"/><path d="M74 66 L64 76 L68 86" stroke="${d}" stroke-width="2" fill="none"/>
+        ${gladiusSvg(d, d, 2, 0.62).replace(/fill="[^"]+"/g, `fill="${d}" fill-opacity=".55"`)}`; break;
+    case 3: // Aluminium: gebürstetes Metall mit Nieten
+      g = `<path d="${SHIELD}" fill="${G}" stroke="${d}" stroke-width="4"/>
+        <clipPath id="${u}cl"><path d="${SHIELD}"/></clipPath><g stroke="#fff" stroke-width=".8" opacity=".5" clip-path="url(#${u}cl)">${Array.from({ length: 16 }, (_, i) => `<path d="M16 ${22 + i * 5} H84"/>`).join('')}</g>
+        <path d="M50 14 L80 24 V50 C80 72 67 87 50 95 C33 87 20 72 20 50 V24 Z" fill="none" stroke="${d}" stroke-width="2"/>
+        ${[[24, 26], [76, 26], [22, 58], [78, 58], [50, 98]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3" fill="${l}" stroke="${d}" stroke-width="1.3"/>`).join('')}
+        ${gladiusSvg(m, '#4b5561', 0, 0.75)}`; break;
+    case 4: // Bronze: Schild mit Rand, Gladius und Lorbeerzweig
+      g = `<path d="${SHIELD}" fill="${R}" stroke="${d}" stroke-width="3"/><path d="M50 14 L80 24 V50 C80 72 67 87 50 95 C33 87 20 72 20 50 V24 Z" fill="${G}" stroke="${d}" stroke-width="2"/>
+        ${laurel(50, 62, 30, 120, 175, 5, '#9c5a22', d, false)}${laurel(50, 62, 30, 60, 5, 5, '#9c5a22', d, true)}${gladiusSvg(l, d, 0, 0.82)}`; break;
+    case 5: // Silber: Schild mit Flügeln
+      g = `${wings(G, d, false)}<path d="${SHIELD}" fill="${R}" stroke="${d}" stroke-width="3"/><path d="M50 14 L80 24 V50 C80 72 67 87 50 95 C33 87 20 72 20 50 V24 Z" fill="${G}" stroke="${d}" stroke-width="2"/>
+        ${laurel(50, 62, 30, 120, 175, 5, '#9aa6b3', d, false)}${laurel(50, 62, 30, 60, 5, 5, '#9aa6b3', d, true)}${gladiusSvg('#fff', d, 0, 0.84)}`; break;
+    case 6: // Gold: gekreuzte Klingen, Lorbeerkranz, Stern
+      g = `<g transform="rotate(-46 50 58)">${gladiusSvg(l, d, -2, 1.95)}</g><g transform="rotate(46 50 58)">${gladiusSvg(l, d, -2, 1.95)}</g>
+        <path d="${SHIELD}" fill="${R}" stroke="${d}" stroke-width="3" transform="translate(50 58) scale(.86) translate(-50 -58)"/>
+        <path d="M50 18 L76 27 V50 C76 70 65 84 50 91 C35 84 24 70 24 50 V27 Z" fill="${G}" stroke="${d}" stroke-width="2"/>
+        ${laurel(50, 58, 46, 100, 200, 7, '#e8b21e', d, false)}${laurel(50, 58, 46, 80, -20, 7, '#e8b21e', d, true)}
+        <path d="M50 30 l4.2 8.6 9.4 1.3 -6.8 6.6 1.6 9.3 -8.4-4.4 -8.4 4.4 1.6-9.3 -6.8-6.6 9.4-1.3Z" fill="#fff8d6" stroke="${d}" stroke-width="1.5"/>`;
+      break;
+    case 7: // Titan: kantiger Schild mit Stacheln, blauer Schimmer
+      g = `<circle cx="50" cy="56" r="58" fill="url(#${u}glow)"/>
+        <path d="M50 -6 L56 8 L44 8 Z M-4 30 L12 22 L12 36 Z M104 30 L88 22 L88 36 Z" fill="${m}" stroke="${d}" stroke-width="1.5"/>
+        <path d="${SHIELD_SHARP}" fill="${R}" stroke="${d}" stroke-width="3"/>
+        <path d="M50 12 L66 18 L82 17 L79 46 C77 70 65 85 50 95 C35 85 23 70 21 46 L18 17 L34 18 Z" fill="${G}" stroke="#9fc4ff" stroke-width="1.5"/>
+        <path d="M50 12 V95" stroke="#9fc4ff" stroke-width="1" opacity=".5"/>${gladiusSvg('#e3eefa', '#1b2633', 0, 0.85)}
+        <path d="M22 30 L34 22 M78 30 L66 22" stroke="#9fc4ff" stroke-width="2"/>`; break;
+    case 8: // Carbon: Kohlefaser-Schild, rote Akzente, Flügel, gekreuzte Klingen
+      g = `<circle cx="50" cy="56" r="60" fill="url(#${u}glow)"/>${wings('#2a2e33', '#ff3b3b', true)}
+        <g transform="rotate(-46 50 58)">${gladiusSvg('#d6dbe1', '#0b0c0d', -2, 1.95)}</g><g transform="rotate(46 50 58)">${gladiusSvg('#d6dbe1', '#0b0c0d', -2, 1.95)}</g>
+        <path d="${SHIELD_SHARP}" fill="url(#${u}cf)" stroke="#ff3b3b" stroke-width="3"/>
+        <path d="M50 2 L70 10 L92 8 L88 46 C86 76 70 94 50 106 C30 94 14 76 12 46 L8 8 L30 10 Z" fill="${S}" opacity=".6"/>
+        <path d="M30 30 L50 22 L70 30 L50 92 Z" fill="none" stroke="#ff3b3b" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M50 34 L58 46 L50 80 L42 46 Z" fill="#ff3b3b"/>`; break;
+    case 9: // Diamant: facettierter Edelstein mit Glanz, Krone und Funkeln
+      g = `<circle cx="50" cy="58" r="62" fill="url(#${u}glow)"/>
+        ${laurel(50, 64, 50, 100, 205, 8, '#7fe3ff', '#1d6aa8', false)}${laurel(50, 64, 50, 80, -25, 8, '#7fe3ff', '#1d6aa8', true)}
+        <path d="M30 8 L38 18 L50 4 L62 18 L70 8 L72 24 L28 24 Z" fill="#ffe27a" stroke="#a8740b" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M24 30 H76 L92 50 L50 106 L8 50 Z" fill="${G}" stroke="#16609f" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M24 30 L36 50 L50 30 L64 50 L76 30 M8 50 H92 M36 50 L50 106 L64 50" fill="none" stroke="#e9fbff" stroke-width="1.6" stroke-linejoin="round" opacity=".9"/>
+        <path d="M24 30 L36 50 L8 50 Z M50 30 L64 50 L36 50 Z" fill="#fff" opacity=".45"/><path d="M64 50 L92 50 L50 106 Z" fill="#0b4f8f" opacity=".35"/>
+        ${[[12, 22, 5], [90, 30, 4], [84, 92, 3.5], [16, 88, 3]].map(([x, y, r]) => `<path d="M${x} ${y - r * 2} L${x + r * .5} ${y - r * .5} L${x + r * 2} ${y} L${x + r * .5} ${y + r * .5} L${x} ${y + r * 2} L${x - r * .5} ${y + r * .5} L${x - r * 2} ${y} L${x - r * .5} ${y - r * .5} Z" fill="#fff"/>`).join('')}`; break;
+  }
+  const shine = tier >= 1 && tier !== 9 && tier !== 8 ? `<path d="${tier === 7 ? SHIELD_SHARP : tier === 2 ? 'M50 6 L88 26 L90 74 L50 104 L10 74 L12 26 Z' : SHIELD}" fill="${S}" ${tier === 6 ? 'transform="translate(50 58) scale(.86) translate(-50 -58)"' : ''}/>` : '';
+  const ribbon = div ? `<g transform="translate(50 108)"><path d="M-24 -7 H24 L19 0 L24 7 H-24 L-19 0 Z" fill="${tier === 8 ? '#ff3b3b' : m}" stroke="${d}" stroke-width="1.5"/>
+    <text x="0" y="4.5" text-anchor="middle" font-family="Cinzel,Georgia,serif" font-weight="700" font-size="12" fill="${tier === 8 ? '#fff' : T.txt}">${['', 'I', 'II', 'III'][div]}</text></g>` : '';
+  const gray = opt.locked ? ' style="filter:grayscale(1) brightness(.8);opacity:.45"' : '';
+  return `<svg class="rbadge" viewBox="-16 -10 132 132" width="${size}" height="${size}" role="img" aria-label="${T.name}${div ? ' ' + ['', 'I', 'II', 'III'][div] : ''}"${gray}>${defs}${g}${shine}${ribbon}</svg>`;
+}
+// ---------- Saison-Rang (1. Mai – 30. April) ----------
+const DIVS = ['', 'I', 'II', 'III'], TIER_END = 32000;
+function seasonOf(tSec) { const d = new Date(tSec * 1000), y = d.getMonth() >= 4 ? d.getFullYear() : d.getFullYear() - 1;
+  return { y, label: `${y}/${String((y + 1) % 100).padStart(2, '0')}`, start: Math.floor(new Date(y, 4, 1).getTime() / 1000), end: Math.floor(new Date(y + 1, 4, 1).getTime() / 1000) }; }
+function xpBetween(a, b) {
+  return store.get('history', []).filter(h => h.date >= a && h.date < b).reduce((s, h) => s + rideXp(h), 0) + store.get('xpLog', []).filter(x => x.t >= a && x.t < b).reduce((s, x) => s + x.xp, 0);
+}
+function rankFromXp(xp) {
+  let t = 0; TIERS.forEach((x, i) => { if (xp >= x.xp) t = i; });
+  const lo = TIERS[t].xp, hi = t < TIERS.length - 1 ? TIERS[t + 1].xp : TIER_END, step = (hi - lo) / 3;
+  const k = Math.min(2, Math.floor((xp - lo) / step)), div = 3 - k, from = lo + k * step, to = lo + (k + 1) * step;
+  const top = t === TIERS.length - 1 && div === 1;
+  const next = top ? null : div > 1 ? `${TIERS[t].name} ${DIVS[div - 1]}` : `${TIERS[t + 1].name} III`;
+  return { tier: t, div, name: `${TIERS[t].name} ${DIVS[div]}`, xp, from: Math.round(from), to: Math.round(top ? Math.max(to, xp) : to), next };
+}
+function seasonRank(tSec = Math.floor(clock.now() / 1000)) { const S = seasonOf(tSec); return { ...rankFromXp(xpBetween(S.start, S.end)), season: S }; }
+function updateTrophies() {
+  // Abgeschlossene Saisons als Trophäe sichern (höchster erreichter Rang = Rang am Saisonende)
+  const hist = store.get('history', []), log = store.get('xpLog', []), now = Math.floor(clock.now() / 1000), cur = seasonOf(now);
+  const first = Math.min(...hist.map(h => h.date), ...log.map(x => x.t), now);
+  const tr = store.get('trophies', []); let changed = false;
+  for (let S = seasonOf(first); S.start < cur.start; S = seasonOf(S.end + 1)) {
+    if (tr.some(x => x.season === S.label)) continue;
+    const xp = xpBetween(S.start, S.end); if (!xp) continue;
+    const r = rankFromXp(xp); tr.push({ season: S.label, tier: r.tier, div: r.div, xp }); changed = true;
+  }
+  if (changed) { tr.sort((a, b) => a.season < b.season ? 1 : -1); store.set('trophies', tr); }
+  return tr;
+}
 // Leistungsklasse nach FTP in W/kg – grobe Richtwerte nach dem Power-Profil von Allen & Coggan (Männer)
-const CLASSES = [[0, 'Einsteiger'], [2.0, 'Freizeit'], [2.6, 'Hobby'], [3.2, 'Ambitioniert'], [3.8, 'Stark'], [4.4, 'Sehr stark'], [5.0, 'Elite'], [5.6, 'Weltklasse']];
-function classOf(wkg) { let i = 0; CLASSES.forEach((c, j) => { if (wkg >= c[0]) i = j; }); return { i, name: CLASSES[i][1], next: CLASSES[i + 1] || null }; }
+// Frauen: Werte rund 15 % tiefer (in Coggans Tabellen liegen die Klassengrenzen bei Frauen etwa 0,5–0,9 W/kg tiefer)
+const CLASSES_M = [[0, 'Einsteiger'], [2.0, 'Freizeit'], [2.6, 'Hobby'], [3.2, 'Ambitioniert'], [3.8, 'Stark'], [4.4, 'Sehr stark'], [5.0, 'Elite'], [5.6, 'Weltklasse']];
+const classTable = () => settings.sex === 'f' ? CLASSES_M.map(([v, n]) => [Math.round(v * 0.85 * 10) / 10, n]) : CLASSES_M;
+function classOf(wkg) { const C = classTable(); let i = 0; C.forEach((c, j) => { if (wkg >= c[0]) i = j; }); return { i, name: C[i][1], next: C[i + 1] || null }; }
 function addXpLog(k, xp, why) { const l = store.get('xpLog', []).filter(x => x.k !== k); if (xp) l.push({ k, t: Math.floor(clock.now() / 1000), xp, why }); store.set('xpLog', l); }
 
 function renderLevelCard() {
   const box = $('#d-level'); if (!box) return;
-  const now = Math.floor(clock.now() / 1000), L = levelOf(totalXp()), R = rankOf(L.level), wk = totalXp() - totalXp(now - 7 * DAY);
-  const pct = (L.xp - L.from) / (L.to - L.from) * 100, wkg = settings.ftp / settings.weight, C = classOf(wkg);
-  const lo = 1.5, hi = 6.2, pos = v => clamp((v - lo) / (hi - lo) * 100, 0, 100);
-  const nextW = C.next ? Math.ceil(C.next[0] * settings.weight - settings.ftp) : 0;
+  const now = Math.floor(clock.now() / 1000), L = levelOf(totalXp()), SR = seasonRank(now), S = SR.season, wk = totalXp() - totalXp(now - 7 * DAY);
+  const pct = SR.to > SR.from ? (SR.xp - SR.from) / (SR.to - SR.from) * 100 : 100, daysLeft = Math.ceil((S.end - now) / DAY);
+  const wkg = settings.ftp / settings.weight, CT = classTable(), C = classOf(wkg);
+  const lo = CT[1][0] - 0.5, hi = CT[CT.length - 1][0] + 0.6, pos = v => clamp((v - lo) / (hi - lo) * 100, 0, 100);
+  const nextW = C.next ? Math.ceil(C.next[0] * settings.weight - settings.ftp) : 0, trophies = updateTrophies();
   box.innerHTML = `<div class="dcard lvcard"><div class="lv-l">
-      <div class="t"><span>LEVEL & RANG</span><span>${wk ? `+${wk} XP in 7 Tagen` : ''}</span></div>
-      <div class="lv-row"><div class="lv-badge"><svg viewBox="0 0 64 72" aria-hidden="true"><path d="M32 2 60 14v22c0 17-12 28-28 34C16 64 4 53 4 36V14Z" fill="none" stroke="var(--accent)" stroke-width="3"/></svg><span class="num">${L.level}</span></div>
-        <div><div class="lv-rank">${esc(R.name)}</div><div class="muted" style="font-size:13px">${esc(R.desc)}</div></div></div>
-      <div class="lv-bar"><i style="width:${pct}%"></i></div>
-      <div class="muted num" style="font-size:12.5px;display:flex;justify-content:space-between"><span>${L.xp - L.from} / ${L.to - L.from} XP bis Level ${L.level + 1}</span><span>${R.next ? `${esc(R.next[1])} ab Level ${R.next[0]}` : 'Höchster Rang'}</span></div>
+      <div class="t"><span>RANG · SAISON ${S.label}</span><span>${wk ? `+${wk} XP in 7 Tagen` : ''}</span></div>
+      <div class="lv-row">${rankBadge(SR.tier, SR.div, 96)}
+        <div style="min-width:0;flex:1"><div class="lv-rank">${esc(SR.name)}</div>
+        <div class="muted" style="font-size:13px">${SR.xp.toLocaleString('de-CH')} Saison-XP · Level ${L.level} (${L.xp.toLocaleString('de-CH')} XP gesamt)</div>
+        <div class="lv-bar" style="margin-top:10px"><i style="width:${pct}%"></i></div>
+        <div class="muted num" style="font-size:12.5px;display:flex;justify-content:space-between;gap:8px"><span>${SR.next ? `Noch ${(SR.to - SR.xp).toLocaleString('de-CH')} XP bis ${esc(SR.next)}` : 'Höchster Rang erreicht!'}</span><span>Reset in ${daysLeft} Tagen (1. Mai)</span></div></div></div>
+      <div class="ladder">${TIERS.map((T, i) => `<div class="${i === SR.tier ? 'cur' : ''}" title="${T.name} ab ${T.xp.toLocaleString('de-CH')} Saison-XP">${rankBadge(i, 0, 40, { locked: i > SR.tier })}<span>${T.name}</span></div>`).join('')}</div>
+      ${trophies.length ? `<div class="t" style="margin-top:12px"><span>TROPHÄEN</span></div><div class="trophies">${trophies.map(x => `<div title="Saison ${x.season}: ${TIERS[x.tier].name} ${DIVS[x.div]} · ${x.xp.toLocaleString('de-CH')} XP">${rankBadge(x.tier, x.div, 52)}<span>${x.season}</span></div>`).join('')}</div>` : ''}
     </div><div class="lv-r">
       <div class="t"><span>LEISTUNGSKLASSE</span><span>${wkg.toFixed(2)} W/kg</span></div>
       <div class="lv-rank" style="margin-top:6px">${C.name}</div>
       <div class="muted" style="font-size:13px">${C.next ? `Noch <b style="color:var(--text)">${nextW} W</b> FTP bis „${C.next[1]}“ (${C.next[0].toFixed(1)} W/kg)` : 'Die Spitze – Respekt.'}</div>
-      <div class="cl-scale">${CLASSES.slice(1).map((c, i) => `<i style="left:${pos(c[0])}%"></i>`).join('')}<b style="left:${pos(wkg)}%"></b></div>
-      <div class="cl-lab">${CLASSES.slice(1).filter((_, i) => i % 2 === 0).map(c => `<span style="left:${pos(c[0])}%">${c[0].toFixed(1)}</span>`).join('')}</div>
-      <div class="muted" style="font-size:11.5px;margin-top:6px">Richtwerte nach Allen & Coggan (Männer, FTP pro kg); bei Frauen liegen die Klassen rund 15 % tiefer. Level und XP sammelst du mit jedem Training: Training Load × Schwierigkeit, plus Boni für Plan-Einheiten, Tests und Bestzeiten.</div>
+      <div class="cl-scale">${CT.slice(1).map(c => `<i style="left:${pos(c[0])}%"></i>`).join('')}<b style="left:${pos(wkg)}%"></b></div>
+      <div class="cl-lab">${CT.slice(1).filter((_, i) => i % 2 === 0).map(c => `<span style="left:${pos(c[0])}%">${c[0].toFixed(1)}</span>`).join('')}</div>
+      <div class="muted" style="font-size:11.5px;margin-top:6px;line-height:1.45">Richtwerte nach Allen & Coggan (FTP pro kg, ${settings.sex === 'f' ? 'Frauen' : settings.sex === 'm' ? 'Männer' : 'Männer – Geschlecht in den Einstellungen angeben'}).<br>Saison-XP sammelst du mit jedem Training: Training Load × Schwierigkeit, plus Boni für Plan-Einheiten, Tests und Bestzeiten. Am 1. Mai beginnt eine neue Saison; dein Rang am Saisonende bleibt als Trophäe.</div>
     </div></div>`;
 }
 
@@ -1339,8 +1484,10 @@ const prChip = w => { const l = w.route ? routePrs(w.routeId || w.id) : []; retu
 function renderXpBox(r) {
   const box = $('#s-xp'); if (!box) return;
   const x = r.xpInfo; if (!x) { box.innerHTML = ''; return; }
-  const parts = [`<span class="xp-gain num">+${x.gain} XP</span><span>Level ${x.after.level} · ${esc(rankOf(x.after.level).name)}</span>`];
-  if (x.after.level > x.before.level) parts.push(`<span class="xp-up">⚔ Level-Up! ${rankOf(x.after.level).name !== rankOf(x.before.level).name ? `Neuer Rang: <b>${esc(rankOf(x.after.level).name)}</b>` : `Level ${x.after.level} erreicht`}</span>`);
+  const ra = x.rankAfter, rb = x.rankBefore;
+  const parts = [ra ? rankBadge(ra.tier, ra.div, 44) : '', `<span class="xp-gain num">+${x.gain} XP</span><span>${ra ? esc(ra.name) + ' · ' : ''}Level ${x.after.level}</span>`];
+  if (ra && rb && (ra.tier > rb.tier || ra.div < rb.div)) parts.push(`<span class="xp-up">▲ Aufstieg: <b>${esc(ra.name)}</b>${ra.tier > rb.tier ? ' – neuer Rang!' : ''}</span>`);
+  else if (x.after.level > x.before.level) parts.push(`<span class="xp-up">⚔ Level ${x.after.level} erreicht!</span>`);
   let pr = '';
   if (r.prInfo) { const p = r.prInfo; pr = p.pr ? `<div class="banner pr">🏆 <b>Neue Bestzeit: ${fmtTime(p.time)}</b>${p.prev ? ` – ${fmtTime(p.prev - p.time)} schneller als bisher` : ' – deine erste Zeit auf dieser Strecke'} · +25 Bonus-XP</div>`
       : `<div class="banner" style="background:var(--panel);border-color:var(--line)">Zeit: <b>${fmtTime(p.time)}</b> · Platz ${p.rank} von ${p.of} · ${fmtTime(p.time - p.prev)} hinter deiner Bestzeit</div>`; }
@@ -1550,13 +1697,13 @@ function finishRide() {
   const sum = summarize(result);
   const hist = store.get('history', []);
   const sc = scoreRide(result);
-  const lvBefore = levelOf(totalXp());
+  const lvBefore = levelOf(totalXp()), rkBefore = seasonRank(result.samples[0].t);
   if (ride.w.route) { result.prInfo = recordRoutePr(result, ride.w); result.routeId = ride.w.routeId || ride.w.id; }
   const entry = { date: result.samples[0].t, score: sc ? sc.total : null, cat: result.cat, readiness: result.readiness, name: result.name, dur: sum.dur, np: sum.np, tss: sum.tss, avgP: sum.avgP, best300: sum.best300, maxHr: sum.maxHr,
     vo2: sum.dur >= 300 ? +vo2FromPower(sum.best300, settings.weight).toFixed(1) : null, diff: workoutDifficulty(ride.w) || null, plan: ride.w.planIdx != null || undefined, pr: result.prInfo?.pr || undefined };
   hist.unshift(entry);
-  store.set('history', hist.slice(0, 400));
-  result.xpInfo = { gain: rideXp(entry), before: lvBefore, after: levelOf(totalXp()) };
+  store.set('history', hist.slice(0, 3000));
+  result.xpInfo = { gain: rideXp(entry), before: lvBefore, after: levelOf(totalXp()), rankBefore: rkBefore, rankAfter: seasonRank(result.samples[0].t) };
   store.set('lastRide', result);
   if (ride.w.planIdx != null) markPlanDone(ride.w.planIdx, result.completion, sc ? sc.total : null);
   if (sum.maxHr && (!settings.hrMax || sum.maxHr > settings.hrMax)) { settings.hrMax = sum.maxHr; store.set('settings', settings); }
@@ -2455,7 +2602,7 @@ function openSettings() {
 function fillSettings() {
   renderProfiles();
   const v = (id, x) => { $('#' + id).value = x ?? ''; };
-  v('s-name', settings.name); v('s-born', settings.born); v('s-weight', settings.weight); v('s-height', settings.height);
+  v('s-name', settings.name); v('s-born', settings.born); v('s-sex', settings.sex); v('s-weight', settings.weight); v('s-height', settings.height);
   v('s-ftp', settings.ftp); v('s-lthr', settings.lthr); v('s-hrmax', settings.hrMax);
   v('s-bikename', settings.bikeName); v('s-bikeweight', settings.bikeWeight);
   const wh = String(settings.wheel || 2105), known = [...$('#s-wheel').options].some(o => o.value === wh);
@@ -2477,7 +2624,7 @@ function settingsPreview() {
 }
 function saveSettings(navigate = true) {
   const num = (id, lo, hi, dflt) => { const x = +$('#' + id).value; return x ? clamp(x, lo, hi) : dflt; };
-  settings.name = $('#s-name').value.trim(); settings.born = num('s-born', 1930, 2020, null); settings.weight = num('s-weight', 30, 200, 75); settings.height = num('s-height', 120, 230, null);
+  settings.name = $('#s-name').value.trim(); settings.born = num('s-born', 1930, 2020, null); settings.sex = $('#s-sex').value || null; settings.weight = num('s-weight', 30, 200, 75); settings.height = num('s-height', 120, 230, null);
   settings.lthr = num('s-lthr', 90, 220, null); settings.hrMax = num('s-hrmax', 100, 230, null);
   settings.bikeName = $('#s-bikename').value.trim(); settings.bikeWeight = num('s-bikeweight', 3, 30, 9);
   settings.wheel = $('#s-wheel').value === 'custom' ? num('s-wheelc', 1500, 2500, 2105) : +$('#s-wheel').value;
@@ -2579,7 +2726,7 @@ $('#s-reset-all').onclick = async () => {
   profileKeys(PROFILE).forEach(k => LS.del(k)); location.reload();
 };
 // Datensicherung
-const BACKUP_KEYS = ['settings', 'history', 'ftpHistory', 'adapt', 'routes', 'lastRide', 'onboarded', 'plan', 'routePRs', 'xpLog'];
+const BACKUP_KEYS = ['settings', 'history', 'ftpHistory', 'adapt', 'routes', 'lastRide', 'onboarded', 'plan', 'routePRs', 'xpLog', 'trophies'];
 $('#s-export').onclick = () => {
   const data = { app: 'Gladius', version: 1, created: new Date().toISOString(), data: Object.fromEntries(BACKUP_KEYS.map(k => [k, store.get(k, null)])) };
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
@@ -2717,7 +2864,7 @@ updateFtpLabel(); renderLibrary();
 if (!store.get('onboarded')) { $('#w-weight').value = settings.weight; $('#dlg-welcome').showModal(); }
 if (!navigator.bluetooth && !EMBEDDED) setTimeout(() => toast('Hinweis: Bluetooth funktioniert nur in Chrome oder Edge. Demo-Modus geht überall.', 6000), 600);
 // Testschnittstelle
-window.__gladius = { workoutDifficulty, ROUTES, routeClimbScore, levelOf, totalXp, xpNeed, togglePlanDone, rebuildFrom, resumePlan, openPauseDialog, movePlanSession, generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
+window.__gladius = { seasonRank, updateTrophies, rankFromXp, workoutDifficulty, ROUTES, routeClimbScore, levelOf, totalXp, xpNeed, togglePlanDone, rebuildFrom, resumePlan, openPauseDialog, movePlanSession, generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
 </script>
 </body>
 </html>
