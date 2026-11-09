@@ -22,6 +22,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 header{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5;flex-wrap:wrap}
 .logo{display:flex;flex-direction:column;gap:10px;line-height:1}
 .logo .wm{display:flex;align-items:center;font-family:'Cinzel','Trajan Pro','Times New Roman',serif;font-weight:800;font-size:34px;letter-spacing:.16em;color:var(--text);height:40px}
+@media (prefers-reduced-motion:reduce){.sw-anim{display:none}}
 .logo .sword-i{height:1.38em;width:auto;margin:0 .2em 0 .02em;transform:translateY(.08em);overflow:visible}
 .logo small{display:block;font-family:'Cinzel','Trajan Pro','Times New Roman',serif;font-size:12.5px;letter-spacing:.32em;color:var(--muted);font-weight:600}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
@@ -195,9 +196,13 @@ table.prs tr.pr1 td{color:#ffc53d}
 .ck-row select{min-width:230px}@keyframes ckhit{from{background:rgba(255,122,47,.35);border-color:var(--accent)}to{}}.ck-row.hit{animation:ckhit 1s ease-out}
 /* Schimmer auf dem Level-Balken */
 .lv-bar i{position:relative;overflow:hidden}
-.lv-bar i::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.55) 50%,transparent 80%);transform:translateX(-100%);animation:shimmer 2.6s ease-in-out infinite}
+.lv-bar{height:10px!important;overflow:visible!important;background:rgba(255,255,255,.08)}.lv-bar i{border-radius:5px;box-shadow:0 0 12px color-mix(in srgb,var(--accent) 70%,transparent);animation:lvglow 2.2s ease-in-out infinite}
+.lv-bar i::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(100deg,transparent 15%,rgba(255,255,255,.35) 38%,rgba(255,255,255,.95) 50%,rgba(255,255,255,.35) 62%,transparent 85%);background-size:60% 100%;background-repeat:no-repeat;background-position:-60% 0;animation:shimmer2 2.2s ease-in-out infinite}
+@keyframes shimmer2{0%{background-position:-60% 0}65%,100%{background-position:160% 0}}
+@keyframes lvglow{50%{box-shadow:0 0 18px color-mix(in srgb,var(--accent) 95%,transparent),0 0 4px #fff8}}
 @keyframes shimmer{60%,100%{transform:translateX(100%)}}
-@media (prefers-reduced-motion:reduce){.lv-bar i::after{animation:none}}
+@media (prefers-reduced-motion:reduce){.lv-bar i,.lv-bar i::after{animation:none}}
+.lv-toggle .rbadge{filter:drop-shadow(0 4px 12px rgba(0,0,0,.5)) drop-shadow(0 0 10px var(--bc))}
 .info-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:14px;margin:4px 0 10px}.info-grid dt{color:var(--muted)}.info-grid dd{margin:0}
 .info-logo{display:flex;align-items:center;gap:16px;margin-bottom:12px}.info-logo .wm{font-family:Cinzel,Georgia,serif;font-size:26px;font-weight:800;letter-spacing:.14em}
 .info-list{margin:4px 0 0;padding-left:18px;font-size:13.5px;line-height:1.6;color:var(--muted)}.info-list b{color:var(--text);font-weight:600}
@@ -275,6 +280,13 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
       <path d="M6.4 23.4 L13.6 23.4 L12.7 33.5 L14.4 50 L10 66 L5.6 50 L7.3 33.5 Z" fill="url(#sw-blade)"/>
       <path d="M8 24.2 L12 24.2 L11.4 33.5 L12.8 49.6 L10 59.5 L7.2 49.6 L8.6 33.5 Z" fill="#8f9aa8"/>
       <path d="M10 24.2 L10 59.5" stroke="#c9d1da" stroke-width=".5"/>
+      <!-- Metallisches Blinken: Lichtreflex wandert über die Klinge, an der Spitze funkelt es kurz -->
+      <clipPath id="sw-clip"><path d="M6.4 23.4 L13.6 23.4 L12.7 33.5 L14.4 50 L10 66 L5.6 50 L7.3 33.5 Z"/></clipPath>
+      <linearGradient id="sw-gleam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      <g clip-path="url(#sw-clip)" class="sw-anim"><rect x="0" y="10" width="20" height="9" fill="url(#sw-gleam)" transform="skewY(-25)"><animate attributeName="y" values="14;72;72" keyTimes="0;.22;1" dur="6s" repeatCount="indefinite"/></rect></g>
+      <path class="sw-anim" d="M10 58.5 L10.7 61.3 L13.5 62 L10.7 62.7 L10 65.5 L9.3 62.7 L6.5 62 L9.3 61.3 Z" fill="#fff" opacity="0" transform-origin="10 62">
+        <animate attributeName="opacity" values="0;0;1;0;0" keyTimes="0;.17;.21;.27;1" dur="6s" repeatCount="indefinite"/>
+        <animateTransform attributeName="transform" type="rotate" values="0;0;45;90;90" keyTimes="0;.17;.21;.27;1" dur="6s" repeatCount="indefinite"/></path>
     </svg><span>US</span></div>
     <small>INDOOR CYCLING TRAINING</small>
   </div>
@@ -1608,7 +1620,12 @@ function rankBadge(tier, div, size = 64, opt = {}) {
   const ribbon = div ? `<g transform="translate(50 110)"><path d="M-50 -9 H50 L43 0 L50 9 H-50 L-43 0 Z" fill="${tier === 8 ? '#ff3b3b' : tier === 9 ? '#2b86d8' : m}" stroke="${tier === 8 ? '#7a1010' : d}" stroke-width="1.5"/>
     <text x="0" y="5" text-anchor="middle" font-family="Cinzel,Georgia,serif" font-weight="700" font-size="${T.name.length > 7 ? 11.5 : 13.5}" letter-spacing="1" fill="${tier === 8 || tier === 9 ? '#fff' : T.txt}">${T.name.toUpperCase()}</text></g>` : '';
   const gray = opt.locked ? ' style="filter:saturate(.45);opacity:.42"' : '';
-  return `<svg class="rbadge" viewBox="-16 -10 132 132" width="${size}" height="${size}" role="img" aria-label="Rang ${T.name}"${gray}>${defs}${g}${shine}${ribbon}</svg>`;
+  // Glanz: heller Streifen, der über das Abzeichen wandert (nur auf der Form selbst, per Maske)
+  const gloss = opt.shine ? `<defs><filter id="${u}w"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/></filter>
+      <mask id="${u}m" maskUnits="userSpaceOnUse" x="-16" y="-10" width="132" height="132"><g filter="url(#${u}w)">${g.replace(/<circle[^>]*glow\)"\/>/g, '')}</g></mask>
+      <linearGradient id="${u}sh" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+    <g mask="url(#${u}m)" style="mix-blend-mode:screen"><g transform="skewX(-22)"><rect x="-90" y="-20" width="34" height="160" fill="url(#${u}sh)"><animate attributeName="x" values="-90;170;170" keyTimes="0;.45;1" dur="4s" repeatCount="indefinite"/></rect></g></g>` : '';
+  return `<svg class="rbadge" viewBox="-16 -10 132 132" width="${size}" height="${size}" role="img" aria-label="Rang ${T.name}"${gray}${opt.shine ? ` style="--bc:${T.c[1]}88"` : ''}>${defs}${g}${shine}${gloss}${ribbon}</svg>`;
 }
 // ---------- Saison-Rang (1. Mai – 30. April) ----------
 const TIER_END = 32000;
@@ -1664,7 +1681,7 @@ function renderLevelCard() {
   const nextW = C.next ? Math.ceil(C.next[0] * settings.weight - settings.ftp) : 0, trophies = updateTrophies();
   box.innerHTML = `<div class="dcard"><div class="lv-l">
       <div class="t"><span>RANG · SAISON ${S.label}</span><span>${wk ? `+${wk} XP in 7 Tagen` : ''}</span></div>
-      <div class="lv-row"><button class="lv-toggle" id="lv-toggle" aria-expanded="${ladderOpen}" title="Alle Ränge ${ladderOpen ? 'ausblenden' : 'anzeigen'}">${rankBadge(SR.tier, true, 104)}</button>
+      <div class="lv-row"><button class="lv-toggle" id="lv-toggle" aria-expanded="${ladderOpen}" title="Alle Ränge ${ladderOpen ? 'ausblenden' : 'anzeigen'}">${rankBadge(SR.tier, true, 104, { shine: true })}</button>
         <div style="min-width:0;flex:1"><button class="lv-toggle lv-rank" id="lv-toggle2" aria-expanded="${ladderOpen}">${esc(SR.name)} <span class="lv-caret">${ladderOpen ? '▴' : '▾'}</span></button>
         <div class="muted" style="font-size:13px">${SR.xp.toLocaleString('de-CH')} Saison-XP · Level ${L.level} (${L.xp.toLocaleString('de-CH')} XP gesamt)</div>
         <div class="lv-bar" style="margin-top:10px"><i style="width:${pct}%"></i></div>
