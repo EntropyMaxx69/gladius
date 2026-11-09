@@ -471,6 +471,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <h2 style="margin-top:0">Wie fühlst du dich heute?</h2>
   <p class="muted" style="margin-top:0;line-height:1.45">Deine Tagesform passt die Intensität des heutigen Trainings an. Gefragt wird einmal pro Tag.</p>
   <div class="feels col" id="rd-opts"></div><div id="rd-advice"></div>
+  <div class="toolbar" style="justify-content:flex-end;margin-bottom:0"><button class="btn small" id="rd-skip">Später</button></div>
 </dialog>
 <dialog id="dlg-welcome">
   <h2 style="margin-top:0">Willkommen bei Gladius</h2>
@@ -1596,6 +1597,7 @@ let pendingWorkout = null;
 function askReadiness(w) {
   pendingWorkout = w;
   $('#rd-opts').innerHTML = READINESS.map(r => `<button class="feel" data-v="${r.v}" style="--c:${r.col}"><b>${r.label}</b><span>${r.desc}</span></button>`).join('');
+  $('#rd-skip').textContent = w ? 'Ohne Angabe starten' : 'Später';
   $('#rd-advice').innerHTML = ''; $('#dlg-ready').showModal();
 }
 function pickReadiness(v) {
@@ -2897,6 +2899,16 @@ $('#w-save').onclick = () => {
   store.set('onboarded', true); $('#dlg-welcome').close(); updateFtpLabel(); renderLibrary();
 };
 $('#dlg-welcome').addEventListener('cancel', () => store.set('onboarded', true));
+$('#dlg-welcome').addEventListener('close', () => setTimeout(dailyReadiness, 300));
+// Tagesform: beim ersten Start jedes Tages per Popup abfragen (auch wenn die App über Mitternacht offen bleibt)
+function dailyReadiness() {
+  if (ride.active || readinessToday() || !store.get('onboarded') || store.get('readinessAsked') === todayKey()) return;
+  if (document.querySelector('dialog[open]')) return;
+  store.set('readinessAsked', todayKey()); askReadiness(null);
+}
+$('#rd-skip').onclick = () => { const w = pendingWorkout; $('#dlg-ready').close(); pendingWorkout = null; if (w) beginRide(w, READINESS.find(x => x.v === 4)); };
+document.addEventListener('visibilitychange', () => { if (!document.hidden) dailyReadiness(); });
+setInterval(dailyReadiness, 60000);
 if (DESKTOP) {
   document.title = 'Gladius';
   $('#kbd-desk').style.display = '';
@@ -2931,6 +2943,7 @@ if (EMBEDDED && !DESKTOP) {
 applyBike(); applyLook(); renderProfiles();
 updateFtpLabel(); renderLibrary();
 if (!store.get('onboarded')) { $('#w-weight').value = settings.weight; $('#dlg-welcome').showModal(); }
+else setTimeout(dailyReadiness, 400);
 if (!navigator.bluetooth && !EMBEDDED) setTimeout(() => toast('Hinweis: Bluetooth funktioniert nur in Chrome oder Edge. Demo-Modus geht überall.', 6000), 600);
 // Testschnittstelle
 window.__gladius = { rankBadge, seasonRank, updateTrophies, rankFromXp, workoutDifficulty, ROUTES, routeClimbScore, levelOf, totalXp, xpNeed, togglePlanDone, rebuildFrom, resumePlan, openPauseDialog, movePlanSession, generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
