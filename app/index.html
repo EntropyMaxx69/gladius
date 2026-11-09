@@ -126,6 +126,26 @@ table.hist th{color:var(--muted);font-weight:600}
 .sc-row{display:grid;grid-template-columns:80px 1fr 36px;gap:12px;align-items:center;font-size:14px}.sc-row b{text-align:right}
 .sc-bar{height:8px;background:var(--panel2);border-radius:4px;overflow:hidden}.sc-bar i{display:block;height:100%;background:var(--text);border-radius:4px}
 /* dashboard */
+.plancard{background:linear-gradient(135deg,rgba(255,122,47,.10),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 14px}
+.plancard.empty{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.plancard .t,.plancard .t2{font-size:12px;letter-spacing:.14em;color:var(--muted);font-weight:700}.plancard .t2{color:var(--accent2);margin-top:4px}
+.pc-top{display:flex;gap:8px 16px;align-items:center;flex-wrap:wrap}.pc-top .t{margin-right:auto}
+.pc-h{font-size:22px;font-weight:800;margin:4px 0 4px}
+.pc-prog{height:5px;border-radius:3px;background:rgba(255,255,255,.08);margin:10px 0 12px;overflow:hidden}.pc-prog i{display:block;height:100%;background:var(--accent)}
+.pweek{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px}
+.ps{text-align:left;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--pc);border-radius:10px;padding:8px 10px;color:var(--text);display:flex;flex-direction:column;gap:2px;cursor:pointer;font:inherit}
+.ps:hover{border-color:var(--muted);border-left-color:var(--pc)}.ps .d{font-size:12px;color:var(--muted)}.ps .n{font-weight:700;font-size:14px;line-height:1.25}.ps .m{font-size:12px;color:var(--muted)}
+.ps-done{opacity:.75}.ps-done .m{color:#3ecf8e}.ps-missed{opacity:.5}.ps-missed .n{text-decoration:line-through}.ps-today{box-shadow:0 0 0 2px var(--accent)}
+.pweeks{display:flex;flex-direction:column;gap:12px;margin-top:16px}.pwk{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.pwk.cur{border-color:var(--accent)}
+.pwk-h{display:flex;gap:12px;align-items:baseline;font-size:14px;color:var(--muted)}.pwk-h b{color:var(--text);font-size:15px}.pwk-h .num{margin-left:auto}.pwk .pweek{margin-top:8px}
+.wz-goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
+.wz-goal{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--text);display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit}
+.wz-goal span:last-child{font-size:13px;color:var(--muted);line-height:1.4}.wz-goal .ic{font-size:22px;color:var(--accent)}.wz-goal:hover{border-color:var(--muted)}.wz-goal.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:rgba(255,122,47,.08)}
+.wz-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px}.wz-row label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+.wz-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.wz-day{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);text-align:center}.wz-day select{width:100%}
+@media (max-width:640px){.wz-days{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.wz-sum{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:14px;color:var(--muted)}.wz-sum b{color:var(--text);font-size:17px}
+#view-planwiz h2{font-size:15px;margin:6px 0 10px}
 .dash{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 26px}
 .dcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
 .dcard .t{font-size:12px;letter-spacing:.14em;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;gap:8px}
@@ -213,6 +233,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <h1>Übersicht</h1>
     <div id="d-setup"></div>
     <div id="d-day" class="dayrow"></div>
+    <div id="d-plan"></div>
     <div class="dash">
       <div class="dcard"><div class="t"><span>PULS JETZT</span><span id="d-hrsrc"></span></div>
         <div class="big num" id="d-hr">–<small>bpm</small></div><div class="note" id="d-hrzone"></div>
@@ -312,6 +333,8 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   </section>
 
   <section class="view" id="view-detail"><div id="detail"></div></section>
+  <section class="view" id="view-plan"><div id="planview"></div></section>
+  <section class="view" id="view-planwiz"><div id="planwiz"></div></section>
 
   <section class="view" id="view-ride">
     <div class="ridehead">
@@ -770,6 +793,256 @@ const FREE_RIDE ={ id: 'free', cat: 'free', name: 'Freie Fahrt', open: true, des
 
 const segPct = (s, frac) => s.from + (s.to - s.from) * frac;
 const totalDur = w => w.segs.reduce((a, s) => a + s.dur, 0);
+
+/* =========================================================
+   Trainingspläne
+   Grundsätze: polarisierte Verteilung (Seiler 2010; Stöggl & Sperlich 2014) – meist locker, höchstens 2 harte
+   Einheiten pro Woche; Periodisierung 3 Belastungswochen + 1 Erholungswoche (Matwejew, Issurin); progressive
+   Steigerung der harten Einheiten; Ramp-Test zu Beginn und am Ende; vor dem Schlusstest reduziertes Volumen.
+   ========================================================= */
+const WEEKDAYS = [[1, 'Mo'], [2, 'Di'], [3, 'Mi'], [4, 'Do'], [5, 'Fr'], [6, 'Sa'], [0, 'So']];
+const dkey = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const dparse = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d, 12); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const fmtDay = k => dparse(k).toLocaleDateString('de-CH', { weekday: 'short', day: 'numeric', month: 'numeric' });
+
+// ---------- Bausteine: jede Einheit passt genau in die verfügbare Zeit T (Minuten) ----------
+const PB = {
+  // Lockere Grundlage, ab 75 min mit kurzen Kadenz-Einschüben
+  endurance(T) {
+    const core = T - 15, segs = [R(10, 45, 70, { label: 'Einfahren' })];
+    if (core >= 60) { const blocks = Math.floor(core / 15); for (let i = 0; i < blocks; i++) segs.push(S(i % 2 ? 14 : 15, 68, { label: 'Zone 2' }), ...(i % 2 ? [S(1, 68, { label: 'Kadenz hoch', cad: 100 })] : [])); const rest = core - blocks * 15; if (rest > 0) segs.push(S(rest, 68, { label: 'Zone 2' })); }
+    else segs.push(S(core, 68, { label: 'Zone 2' }));
+    segs.push(R(5, 60, 40, { label: 'Ausfahren' }));
+    return { name: `Grundlage ${T} min`, cat: 'base', hard: false, desc: 'Lockere Ausdauer bei ~68 % FTP – du kannst dich noch unterhalten.', sciRef: 'z2-60', segs };
+  },
+  recovery(T) {
+    T = Math.min(T, 45);
+    return { name: `Recovery ${T} min`, cat: 'warm', hard: false, desc: 'Ganz locker unter 55 % FTP – fördert die Erholung, ohne zu belasten.', sciRef: 'rec-30',
+      segs: [R(5, 40, 50, { label: 'Einrollen' }), S(T - 10, 50, { cad: 90, label: 'Recovery' }), R(5, 50, 40, { label: 'Ausrollen' })] };
+  },
+  // Intervall-Einheit: Wiederholungen so viele, wie in die Zeit passen (min..max), Rest locker
+  _intervals(T, o) {
+    const fixed = 10 + 3 + 6, core = T - fixed, unit = o.work + o.rest;
+    const n = clamp(Math.floor((core + o.rest) / unit), 1, o.max), used = n * unit - o.rest, fill = Math.max(0, core - used);
+    const segs = [R(10, 45, 72, { label: 'Einfahren' }), S(3, 55, { label: 'Locker' })];
+    for (let i = 0; i < n; i++) { segs.push(...o.block(i, n)); if (i < n - 1 && o.rest) segs.push(S(o.rest, o.restPct || 55, { label: 'Erholung' })); }
+    if (fill >= 2) segs.push(S(fill, 65, { label: 'Zone 2' }));
+    segs.push(R(6, 60, 40, { label: 'Ausfahren' }));
+    return { n, segs };
+  },
+  sweetspot(T, lvl) {
+    const len = [10, 12, 15, 20][Math.min(lvl, 3)], r = this._intervals(T, { work: len, rest: len >= 15 ? 5 : 4, min: 2, max: 4, block: () => [S(len, 90, { label: 'Sweet Spot' })] });
+    return { name: `Sweet Spot ${r.n} × ${len} min`, cat: 'ftp', hard: true, desc: `${r.n} × ${len} min bei 90 % FTP.`, sciRef: 'ss-3x12', segs: r.segs };
+  },
+  threshold(T, lvl) {
+    const len = [8, 10, 12, 15, 20][Math.min(lvl, 4)], pct = [95, 96, 97, 98, 98][Math.min(lvl, 4)];
+    const r = this._intervals(T, { work: len, rest: 5, min: 2, max: 4, block: () => [S(len, pct, { label: 'Schwelle' })] });
+    return { name: `Schwelle ${r.n} × ${len} min`, cat: 'ftp', hard: true, desc: `${r.n} × ${len} min bei ${pct} % FTP.`, sciRef: 'thr-2x20', segs: r.segs };
+  },
+  overunder(T, lvl) {
+    const k = 2 + Math.min(lvl, 2), r = this._intervals(T, { work: k * 3, rest: 5, min: 2, max: 4, block: () => rep(k, [S(2, 95, { label: 'Under' }), S(1, 108, { label: 'Over' })]) });
+    return { name: `Over-Unders ${r.n} × ${k * 3} min`, cat: 'ftp', hard: true, desc: `${r.n} Blöcke à ${k} × (2 min 95 % / 1 min 108 %).`, sciRef: 'ou', segs: r.segs };
+  },
+  vo2long(T, lvl) {
+    const v = [[4, 112, 3, 'Helgerud'], [4, 115, 3, 'Helgerud'], [8, 105, 2, 'Seiler'], [5, 110, 3, null]][Math.min(lvl, 3)];
+    const r = this._intervals(T, { work: v[0], rest: v[2], min: 3, max: v[0] === 8 ? 4 : 6, block: () => [S(v[0], v[1], { label: 'VO2max' })] });
+    const sciRef = v[3] === 'Seiler' ? '4x8' : '4x4';
+    return { name: `VO2max ${r.n} × ${v[0]} min`, cat: 'vo2', hard: true, desc: `${r.n} × ${v[0]} min bei ${v[1]} % FTP, ${v[2]} min Pause.`, sciRef, segs: r.segs };
+  },
+  vo2short(T, lvl) {
+    const reps = lvl === 0 ? 10 : 13, setLen = reps * 0.75;
+    const r = this._intervals(T, { work: setLen, rest: 3, restPct: 50, min: 2, max: 3, block: () => rep(reps, [sec(30, 120, { label: '30 s hart' }), sec(15, 50, { label: '15 s locker' })]) });
+    return { name: `30/15 · ${r.n} × ${reps}`, cat: 'vo2', hard: true, desc: `${r.n} Sätze à ${reps} × (30 s hart / 15 s locker).`, sciRef: 'r3015', segs: r.segs };
+  },
+  sprints(T, lvl) {
+    const r = this._intervals(T, { work: 5, rest: 0, min: 4, max: 6 + 2 * Math.min(lvl, 2), block: () => [sec(10, 250, { mode: 'gear', gear: 21, label: 'SPRINT!', text: 'Volle Kraft – 10 s' }), sec(290, 50, { label: 'Volle Erholung' })] });
+    return { name: `Sprints ${r.n} × 10 s`, cat: 'max', hard: true, desc: `${r.n} maximale Sprints mit je ~5 min Erholung.`, sciRef: 'spr-8x10', segs: r.segs };
+  },
+  sit(T, lvl) {
+    const r = this._intervals(T, { work: 4.5, rest: 0, min: 4, max: 4 + Math.min(lvl, 2), block: () => [sec(30, 180, { mode: 'gear', gear: 20, label: 'ALL-OUT 30 s' }), S(4, 45, { label: 'Erholung' })] });
+    return { name: `All-out ${r.n} × 30 s`, cat: 'max', hard: true, desc: `${r.n} × 30 s maximal, 4 min Erholung.`, sciRef: 'sit-6x30', segs: r.segs };
+  },
+  ka(T, lvl) {
+    const len = [5, 6, 8][Math.min(lvl, 2)], r = this._intervals(T, { work: len, rest: 3, min: 3, max: 6, block: () => [S(len, 85, { cad: 60, label: 'Kraftausdauer' })] });
+    return { name: `Kraftausdauer ${r.n} × ${len} min`, cat: 'cad', hard: true, desc: `${r.n} × ${len} min bei 85 % FTP mit 60 U/min – Vorbereitung auf lange Anstiege.`, sciRef: 'cad-ka', segs: r.segs };
+  },
+  test() { return { ref: 'ramp', hard: true }; },
+};
+
+// ---------- Ziele ----------
+const PLAN_GOALS = {
+  base: { name: 'Grundlagenausdauer', icon: '∞', desc: 'Mehr Ausdauer und ein stabiles Fundament: viel lockeres Volumen, eine moderate Einheit pro Woche.',
+    hard: (w, lvl, n) => ['sweetspot'].slice(0, Math.min(n, 1)) },
+  ftp: { name: 'FTP steigern', icon: '↗', desc: 'Höhere Dauerleistung an der Schwelle: Sweet Spot, dann Schwelle und Over-Unders, dazu ein VO2max-Reiz.',
+    hard: (w, lvl, n, phase) => [phase < 0.34 ? 'sweetspot' : phase < 0.67 ? 'threshold' : 'overunder', 'vo2long'].slice(0, n) },
+  vo2: { name: 'VO2max steigern', icon: '◆', desc: 'Grösserer Motor: abwechselnd lange VO2max-Intervalle und 30/15 nach Rønnestad, dazu Schwellenarbeit.',
+    hard: (w, lvl, n) => [w % 2 ? 'vo2short' : 'vo2long', w % 2 ? 'threshold' : 'vo2short'].slice(0, n) },
+  sprint: { name: 'Sprint & Max Power', icon: '⚡', desc: 'Mehr Spitzenleistung: kurze maximale Sprints und All-out-Intervalle mit langen Pausen.',
+    hard: (w, lvl, n) => [w % 2 ? 'sit' : 'sprints', 'threshold'].slice(0, n) },
+  climb: { name: 'Pässe fahren', icon: '⛰', desc: 'Fit für lange Anstiege: Schwelle und Kraftausdauer, ab Woche 3 ein Pass am langen Tag.',
+    hard: (w, lvl, n, phase) => [phase < 0.5 ? 'sweetspot' : 'threshold', 'ka'].slice(0, n), longRoute: true },
+};
+
+// ---------- Generator ----------
+function generatePlan({ goal, weeks, start, days }) {
+  const G = PLAN_GOALS[goal], startD = dparse(start), sessions = [];
+  const avail = WEEKDAYS.map(([wd]) => wd).filter(wd => days[wd] >= 30);
+  const nHard = avail.length >= 4 ? 2 : avail.length >= 2 ? 1 : 0;
+  let lvl = 0;
+  for (let w = 0; w < weeks; w++) {
+    const last = w === weeks - 1 && weeks >= 4, recovery = !last && (w + 1) % 4 === 0, phase = w / Math.max(1, weeks - 1);
+    // Wochentage dieser Woche (ab Startdatum)
+    const slots = [];
+    for (let i = 0; i < 7; i++) { const d = addDays(startD, w * 7 + i), wd = d.getDay(); if (days[wd] >= 30) slots.push({ date: dkey(d), wd, T: days[wd] }); }
+    if (!slots.length) continue;
+    // Langer Tag = meiste Zeit; harte Tage = möglichst weit auseinander, mind. 45 min
+    const longSlot = slots.reduce((a, b) => b.T > a.T ? b : a);
+    const hardCand = slots.filter(s => s.T >= 45 && s !== longSlot);
+    const hardSlots = pickSpread(hardCand.length >= nHard ? hardCand : slots.filter(s => s.T >= 45), nHard);
+    let kinds = G.hard(w, lvl, recovery ? Math.min(1, nHard) : nHard, phase);
+    for (const s of slots) {
+      let spec;
+      const hi = hardSlots.indexOf(s);
+      if (w === 0 && !ftpKnown() && s === (hardSlots[0] || slots[0])) spec = PB.test();
+      else if (last && s === (hardSlots[0] || slots[Math.floor(slots.length / 2)])) spec = PB.test();
+      else if (last) spec = s === longSlot ? PB.endurance(Math.min(s.T, Math.max(30, Math.round(s.T * 0.6 / 5) * 5))) : PB.endurance(Math.min(s.T, 60));
+      else if (hi >= 0 && kinds[hi]) spec = PB[kinds[hi]](s.T, recovery ? 0 : lvl);
+      else if (s === longSlot && G.longRoute && w >= 2 && !recovery) spec = routeFor(s.T) || PB.endurance(s.T);
+      else if (recovery) spec = s === longSlot && s.T >= 45 ? PB.endurance(Math.max(45, Math.round(s.T * 0.65 / 5) * 5)) : PB.recovery(s.T);
+      else spec = PB.endurance(s.T);
+      sessions.push({ date: s.date, week: w, kind: recovery ? 'recovery' : last ? 'taper' : 'load', ...spec });
+    }
+    if (!recovery && !last) lvl++;
+  }
+  return { goal, weeks, start, days, created: dkey(new Date(clock.now())), sessions: sessions.map((s, i) => ({ ...s, idx: i })) };
+}
+function pickSpread(cands, n) {
+  // n Tage wählen, die im Wochenverlauf möglichst weit auseinander liegen (keine harten Tage hintereinander)
+  if (n <= 0 || !cands.length) return [];
+  const order = d => (d.wd + 6) % 7; let best = null, bestGap = -1;
+  const combos = (arr, k, st = 0, cur = []) => k === 0 ? [cur] : arr.slice(st).flatMap((x, i) => combos(arr, k - 1, st + i + 1, [...cur, x]));
+  for (const c of combos(cands, Math.min(n, cands.length))) {
+    const o = c.map(order).sort((a, b) => a - b), gaps = o.length < 2 ? [7] : o.slice(1).map((x, i) => x - o[i]).concat(7 - o[o.length - 1] + o[0]);
+    const g = Math.min(...gaps) * 100 + c.reduce((a, s) => a + s.T, 0) / 100; if (g > bestGap) { bestGap = g; best = c; }
+  }
+  return best;
+}
+function routeFor(T) {
+  // Pass, der bei ~75 % FTP in die Zeit passt (längster passender)
+  const fits = ROUTES.map(r => ({ r, t: routeTimeAt(r.route, settings.ftp * 0.75) / 60 })).filter(x => x.t <= T - 5).sort((a, b) => b.t - a.t);
+  if (!fits.length) return null;
+  return { routeRef: fits[0].r.id, hard: false, estMin: Math.round(fits[0].t) };
+}
+// ---------- Plan-Zugriff ----------
+const getPlan = () => store.get('plan', null);
+function planWorkout(s) {
+  let base;
+  if (s.ref) base = LIBRARY.find(w => w.id === s.ref);
+  else if (s.routeRef) base = ROUTES.find(r => r.id === s.routeRef);
+  else base = { ...s, sci: s.sciRef ? (LIBRARY.find(w => w.id === s.sciRef) || {}).sci : null };
+  if (!base) return null;
+  return { ...base, id: 'plan-' + s.idx, planIdx: s.idx, planDate: s.date, hard: s.hard, estMin: s.estMin };
+}
+const planWorkouts = () => { const p = getPlan(); return p ? p.sessions.map(planWorkout).filter(Boolean) : []; };
+const findWorkout = id => allWorkouts().find(x => x.id === id) || planWorkouts().find(x => x.id === id);
+const planToday = () => dkey(new Date(clock.now()));
+function planStatus(s, today = planToday()) { return s.done ? 'done' : s.date < today ? 'missed' : s.date === today ? 'today' : 'next'; }
+function sessionMin(s) { const w = planWorkout(s); if (!w) return 0; return w.route ? (s.estMin || 60) : Math.round(totalDur(w) / 60); }
+function markPlanDone(idx, completion, score) {
+  const p = getPlan(); if (!p || !p.sessions[idx]) return;
+  p.sessions[idx].done = { t: Math.floor(clock.now() / 1000), score: score ?? null, completion: Math.round(completion * 100) }; store.set('plan', p);
+}
+
+// ---------- Plan-Oberfläche ----------
+const PLAN_SCI = 'So ist der Plan aufgebaut: <b>Polarisiert</b> – rund 80 % der Einheiten locker, höchstens zwei harte pro Woche, nie an zwei Tagen hintereinander (Seiler 2010; Stöggl & Sperlich 2014: grösste Verbesserungen bei VO2max und Schwellenleistung). <b>Periodisiert</b> – drei Belastungswochen, dann eine Erholungswoche mit weniger Volumen und Intensität, damit sich der Körper anpasst (Superkompensation; Matwejew, Issurin 2010). <b>Progressiv</b> – die harten Einheiten werden von Woche zu Woche länger oder intensiver. <b>Messbar</b> – Ramp-Test zu Beginn (falls deine FTP noch unbekannt ist) und am Ende; davor eine leichtere Woche (Tapering, Mujika & Padilla 2003). Alle Einheiten sind genau auf die Zeit zugeschnitten, die du für den Tag angegeben hast; die längste Einheit liegt am Tag mit der meisten Zeit.';
+const STATUS_TXT = { done: 'erledigt', missed: 'verpasst', today: 'heute', next: 'geplant' };
+function sessionChip(s, today) {
+  const w = planWorkout(s); if (!w) return '';
+  const st = planStatus(s, today), col = w.route ? 'var(--gear)' : w.test ? '#ff4d6d' : s.hard ? zoneHex(w.cat === 'max' ? 130 : w.cat === 'vo2' ? 112 : 96) : zoneHex(w.cat === 'warm' ? 45 : 65);
+  return `<button class="ps ps-${st}" data-psess="${s.idx}" style="--pc:${col}" title="${esc(w.name)} · ${STATUS_TXT[st]}">
+    <span class="d">${fmtDay(s.date)}</span><span class="n">${esc(w.name)}</span><span class="m num">${sessionMin(s)} min${s.done ? ` · ✓${s.done.score != null ? ' ' + s.done.score : ''}` : st === 'missed' ? ' · verpasst' : ''}</span></button>`;
+}
+function renderPlanCard() {
+  const box = $('#d-plan'), p = getPlan();
+  if (!p) { box.innerHTML = `<div class="plancard empty"><div><div class="t">TRAININGSPLAN</div><div class="pc-h">Trainiere gezielt auf ein Ziel hin</div>
+    <div class="muted" style="font-size:14px">Gib an, wie viel Zeit du an welchen Tagen hast – Gladius plant die passenden Einheiten Woche für Woche.</div></div>
+    <button class="btn primary" data-plan="new">Plan erstellen</button></div>`; return; }
+  const today = planToday(), G = PLAN_GOALS[p.goal], ss = p.sessions;
+  const done = ss.filter(s => s.done).length, endKey = ss[ss.length - 1]?.date;
+  const curWeek = clamp(Math.floor((dparse(today) - dparse(p.start)) / (7 * DAY * 1000)), 0, p.weeks - 1);
+  const todays = ss.filter(s => s.date === today), next = ss.find(s => s.date >= today && !s.done);
+  const wk = ss.filter(s => s.week === curWeek);
+  const finished = endKey && today > endKey;
+  const focus = todays.find(s => !s.done) || null;
+  let main;
+  if (finished) main = `<div class="pc-h">Plan abgeschlossen 🎉</div><div class="muted">${done} von ${ss.length} Einheiten absolviert. Zeit für ein neues Ziel?</div>`;
+  else if (focus) { const w = planWorkout(focus); main = `<div class="t2">HEUTE</div><div class="pc-h">${esc(w.name)}</div><div class="muted" style="font-size:14px">${sessionMin(focus)} min · ${esc(w.desc || '')}</div>
+      <div class="toolbar" style="margin:10px 0 0"><button class="btn primary" data-pstart="${focus.idx}">Jetzt starten</button><button class="btn" data-psess="${focus.idx}">Details</button></div>`; }
+  else if (todays.length) main = `<div class="t2">HEUTE</div><div class="pc-h">Erledigt – stark! 💪</div><div class="muted">${next ? `Nächste Einheit: ${fmtDay(next.date)} · ${esc(planWorkout(next)?.name || '')}` : ''}</div>`;
+  else main = `<div class="t2">HEUTE</div><div class="pc-h">Ruhetag</div><div class="muted">Erholung gehört zum Training – die Anpassung passiert in der Pause.${next ? ` Nächste Einheit: ${fmtDay(next.date)} · ${esc(planWorkout(next)?.name || '')} (${sessionMin(next)} min).` : ''}</div>`;
+  box.innerHTML = `<div class="plancard"><div class="pc-top"><div class="t">TRAININGSPLAN · ${esc(G.name.toUpperCase())}</div>
+    <div class="muted num" style="font-size:13px">${finished ? '' : `Woche ${curWeek + 1} von ${p.weeks}${wk[0]?.kind === 'recovery' ? ' · Erholungswoche' : wk[0]?.kind === 'taper' ? ' · Testwoche' : ''} · `}${done}/${ss.length} erledigt</div>
+    <button class="btn small" data-plan="view">Ganzen Plan ansehen</button></div>
+    <div class="pc-prog"><i style="width:${done / ss.length * 100}%"></i></div>
+    <div class="pc-main">${main}</div>
+    ${finished ? '<div class="toolbar"><button class="btn primary" data-plan="new">Neuen Plan erstellen</button></div>' : `<div class="pweek">${wk.map(s => sessionChip(s, today)).join('')}</div>`}</div>`;
+}
+function renderPlanView() {
+  const p = getPlan(), box = $('#planview');
+  if (!p) { openPlanWizard(); return; }
+  const G = PLAN_GOALS[p.goal], today = planToday(), ss = p.sessions;
+  const mins = ss.filter(s => s.week >= 0).reduce((a, s) => a + sessionMin(s), 0), done = ss.filter(s => s.done);
+  const hard = ss.filter(s => s.hard).length;
+  const weeks = [...new Set(ss.map(s => s.week))];
+  box.innerHTML = `<button class="dt-back" data-plan="back">← Zurück zur Übersicht</button>
+    <div class="dt-head"><div class="grow"><div style="font-size:12px;letter-spacing:.14em;color:var(--accent2);font-weight:700">TRAININGSPLAN</div><h1>${G.icon} ${esc(G.name)}</h1>
+    <div class="muted">${esc(G.desc)}</div></div>
+    <div class="toolbar" style="margin:0"><button class="btn" data-plan="edit">Plan anpassen</button><button class="btn" data-plan="delete">Plan löschen</button></div></div>
+    <div class="stats dt-stats">${[['Zeitraum', `${ss[0].date.slice(8) * 1}.${ss[0].date.slice(5, 7) * 1}. – ${ss[ss.length - 1].date.slice(8) * 1}.${ss[ss.length - 1].date.slice(5, 7) * 1}.`], ['Einheiten', `${ss.length} · ${hard} hart`], ['Ø pro Woche', fmtDur(mins * 60 / p.weeks)],
+      ['Erledigt', `${done.length} / ${ss.length}`], ['Ø Score', done.some(s => s.done.score != null) ? Math.round(done.filter(s => s.done.score != null).reduce((a, s) => a + s.done.score, 0) / done.filter(s => s.done.score != null).length) : '–']]
+      .map(([l, v]) => `<div class="stat"><div class="l">${l}</div><div class="v num">${v}</div></div>`).join('')}</div>
+    <div class="pweeks">${weeks.map(wn => { const ws = ss.filter(s => s.week === wn), k = ws[0].kind, wm = ws.reduce((a, s) => a + sessionMin(s), 0);
+      return `<div class="pwk ${ws.some(s => s.date <= today) && ws.some(s => s.date >= today) ? 'cur' : ''}"><div class="pwk-h"><b>${wn < 0 ? 'Vorheriger Plan' : `Woche ${wn + 1}`}</b><span>${wn < 0 ? 'erledigt' : k === 'recovery' ? 'Erholung' : k === 'taper' ? 'Test & Entlastung' : wn === 0 ? 'Einstieg' : 'Aufbau'}</span><span class="num">${fmtDur(wm * 60)}</span></div>
+        <div class="pweek">${ws.map(s => sessionChip(s, today)).join('')}</div></div>`; }).join('')}</div>
+    <div class="dt-box" style="margin-top:14px"><h2>WIE DER PLAN FUNKTIONIERT</h2><div class="dt-sci">${PLAN_SCI}</div></div>`;
+}
+let wiz = null;
+function openPlanWizard() {
+  const p = getPlan(), mon = planToday();
+  wiz = p ? { goal: p.goal, weeks: p.weeks, start: planToday(), days: { ...p.days } } : { goal: 'ftp', weeks: 8, start: mon, days: { 1: 0, 2: 60, 3: 0, 4: 60, 5: 0, 6: 120, 0: 90 } };
+  renderWizard(); showView('planwiz');
+}
+const WIZ_MIN = [0, 30, 45, 60, 75, 90, 120, 150, 180, 240];
+function renderWizard() {
+  const days = WEEKDAYS.map(([wd, n]) => `<label class="wz-day"><span>${n}</span><select data-wd="${wd}">${WIZ_MIN.map(m => `<option value="${m}" ${wiz.days[wd] == m ? 'selected' : ''}>${m ? (m >= 60 ? (m / 60).toLocaleString('de-CH') + ' h' : m + ' min') : 'Ruhetag'}</option>`).join('')}</select></label>`).join('');
+  const nDays = Object.values(wiz.days).filter(m => m >= 30).length, tot = Object.values(wiz.days).reduce((a, m) => a + (m >= 30 ? m : 0), 0);
+  const nHard = nDays >= 4 ? 2 : nDays >= 2 ? 1 : 0;
+  const warn = nDays === 0 ? 'Wähle mindestens einen Trainingstag.' : nDays === 1 ? 'Mit nur einem Tag pro Woche ist Fortschritt möglich, aber langsam – zwei bis vier Tage sind ideal.' : tot < 150 ? 'Weniger als 2,5 h pro Woche: Der Plan setzt auf Qualität statt Umfang.' : nDays >= 6 ? 'Viele Trainingstage – achte auf deine Tagesform; Gladius plant genug lockere Tage ein.' : '';
+  $('#planwiz').innerHTML = `<button class="dt-back" data-plan="${getPlan() ? 'view' : 'back'}">← Abbrechen</button>
+    <h1>${getPlan() ? 'Plan anpassen' : 'Neuer Trainingsplan'}</h1>
+    <div class="muted" style="margin-bottom:16px">${getPlan() ? 'Der Plan wird ab heute neu berechnet. Bereits erledigte Einheiten bleiben gespeichert.' : 'Drei Fragen – dann plant Gladius jede Einheit passend zu deiner Zeit.'}</div>
+    <h2>1 · Was ist dein Ziel?</h2>
+    <div class="wz-goals">${Object.entries(PLAN_GOALS).map(([k, g]) => `<button class="wz-goal ${wiz.goal === k ? 'on' : ''}" data-goal="${k}"><span class="ic">${g.icon}</span><b>${esc(g.name)}</b><span>${esc(g.desc)}</span></button>`).join('')}</div>
+    <h2>2 · Wie lange und ab wann?</h2>
+    <div class="wz-row"><label>Dauer <select id="wz-weeks">${[4, 6, 8, 10, 12, 16].map(n => `<option value="${n}" ${wiz.weeks == n ? 'selected' : ''}>${n} Wochen</option>`).join('')}</select></label>
+      <label>Start <input type="date" id="wz-start" value="${wiz.start}"></label></div>
+    <h2>3 · Wie viel Zeit hast du an welchem Tag?</h2>
+    <div class="wz-days">${days}</div>
+    <div class="wz-sum"><span><b class="num">${nDays}</b> Trainingstage</span><span><b class="num">${fmtDur(tot * 60)}</b> pro Woche</span><span><b class="num">${nHard}</b> harte Einheit${nHard === 1 ? '' : 'en'} pro Woche</span></div>
+    ${warn ? `<div class="muted" style="margin-top:8px">${warn}</div>` : ''}
+    <div class="toolbar" style="margin-top:18px"><button class="btn primary" id="wz-go" ${nDays ? '' : 'disabled'} style="padding:12px 26px;font-size:16px">${getPlan() ? 'Plan neu berechnen' : 'Plan erstellen'}</button></div>`;
+}
+function createPlanFromWizard() {
+  const old = getPlan(), p = generatePlan(wiz);
+  if (old) {
+    // Erledigte Einheiten vor dem neuen Start behalten
+    const keep = old.sessions.filter(s => s.done && s.date < wiz.start);
+    if (keep.length) { p.sessions = [...keep.map(s => ({ ...s, week: -1 })), ...p.sessions]; p.sessions.forEach((s, i) => s.idx = i); }
+  }
+  store.set('plan', p); toast(`Plan erstellt: ${p.sessions.filter(s => s.week >= 0).length} Einheiten in ${p.weeks} Wochen.`); showView('library');
+}
+
 function estTss(w) {
   let t = 0; for (const s of w.segs) { const pct = s.w ? s.w / settings.ftp * 100 : (s.from + s.to) / 2; t += s.dur * (pct / 100) ** 2; }
   return Math.round(t / 36);
@@ -976,6 +1249,7 @@ function finishRide() {
   hist.unshift({ date: result.samples[0].t, score: sc ? sc.total : null, cat: result.cat, readiness: result.readiness, name: result.name, dur: sum.dur, np: sum.np, tss: sum.tss, avgP: sum.avgP, best300: sum.best300, maxHr: sum.maxHr,
     vo2: sum.dur >= 300 ? +vo2FromPower(sum.best300, settings.weight).toFixed(1) : null });
   store.set('history', hist.slice(0, 400));
+  if (ride.w.planIdx != null) markPlanDone(ride.w.planIdx, result.completion, sc ? sc.total : null);
   if (sum.maxHr && (!settings.hrMax || sum.maxHr > settings.hrMax)) { settings.hrMax = sum.maxHr; store.set('settings', settings); }
   showSummary(result);
 }
@@ -1461,10 +1735,13 @@ function renderLibrary() {
 /* ---------------- Detailseite ---------------- */
 let libScroll = 0;
 function openDetail(id) {
-  const w = allWorkouts().find(x => x.id === id); if (!w) return;
-  libScroll = window.scrollY; $('#detail').innerHTML = w.route ? routeDetail(w) : workoutDetail(w);
+  const w = findWorkout(id); if (!w) return;
+  const from = document.querySelector('.view.active')?.id.replace('view-', '') || 'library';
+  if (from === 'library') libScroll = window.scrollY; $('#detail').innerHTML = w.route ? routeDetail(w) : workoutDetail(w);
   showView('detail');
-  $('#dt-back').onclick = () => { showView('library'); window.scrollTo(0, libScroll); };
+  if (from === 'plan') $('#dt-back').textContent = '← Zurück zum Plan';
+  if (w.planDate) $('#dt-start').insertAdjacentHTML('beforebegin', `<div class="muted" style="text-align:right">Plan-Einheit · ${fmtDay(w.planDate)}</div>`);
+  $('#dt-back').onclick = () => { if (from === 'plan') showPlan(); else { showView('library'); window.scrollTo(0, libScroll); } };
   $('#dt-start').onclick = () => startRide(w);
   const box = $('#detail .dt-chart'), tip = document.createElement('div'); tip.className = 'dt-tip'; box.appendChild(tip);
   let hl = null;
@@ -1744,6 +2021,7 @@ function renderSetupHint() {
 function renderDash() {
   renderGreeting();
   renderSetupHint();
+  renderPlanCard();
   const rd = readinessToday(), ad = store.get('adapt', {});
   const adTxt = Object.entries(ADAPT_CATS).map(([k, n]) => { const f = ad[k] || 1; return `${n} <b class="num">${Math.round(f * 1000) / 10} %</b>`; }).join(' · ');
   $('#d-day').innerHTML = `<span>Tagesform heute: ${rd ? `<b style="color:${rd.col}">${rd.label}</b>` : '<b>noch nicht erfasst</b>'} <button class="btn small" id="d-dayset">${rd ? 'ändern' : 'erfassen'}</button></span><span title="Gelernte Anpassung der Zielwerte pro Trainingsart">Anpassung: ${adTxt}</span>`;
@@ -1973,7 +2251,7 @@ $('#s-reset-all').onclick = async () => {
   profileKeys(PROFILE).forEach(k => LS.del(k)); location.reload();
 };
 // Datensicherung
-const BACKUP_KEYS = ['settings', 'history', 'ftpHistory', 'adapt', 'routes', 'lastRide', 'onboarded'];
+const BACKUP_KEYS = ['settings', 'history', 'ftpHistory', 'adapt', 'routes', 'lastRide', 'onboarded', 'plan'];
 $('#s-export').onclick = () => {
   const data = { app: 'Gladius', version: 1, created: new Date().toISOString(), data: Object.fromEntries(BACKUP_KEYS.map(k => [k, store.get(k, null)])) };
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
@@ -1989,6 +2267,32 @@ $('#s-import').onchange = async e => {
     for (const k of BACKUP_KEYS) { if (j.data[k] == null) store.del(k); else store.set(k, j.data[k]); }
     Object.assign(settings, j.data.settings || {}); applyBike(); applyLook(); updateFtpLabel(); fillSettings(); toast(`Wiederhergestellt: ${n} Fahrten.`);
   } catch (err) { toast('Wiederherstellen fehlgeschlagen: ' + err.message, 6000); }
+};
+
+/* ---------------- Trainingsplan: Bedienung ---------------- */
+function showPlan() { showView('plan'); renderPlanView(); }
+async function planAction(a) {
+  if (a === 'new' || a === 'edit') openPlanWizard();
+  else if (a === 'view') showPlan();
+  else if (a === 'back') showView('library');
+  else if (a === 'delete') { if (await askConfirm('Trainingsplan löschen? Deine gefahrenen Trainings bleiben in der Historie.', 'Löschen')) { store.del('plan'); showView('library'); } }
+}
+function planClick(e) {
+  const a = e.target.closest('[data-plan]'); if (a) { planAction(a.dataset.plan); return; }
+  const st = e.target.closest('[data-pstart]'); if (st) { startRide(findWorkout('plan-' + st.dataset.pstart)); return; }
+  const ps = e.target.closest('[data-psess]'); if (ps) openDetail('plan-' + ps.dataset.psess);
+}
+$('#d-plan').onclick = planClick; $('#planview').onclick = planClick;
+$('#planwiz').onclick = e => {
+  const a = e.target.closest('[data-plan]'); if (a) { planAction(a.dataset.plan); return; }
+  const g = e.target.closest('[data-goal]'); if (g) { wiz.goal = g.dataset.goal; renderWizard(); return; }
+  if (e.target.id === 'wz-go') createPlanFromWizard();
+};
+$('#planwiz').onchange = e => {
+  if (e.target.dataset.wd != null) wiz.days[e.target.dataset.wd] = +e.target.value;
+  else if (e.target.id === 'wz-weeks') wiz.weeks = +e.target.value;
+  else if (e.target.id === 'wz-start' && e.target.value) wiz.start = e.target.value;
+  renderWizard();
 };
 $('#tabs').onclick = e => { const c = e.target.dataset.cat; if (c) { activeCat = c; renderLibrary(); } };
 $('#lib').onclick = e => {
@@ -2082,7 +2386,7 @@ updateFtpLabel(); renderLibrary();
 if (!store.get('onboarded')) { $('#w-weight').value = settings.weight; $('#dlg-welcome').showModal(); }
 if (!navigator.bluetooth && !EMBEDDED) setTimeout(() => toast('Hinweis: Bluetooth funktioniert nur in Chrome oder Edge. Demo-Modus geht überall.', 6000), 600);
 // Testschnittstelle
-window.__gladius = { scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
+window.__gladius = { generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
 </script>
 </body>
 </html>
