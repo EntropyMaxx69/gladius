@@ -211,6 +211,11 @@ table.prs tr.pr1 td{color:#ffc53d}
 .info-logo{display:flex;align-items:center;gap:16px;margin-bottom:12px}.info-logo .wm{font-family:Cinzel,Georgia,serif;font-size:26px;font-weight:800;letter-spacing:.14em}
 .info-list{margin:4px 0 0;padding-left:18px;font-size:13.5px;line-height:1.6;color:var(--muted)}.info-list b{color:var(--text);font-weight:600}
 .st-dev summary{cursor:pointer;font-size:13px;font-weight:700;letter-spacing:.12em;color:var(--muted);list-style:none}.st-dev summary::-webkit-details-marker{display:none}.st-dev summary::before{content:'▸ '}.st-dev[open] summary::before{content:'▾ '}
+.t-r{display:flex;align-items:center;gap:10px}.xbtn{background:none;border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:15px;line-height:1;padding:3px 7px;cursor:pointer}.xbtn:hover{color:var(--text);border-color:var(--muted)}
+dialog.dlg-full{width:calc(100vw - 40px);height:calc(100vh - 40px);max-width:none;max-height:none;box-sizing:border-box;display:none;flex-direction:column;padding:18px 22px}dialog.dlg-full[open]{display:flex}
+.fc-head{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}.fc-t{font-size:13px;letter-spacing:.14em;color:var(--muted);font-weight:700}.fc-now{font-size:22px;font-weight:800;margin-top:4px}
+.fc-rng{display:flex;gap:6px;margin-left:auto}.fc-rng button{background:none;border:1px solid var(--line);border-radius:999px;color:var(--text);padding:6px 14px;font:inherit;font-size:14px;cursor:pointer}.fc-rng button.on{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:700}
+.fc-x{font-size:18px;padding:5px 10px}#fc-chart{flex:1;min-height:0;margin-top:10px}.fc-legend{display:flex;gap:18px;font-size:13px;color:var(--muted);margin-top:10px}.fc-legend i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
 .wz-goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
 .wz-goal{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--text);display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit}
 .wz-goal span:last-child{font-size:13px;color:var(--muted);line-height:1.4}.wz-goal .ic{font-size:22px;color:var(--accent)}.wz-goal:hover{border-color:var(--muted)}.wz-goal.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:rgba(255,122,47,.08)}
@@ -332,11 +337,11 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
       <div class="dcard" data-db="hr"><div class="t"><span>PULS JETZT</span><span id="d-hrsrc"></span></div>
         <div class="big num" id="d-hr">–<small>bpm</small></div><div class="note" id="d-hrzone"></div>
         <div class="zbar" id="d-zbar"></div><div class="zlab" id="d-zlab"></div></div>
-      <div class="dcard" data-db="fitness"><div class="t"><span>TRAININGSSCORE · FITNESS</span><span id="d-week"></span></div>
+      <div class="dcard" data-db="fitness"><div class="t"><span>TRAININGSSCORE · FITNESS</span><span class="t-r"><span id="d-week"></span><button class="xbtn" data-full="fitness" title="Als Vollbild anzeigen" aria-label="Trainingsscore als Vollbild">⤢</button></span></div>
         <div class="trio"><div><div class="l">Fitness</div><div class="v num" id="d-ctl">–</div></div><div><div class="l">Ermüdung</div><div class="v num" id="d-atl">–</div></div><div><div class="l">Form</div><div class="v num" id="d-tsb">–</div></div></div>
         <div class="note" id="d-form"></div><div class="chartbox" id="d-ctlchart"></div></div>
-      <div class="dcard" data-db="ftp"><div class="t"><span>FTP-VERLAUF</span><span id="d-ftpnow"></span></div><div class="chartbox" id="d-ftpchart"></div></div>
-      <div class="dcard" data-db="vo2"><div class="t"><span>VO2MAX (GESCHÄTZT)</span><span id="d-vo2now"></span></div><div class="chartbox" id="d-vo2chart"></div>
+      <div class="dcard" data-db="ftp"><div class="t"><span>FTP-VERLAUF</span><span class="t-r"><span id="d-ftpnow"></span><button class="xbtn" data-full="ftp" title="Als Vollbild anzeigen" aria-label="FTP-Verlauf als Vollbild">⤢</button></span></div><div class="chartbox" id="d-ftpchart"></div></div>
+      <div class="dcard" data-db="vo2"><div class="t"><span>VO2MAX (GESCHÄTZT)</span><span class="t-r"><span id="d-vo2now"></span><button class="xbtn" data-full="vo2" title="Als Vollbild anzeigen" aria-label="VO2max als Vollbild">⤢</button></span></div><div class="chartbox" id="d-vo2chart"></div>
         <div class="note">Schätzung aus deiner besten 5-min-Leistung je Fahrt (ACSM-Formel, ± ~10 %). Gezeigt wird der Bestwert der letzten 90 Tage – steigt also vor allem nach harten Einheiten und Tests.</div></div>
     </div>
     <h1>Trainings</h1>
@@ -551,6 +556,9 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <div class="toolbar" style="justify-content:flex-end"><button class="btn" id="tx-no">Abbrechen</button><button class="btn primary" id="tx-yes">OK</button></div>
 </dialog>
 <dialog id="dlg-pause" style="max-width:640px;width:calc(100% - 32px)"><div class="pz-body"></div></dialog>
+<dialog id="dlg-chart" class="dlg-full"><div class="fc-head"><div><div class="fc-t" id="fc-title"></div><div class="fc-now" id="fc-now"></div></div>
+  <div class="fc-rng" id="fc-rng" role="group" aria-label="Zeitraum"></div><button class="xbtn fc-x" id="fc-close" aria-label="Schliessen">✕</button></div>
+  <div class="fc-legend" id="fc-legend"></div><div class="chartbox" id="fc-chart"></div><div class="note" id="fc-note"></div></dialog>
 <dialog id="dlg-choice" style="max-width:540px">
   <p id="ch-msg" style="margin-top:0;font-size:16px;line-height:1.45"></p>
   <div class="toolbar" style="justify-content:flex-end" id="ch-btns"></div>
@@ -2756,16 +2764,26 @@ function loadSeries(hist) {
 }
 function niceStep(raw) { const p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
 function lineChart(el, pts, o) {
-  if (!pts.length) { el.innerHTML = `<div class="empty">${o.empty}</div>`; return; }
+  // o.from: Beginn des Zeitraums (Vollbild); bei Stufenlinien zählt der letzte Wert davor als Startwert
+  const extra = o.extra || [];
+  if (o.from) {
+    const before = pts.filter(p => p.t < o.from), prev = before[before.length - 1];
+    pts = pts.filter(p => p.t >= o.from); if (o.step && prev) pts = [{ ...prev, t: o.from }, ...pts];
+    extra.forEach(s => s.pts = s.pts.filter(p => p.t >= o.from));
+  }
+  if (!pts.length) { el.innerHTML = `<div class="empty">${o.from ? 'Keine Daten in diesem Zeitraum.' : o.empty}</div>`; return; }
   const W = Math.max(260, el.clientWidth || 400), H = o.h || 150, L = 40, Rr = 12, Tp = 12, B = 22;
-  let t0 = pts[0].t, t1 = Math.max(pts[pts.length - 1].t, o.until || 0);
-  if (t1 - t0 < 7 * DAY) { const mid = (t0 + t1) / 2; t0 = mid - 3.5 * DAY; t1 = mid + 3.5 * DAY; }
-  const vs = pts.map(p => p.v); let lo = Math.min(...vs), hi = Math.max(...vs); const pad = (hi - lo) * 0.2 || Math.max(1, hi * 0.08); lo -= pad; hi += pad;
+  let t0 = o.from || pts[0].t, t1 = Math.max(pts[pts.length - 1].t, o.until || 0);
+  if (!o.from && t1 - t0 < 7 * DAY) { const mid = (t0 + t1) / 2; t0 = mid - 3.5 * DAY; t1 = mid + 3.5 * DAY; }
+  if (t1 <= t0) t1 = t0 + DAY;
+  const vs = [...pts, ...extra.flatMap(s => s.pts)].map(p => p.v); let lo = Math.min(...vs), hi = Math.max(...vs); const pad = (hi - lo) * 0.2 || Math.max(1, hi * 0.08); lo -= pad; hi += pad;
   if (o.min != null) lo = Math.max(o.min, lo);
-  const step = niceStep((hi - lo) / 3), x = t => L + (t - t0) / (t1 - t0) * (W - L - Rr), y = v => Tp + (1 - (v - lo) / (hi - lo)) * (H - Tp - B);
+  const step = niceStep((hi - lo) / (o.yTicks || 3)), x = t => L + (t - t0) / (t1 - t0) * (W - L - Rr), y = v => Tp + (1 - (v - lo) / (hi - lo)) * (H - Tp - B);
   let g = '';
   for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) g += `<line x1="${L}" x2="${W - Rr}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(255,255,255,.07)"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${+v.toFixed(1)}</text>`;
-  [t0, (t0 + t1) / 2, t1].forEach((t, i) => g += `<text x="${x(t)}" y="${H - 5}" text-anchor="${['start', 'middle', 'end'][i]}" font-size="11" fill="var(--muted)">${fmtDate(t)}</text>`);
+  const nT = o.xTicks || 3; for (let i = 0; i < nT; i++) { const t = t0 + (t1 - t0) * i / (nT - 1); g += `<text x="${x(t)}" y="${H - 5}" text-anchor="${i === 0 ? 'start' : i === nT - 1 ? 'end' : 'middle'}" font-size="11" fill="var(--muted)">${fmtDate(t)}</text>`; }
+  const pathOf = (ps, stp) => { let d = `M${x(ps[0].t)},${y(ps[0].v)}`; for (let i = 1; i < ps.length; i++) d += stp ? ` H${x(ps[i].t)} V${y(ps[i].v)}` : ` L${x(ps[i].t)},${y(ps[i].v)}`; return d; };
+  extra.forEach(s => { if (s.pts.length) g += `<path d="${pathOf(s.pts)}" fill="none" stroke="${s.color}" stroke-width="1.6" ${s.dash ? 'stroke-dasharray="5 4"' : ''} opacity=".9"/>`; });
   let d = `M${x(pts[0].t)},${y(pts[0].v)}`;
   for (let i = 1; i < pts.length; i++) d += o.step ? ` H${x(pts[i].t)} V${y(pts[i].v)}` : ` L${x(pts[i].t)},${y(pts[i].v)}`;
   if (o.step && o.until) d += ` H${x(t1)}`;
@@ -2777,7 +2795,7 @@ function lineChart(el, pts, o) {
     const r = svg.getBoundingClientRect(), mx = (e.clientX - r.left) / r.width * W, t = t0 + (mx - L) / (W - L - Rr) * (t1 - t0);
     let best = pts[0]; for (const p of pts) if (Math.abs(p.t - t) < Math.abs(best.t - t)) best = p;
     const px = x(best.t), py = y(best.v); hov.setAttribute('cx', px); hov.setAttribute('cy', py); hov.style.display = '';
-    tip.style.display = 'block'; tip.style.left = px / W * r.width + 'px'; tip.style.top = py / H * r.height + 'px'; tip.innerHTML = o.tip(best);
+    tip.style.display = 'block'; tip.style.left = px / W * r.width + 'px'; tip.style.top = py / H * r.height + 'px'; tip.innerHTML = o.tip(best, extra.map(s => ({ ...s, at: s.pts.find(q => q.t === best.t) })));
   });
   svg.addEventListener('pointerleave', () => { tip.style.display = 'none'; hov.style.display = 'none'; });
 }
@@ -3245,6 +3263,50 @@ updateFtpLabel(); renderLibrary();
 if (!store.get('onboarded')) { $('#w-weight').value = settings.weight; $('#dlg-welcome').showModal(); }
 else setTimeout(dailyReadiness, 400);
 if (!navigator.bluetooth && !EMBEDDED) setTimeout(() => toast('Hinweis: Bluetooth funktioniert nur in Chrome oder Edge. Demo-Modus geht überall.', 6000), 600);
+
+/* ---------------- Diagramme als Vollbild mit wählbarem Zeitraum ---------------- */
+const RANGES = [['1w', '1 W', 7], ['1m', '1 M', 30], ['6m', '6 M', 182], ['1y', '1 J', 365], ['all', 'Alle', null]];
+let fullChart = null;
+function fullChartSpec(kind) {
+  const hist = store.get('history', []), now = Math.floor(clock.now() / 1000);
+  if (kind === 'ftp') {
+    const fh = store.get('ftpHistory', []).slice().sort((a, b) => a.t - b.t);
+    return { title: 'FTP-VERLAUF', now: `${settings.ftp} W · ${(settings.ftp / settings.weight).toFixed(2)} W/kg`, pts: fh.map(h => ({ t: h.t, v: h.ftp, src: h.src })),
+      o: { color: '#ff7a2f', step: true, until: now, empty: 'Noch kein Verlauf.', tip: p => `<b>${p.v} W</b> · ${fmtDate(p.t)}<br><span class="muted">${esc(p.src || '')}</span>` },
+      note: 'Jede Stufe ist ein neuer FTP-Wert: aus einem Test, der automatischen Erkennung nach einer Fahrt oder von dir eingetragen.' };
+  }
+  if (kind === 'vo2') {
+    const rides = hist.filter(h => h.vo2).sort((a, b) => a.date - b.date);
+    const pts = rides.map(h => ({ t: h.date, v: Math.max(...rides.filter(r => r.date <= h.date && r.date > h.date - 90 * DAY).map(r => r.vo2)) }));
+    const raw = rides.map(h => ({ t: h.date, v: h.vo2 }));
+    return { title: 'VO2MAX (GESCHÄTZT)', now: pts.length ? `${pts[pts.length - 1].v.toFixed(1)} ml/kg/min` : '', pts,
+      o: { color: '#3d8bfd', empty: 'Noch keine Fahrt ≥ 5 min.', extra: [{ name: 'Einzelne Fahrt', pts: raw, color: '#3d8bfd66', dash: true }], tip: (p, ex) => `<b>${p.v.toFixed(1)}</b> ml/kg/min · ${fmtDate(p.t)}${ex[0]?.at ? `<br><span class="muted">diese Fahrt: ${ex[0].at.v.toFixed(1)}</span>` : ''}` },
+      legend: [['Bestwert der letzten 90 Tage', '#3d8bfd'], ['Schätzung je Fahrt', '#3d8bfd66']],
+      note: 'Schätzung aus der besten 5-min-Leistung je Fahrt (ACSM-Formel, ± ~10 %).' };
+  }
+  const ls = loadSeries(hist), last = ls[ls.length - 1];
+  return { title: 'TRAININGSSCORE · FITNESS', now: last ? `Fitness ${Math.round(last.ctl)} · Ermüdung ${Math.round(last.atl)} · Form ${Math.round(last.ctl - last.atl) > 0 ? '+' : ''}${Math.round(last.ctl - last.atl)}` : '',
+    pts: ls.map(p => ({ t: p.t, v: p.ctl })),
+    o: { color: '#3ecf8e', dots: false, empty: 'Noch keine Fahrten.', extra: [{ name: 'Ermüdung', pts: ls.map(p => ({ t: p.t, v: p.atl })), color: '#ff8a3d' }, { name: 'Form', pts: ls.map(p => ({ t: p.t, v: p.ctl - p.atl })), color: '#a98bff', dash: true }],
+      tip: (p, ex) => `${fmtDate(p.t)}<br>Fitness <b>${Math.round(p.v)}</b>${ex.map(s => s.at ? ` · ${s.name} <b>${Math.round(s.at.v)}</b>` : '').join('')}` },
+    legend: [['Fitness (CTL, 42 Tage)', '#3ecf8e'], ['Ermüdung (ATL, 7 Tage)', '#ff8a3d'], ['Form (TSB = Fitness − Ermüdung)', '#a98bff']],
+    note: 'Fitness steigt mit regelmässigem Training langsam, Ermüdung reagiert schnell. Form über 0 = frisch, unter −30 = sehr ermüdet.' };
+}
+function drawFullChart() {
+  if (!fullChart) return;
+  const sp = fullChartSpec(fullChart.kind), r = RANGES.find(x => x[0] === fullChart.range), now = Math.floor(clock.now() / 1000);
+  $('#fc-title').textContent = sp.title; $('#fc-now').textContent = sp.now; $('#fc-note').textContent = sp.note || '';
+  $('#fc-rng').innerHTML = RANGES.map(([k, l]) => `<button data-rng="${k}" class="${k === fullChart.range ? 'on' : ''}">${l}</button>`).join('');
+  $('#fc-legend').innerHTML = (sp.legend || []).map(([n, c]) => `<span><i style="background:${c}"></i>${n}</span>`).join('');
+  const box = $('#fc-chart'), H = Math.max(220, box.clientHeight - 10);
+  lineChart(box, sp.pts, { ...sp.o, h: H, from: r[2] ? now - r[2] * DAY : null, until: now, xTicks: 6, yTicks: 6, dots: sp.o.dots === false || (r[2] == null || r[2] > 60) && sp.pts.length > 40 ? false : sp.o.dots });
+}
+function openFullChart(kind) { fullChart = { kind, range: store.get('chartRange', '6m') }; $('#dlg-chart').showModal(); requestAnimationFrame(drawFullChart); }
+document.addEventListener('click', e => { const b = e.target.closest('[data-full]'); if (b) { e.stopPropagation(); openFullChart(b.dataset.full); } });
+$('#fc-rng').onclick = e => { const b = e.target.closest('[data-rng]'); if (!b) return; fullChart.range = b.dataset.rng; store.set('chartRange', fullChart.range); drawFullChart(); };
+$('#fc-close').onclick = () => $('#dlg-chart').close();
+$('#dlg-chart').addEventListener('close', () => { fullChart = null; });
+addEventListener('resize', () => { if (fullChart) drawFullChart(); });
 // Testschnittstelle
 window.__gladius = { updateConnBtn, click, onClickAsync, clickMap, checkPlanBonuses, rankBadge, seasonRank, updateTrophies, rankFromXp, workoutDifficulty, ROUTES, routeClimbScore, levelOf, totalXp, xpNeed, togglePlanDone, rebuildFrom, resumePlan, openPauseDialog, movePlanSession, generatePlan, getPlan, planWorkouts, PLAN_GOALS, openDetail, showPlan, scoreRide, ride, settings, store, pickReadiness, beginRide, READINESS, rate, adaptFactor, renderLibrary, setFtp, LIBRARY, startRide, tick, clock, demo, encodeFit, summarize, parseZwo, finishRide, shiftGear, get lastResult() { return lastResult; } };
 </script>
