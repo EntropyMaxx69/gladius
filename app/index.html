@@ -27,6 +27,7 @@ header{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:
 .chip.on .dot{background:var(--ok);box-shadow:0 0 8px var(--ok)}
 .chip.busy .dot{background:var(--warn)}
 .chip:hover{border-color:var(--muted)}
+.chip-icon{padding:7px 11px;font-size:17px;line-height:1}
 main{max-width:1200px;margin:0 auto;padding:20px}
 .view{display:none}.view.active{display:block}
 h1{font-size:26px;margin:4px 0 6px}
@@ -172,7 +173,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <button class="chip" id="chip-trainer" title="Smart-Trainer per Bluetooth (FTMS) verbinden"><span class="dot"></span><span id="lbl-trainer">Trainer verbinden</span></button>
     <button class="chip" id="chip-hr" title="Pulsgurt per Bluetooth verbinden"><span class="dot"></span><span id="lbl-hr">Puls verbinden</span></button>
     <button class="chip" id="chip-demo" title="Simulierter Trainer zum Ausprobieren ohne Hardware"><span class="dot"></span><span>Demo</span></button>
-    <button class="chip" id="chip-settings" title="Einstellungen"><span>⚙ FTP <b id="lbl-ftp" class="num"></b> W</span></button>
+    <button class="chip chip-icon" id="chip-settings" title="Einstellungen" aria-label="Einstellungen"><span aria-hidden="true">⚙</span></button>
   </div>
 </header>
 
@@ -1519,7 +1520,7 @@ function routeCard(w) {
     <div class="actions"><button class="btn primary small" data-start="${w.id}">Losfahren</button>${w.imported ? `<button class="btn small" data-delroute="${w.id}">Löschen</button>` : ''}<span class="more">Details ansehen →</span></div></div>`;
 }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-function updateFtpLabel() { $('#lbl-ftp').textContent = settings.ftp; }
+function updateFtpLabel() { /* FTP steht in Übersicht und Einstellungen */ }
 
 
 
