@@ -48,6 +48,7 @@ h2{font-size:18px;margin:28px 0 10px}
 .btn.danger{border-color:#5a2a2a;color:#ffb0b0}
 .btn.small{padding:6px 10px;font-size:13px}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0}
+.libbar{display:flex;gap:8px 16px;align-items:center;justify-content:space-between;flex-wrap:wrap}.libbar .tabs{margin:16px 0}.sortsel{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);white-space:nowrap}
 .tab{background:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:14px;color:var(--muted)}
 .tab.active{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:600}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
@@ -284,7 +285,8 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     </div>
     <h1>Trainings</h1>
     <div class="muted">Wähle ein Workout. Alle Watt-Vorgaben richten sich nach deiner FTP. ERG-Abschnitte stellt der Trainer selbst ein, in <span style="color:var(--gear)">Gang-Abschnitten</span> schaltest du virtuell.</div>
-    <div class="tabs" id="tabs"></div>
+    <div class="libbar"><div class="tabs" id="tabs"></div>
+      <label class="sortsel">Sortieren <select id="lib-sort"><option value="std">Standard</option><option value="dur-asc">Dauer: kurz → lang</option><option value="dur-desc">Dauer: lang → kurz</option><option value="diff-asc">Schwierigkeit: leicht → schwer</option><option value="diff-desc">Schwierigkeit: schwer → leicht</option></select></label></div>
     <div class="grid" id="lib"></div>
     <div class="toolbar">
       <button class="btn" id="btn-free">Freie Fahrt (virtuelle Gänge)</button>
@@ -2186,6 +2188,13 @@ function renderLibrary() {
   const all = allWorkouts(), count = k => k === 'all' ? all.length : all.filter(w => w.cat === k).length;
   $('#tabs').innerHTML = Object.entries(cats).map(([k, v]) => `<button class="tab ${k === activeCat ? 'active' : ''}" data-cat="${k}">${v} <span class="cnt">${count(k)}</span></button>`).join('');
   const list = allWorkouts().filter(w => activeCat === 'all' || w.cat === activeCat);
+  // Sortierung: Strecken nach geschätzter Fahrzeit bei 75 % FTP; Standard = Reihenfolge der Bibliothek
+  const srt = store.get('libSort', 'std'); $('#lib-sort').value = srt;
+  if (srt !== 'std') {
+    const durOf = w => w.route ? routeTimeAt(w.route, settings.ftp * 0.75) : totalDur(w), dif = w => workoutDifficulty(w) || 0, dir = srt.endsWith('desc') ? -1 : 1;
+    const key = srt.startsWith('dur') ? durOf : dif, k2 = srt.startsWith('dur') ? dif : durOf, idx = new Map(list.map((w, i) => [w, i]));
+    list.sort((a, b) => dir * (key(a) - key(b)) || dir * (k2(a) - k2(b)) || idx.get(a) - idx.get(b));
+  }
   $('#lib').innerHTML = list.map(w => w.route ? routeCard(w) : `<div class="card" data-open="${w.id}" tabindex="0" role="button" aria-label="${esc(w.name)} – Details">
     <div class="cat">${CATS[w.cat] || 'Importiert'}</div><h3>${esc(w.name)}</h3>
     <div class="meta num">${fmtDur(totalDur(w))} ·≈ ${estTss(w)} TSS${w.segs.some(s => s.mode === 'gear') ? ' · <span style="color:var(--gear)">mit Gang-Abschnitten</span>' : ''}</div>${diffBadge(w)}
@@ -2328,7 +2337,7 @@ function routeCard(w) {
   const rt = w.route, avg = rt.gain / rt.len * 100;
   let maxG = 0; for (let d = 0; d + 500 <= rt.len; d += 250) maxG = Math.max(maxG, (eleAt(rt, d + 500) - eleAt(rt, d)) / 5);
   return `<div class="card" data-open="${w.id}" tabindex="0" role="button" aria-label="${esc(w.name)} – Details"><div class="cat">Strecke${w.imported ? ' · importiert' : ''}</div><h3>${esc(w.name)}</h3>
-    <div class="meta num">${(rt.len / 1000).toFixed(1)} km · ${rt.gain} hm · Ø ${avg.toFixed(1)} % · max. ${maxG.toFixed(1)} % (500 m) · ${Math.round(Math.min(...rt.ele))} → ${Math.round(Math.max(...rt.ele))} m</div>
+    <div class="meta num">${(rt.len / 1000).toFixed(1)} km · ${rt.gain} hm · Ø ${avg.toFixed(1)} % · max. ${maxG.toFixed(1)} % (500 m) · ${Math.round(Math.min(...rt.ele))} → ${Math.round(Math.max(...rt.ele))} m · <span title="Geschätzte Fahrzeit bei 75 % FTP">≈ ${fmtDur(routeTimeAt(rt, settings.ftp * 0.75))}</span></div>
     ${diffBadge(w)}${routeSvg(rt)}<p>${esc(w.desc || '')}${prChip(w) ? `<br><span class="muted">Bestzeit</span>${prChip(w).replace(' · ', ' ')}` : ''}</p>
     <div class="actions"><button class="btn primary small" data-start="${w.id}">Losfahren</button>${w.imported ? `<button class="btn small" data-delroute="${w.id}">Löschen</button>` : ''}<span class="more">Details ansehen →</span></div></div>`;
 }
@@ -2772,6 +2781,7 @@ $('#planwiz').onchange = e => {
   else if (e.target.id === 'wz-start' && e.target.value) wiz.start = e.target.value;
   renderWizard();
 };
+$('#lib-sort').onchange = e => { store.set('libSort', e.target.value); renderLibrary(); };
 $('#tabs').onclick = e => { const c = e.target.dataset.cat; if (c) { activeCat = c; renderLibrary(); } };
 $('#lib').onclick = e => {
   const id = e.target.dataset.start; if (id) { startRide(allWorkouts().find(w => w.id === id)); return; }
